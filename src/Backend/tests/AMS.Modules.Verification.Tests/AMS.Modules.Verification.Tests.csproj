@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Integration, against a real SQL Server. The rules under test are the ones
+    the schema enforces - and in particular the two filtered unique indexes
+    that have to be told apart: a retry from the same phone, and somebody else
+    having got to the asset first.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Verification\AMS.Modules.Verification.csproj" />
+    <!--
+      Referenced for the INTERFACE only. What an asset is called and whether it
+      is a bulk line are Assets' answers, tested there.
+    -->
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Assets.PublicApi\AMS.Modules.Assets.PublicApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

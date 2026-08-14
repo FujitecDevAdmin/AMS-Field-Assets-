@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- TargetFramework, Nullable, analyzers and warning policy all come from
+       Directory.Build.props. Nothing module-specific belongs here. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+    <ProjectReference Include="..\AMS.Modules.Organization.PublicApi\AMS.Modules.Organization.PublicApi.csproj" />
+    <ProjectReference Include="..\AMS.Modules.Notifications.PublicApi\AMS.Modules.Notifications.PublicApi.csproj" />
+    <ProjectReference Include="..\..\AMS.SharedKernel.Persistence\AMS.SharedKernel.Persistence.csproj" />
+    <ProjectReference Include="..\..\AMS.SharedKernel.Web\AMS.SharedKernel.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <!-- The licence key column is protected at rest (docs/03 section 8). -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
+  </ItemGroup>
+
+</Project>

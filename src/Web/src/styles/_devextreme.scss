@@ -1,0 +1,264 @@
+/* ---------------------------------------------------------------------------
+   Global DevExtreme overrides.
+   ---------------------------------------------------------------------------
+   This file is the ONE place a DevExtreme component's own styling is adjusted
+   app-wide. It exists because the alternative is `::ng-deep` in whichever
+   component noticed the problem first, which gives the same control four
+   different paddings depending on where it was dropped.
+
+   Rules for what belongs here:
+
+   - It applies to a COMPONENT TYPE, not to one screen. "Every search box in the
+     app" belongs here; "the notification panel's popup has no padding because
+     the panel draws its own header" does not — that stays with the panel.
+   - It adjusts spacing, sizing or colour. It does not fight the theme: colours
+     come from the compiled Fujitec bundle (themes/), and a value that wants
+     changing everywhere should be changed there instead.
+   - `::ng-deep` is not needed here. This sheet is global already, which is the
+     point — docs/04 §3 calls `::ng-deep` on DX internals a review-blocker, and
+     every rule moved into this file is one fewer of them.
+
+   THE ONE HEIGHT
+   DevExtreme sizes each widget family from a different starting point: an
+   editor from its floating-label padding, a button from its content padding, a
+   tab from its own line-height. Drop a text box, a select box and a button into
+   one toolbar and they land on three different heights. Everything single-line
+   here is pinned to --ams-control-height instead.
+
+   `min-height` rather than `height` wherever the content can legitimately grow
+   (a tag box holding six tags, a wrapping button label): the floor is shared,
+   the ceiling is not.
+   --------------------------------------------------------------------------- */
+
+/* --- Text editors ---------------------------------------------------------
+   The Material filled editor reserves room above the text for a floating
+   label: `padding: 15px 16px 14px 46px` on a 51px box. None of our search or
+   filter boxes use a floating label, so that space is a hole above the text and
+   a control half again as tall as it needs to be.
+
+   Text areas are deliberately excluded — they grow, and a fixed height crops
+   them. `:not(.dx-textarea)` also buys the specificity: DevExtreme sets this
+   from `.dx-texteditor.dx-editor-filled .dx-texteditor-input`, which outranks a
+   plain `.dx-searchbox .dx-texteditor-input`, and a rule that loses is worse
+   than no rule because it reads as done.
+
+   The three-selector inner list is DevExtreme's own, copied deliberately. The
+   PLACEHOLDER is not the input: it is a separate absolutely-positioned element
+   whose ::before carries the text and its own copy of the padding. Styling only
+   `.dx-texteditor-input` moves the typed text and leaves the placeholder where
+   it was. Anything that changes the input's box has to change all three. */
+$editor-search-pad-left: 2.75rem; // clears the glyph with a 12px gap
+
+.dx-texteditor.dx-editor-filled:not(.dx-textarea),
+.dx-texteditor.dx-editor-outlined:not(.dx-textarea),
+.dx-texteditor.dx-editor-underlined:not(.dx-textarea) {
+  .dx-texteditor-input,
+  .dx-placeholder::before,
+  .dx-lookup-field {
+    min-height: var(--ams-control-height);
+    height: var(--ams-control-height);
+    padding: 0 var(--ams-control-pad-x);
+    line-height: var(--ams-control-height);
+  }
+
+  /* Search boxes are pills, everywhere. The Material filled editor is a grey
+     slab with a coloured underline, which reads as a form field mid-entry — but
+     a search box is a control you tap, not a value you are filling in. The
+     underline is drawn with ::before/::after, so both are removed rather than
+     recoloured. */
+  &.dx-searchbox {
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgb(0 0 0 / 4%);
+
+    &::before,
+    &::after,
+    .dx-texteditor-container::before,
+    .dx-texteditor-container::after {
+      display: none;
+    }
+
+    .dx-texteditor-input {
+      background: transparent;
+    }
+
+    .dx-icon-search {
+      /* Centred with a transform rather than DevExtreme's `margin-top: -half
+         its own height`, which only lines up while the box stays the height the
+         theme assumed. This holds at any size. box-sizing is pinned because the
+         theme sizes this glyph in rem WITH padding, so a content-box 18px
+         renders as 24 and sits 6px closer to the text than the rule says. */
+      top: 50%;
+      left: 0.875rem;
+      box-sizing: border-box;
+      width: 1.125rem;
+      height: 1.125rem;
+      padding: 0;
+      margin-top: 0;
+      transform: translateY(-50%);
+      font-size: 1.125rem;
+      line-height: 1.125rem;
+    }
+
+    .dx-texteditor-input,
+    .dx-placeholder::before {
+      padding-left: $editor-search-pad-left;
+    }
+  }
+
+  /* A tag box grows down as tags are added, so it gets the floor only. */
+  &.dx-tagbox .dx-texteditor-input {
+    height: auto;
+  }
+}
+
+/* The editor's own buttons — clear, dropdown, spin, and any custom one — sit
+   INSIDE the field. Giving them the shared control height would make a 40px
+   button in a 40px box with no room for its border. */
+.dx-texteditor-buttons-container .dx-button {
+  min-height: 0;
+
+  .dx-button-content {
+    min-height: 0;
+  }
+}
+
+/* --- Buttons --------------------------------------------------------------
+   A Material button is sized by its content padding, which lands a few pixels
+   short of an editor. Pinning the floor puts a button and an input on the same
+   line without either being nudged by hand. */
+.dx-button {
+  min-height: var(--ams-control-height);
+
+  .dx-button-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--ams-control-height);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* --- Drop-down button -----------------------------------------------------
+   Two buttons in a wrapper; the wrapper needs the height as well or the
+   focus/hover surface stops short of the button inside it. */
+.dx-dropdownbutton,
+.dx-dropdownbutton .dx-buttongroup,
+.dx-buttongroup-wrapper {
+  min-height: var(--ams-control-height);
+}
+
+/* --- Tabs -----------------------------------------------------------------
+   Tabs sit directly above content and read as a control strip; a tab row that
+   is 4px off every other control in the header is visible precisely because
+   nothing else is near it to excuse it. */
+.dx-tab,
+.dx-tabs .dx-tab {
+  min-height: var(--ams-control-height);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* --- Toolbars -------------------------------------------------------------
+   The toolbar is where mixed controls actually meet, so it is the one place
+   the shared height has to hold. */
+.dx-toolbar .dx-toolbar-item-content {
+  display: flex;
+  align-items: center;
+}
+
+/* --- Drawer ---------------------------------------------------------------
+   DevExtreme wraps an Angular template in `.dx-template-wrapper`, a plain div
+   with no height of its own. The panel above it IS constrained — but a template
+   that asks for `height: 100%` resolves against that auto-height wrapper, so it
+   grows to fit its content and the drawer's own `overflow: hidden` clips the
+   overflow instead of scrolling it.
+
+   The symptom is a nav that runs off the bottom of the screen with its footer
+   gone and no scrollbar, while every element in it reports exactly the height
+   it asked for. */
+.dx-drawer-panel-content > .dx-template-wrapper {
+  height: 100%;
+}
+
+/* --- Scrollbars -----------------------------------------------------------
+   Native scrolling gives real wheel, keyboard and trackpad behaviour, but on
+   Windows it also gives the full-fat scrollbar with stepper arrows — 15px of
+   chrome taken out of a 248px drawer, which is width the labels needed. Slimmed
+   to a thumb, with the steppers removed. */
+.dx-scrollable-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(0 0 0 / 22%) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgb(0 0 0 / 22%);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgb(0 0 0 / 38%);
+    }
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+/* --- Icons ----------------------------------------------------------------
+   `.dx-icon` ships `line-height: 24px`. Anything that resizes the box without
+   resizing the line draws the glyph on a 24px line inside a smaller element,
+   which pushes it down and clips it. Tying the line to the box removes a whole
+   class of "the icon looks broken at this size" bug. */
+.dx-icon {
+  line-height: 1;
+}
+
+/* --- Popups ---------------------------------------------------------------
+   A popup is a separate working layer. Blur and dim only the popup shader so
+   drawers, dropdowns, load panels and the application shell keep their normal
+   behaviour. The popup surface receives a stronger edge and elevation so it
+   remains distinct over detailed tables and dashboards. */
+.dx-overlay-wrapper.dx-popup-wrapper.dx-overlay-shader {
+  background-color: rgb(20 24 31 / 38%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.dx-popup-wrapper .dx-overlay-content {
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 12px;
+  box-shadow:
+    0 24px 64px rgb(0 0 0 / 28%),
+    0 4px 14px rgb(0 0 0 / 16%);
+  overflow: hidden;
+}
+
+.dx-popup-wrapper .dx-popup-title {
+  border-bottom: 1px solid var(--ams-border, #e2e5e9);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 55%);
+}
+
+/* --- Lists ----------------------------------------------------------------
+   Roomier rows than the stock 8px. These lists carry two or three lines of
+   real text (a notification, a lookup result), not single words. */
+.dx-list-item .dx-list-item-content {
+  padding: 0.625rem 1rem;
+}
+
+/* --- Menus and drop-down content ------------------------------------------
+   The items inside a drop-down are chosen with the same click as a list row and
+   should not be tighter than one. */
+.dx-menu-item .dx-menu-item-content,
+.dx-context-menu .dx-menu-item .dx-menu-item-content {
+  padding: 0.5rem 1rem;
+}

@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.app-header {
+  height: var(--ams-header-height);
+  padding: 0 0.75rem;
+  background: var(--ams-surface-raised);
+  border-bottom: 1px solid var(--ams-border);
+}
+
+/* The search is the widest thing in the bar on purpose: it is the fastest route
+   to a record, and a 200px box says otherwise. */
+.app-header__search {
+  width: clamp(200px, 34vw, 460px);
+}
+
+.app-header__bell {
+  position: relative;
+  display: inline-flex;
+}
+
+.app-header__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.25rem;
+  border-radius: 0.5rem;
+  background: var(--ams-brand);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.app-header__user {
+  max-width: 220px;
+}
+
+/* The Ctrl-K affordance is a label, not a control — it must not look pressable. */
+:host ::ng-deep .app-header__kbd {
+  cursor: default;
+
+  .dx-button-text {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--ams-text-muted);
+    border: 1px solid var(--ams-border);
+    border-radius: 4px;
+    padding: 0.0625rem 0.3125rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app-header {
+    padding: 0 0.25rem;
+  }
+
+  .app-header__search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  :host ::ng-deep .app-header__kbd {
+    display: none;
+  }
+
+  /* The name is the first thing to go: the avatar and the caret still say
+     whose menu it is, and the search needs the room more. */
+  :host ::ng-deep .app-header__user .dx-button-text {
+    display: none;
+  }
+}
+
+/* The toolbar keeps its fixed height at every width. An earlier attempt to let
+   it grow below 480px so the search could take its own row just collapsed it to
+   28px — DevExtreme's toolbar positions its items against that height — and the
+   page title rode up over the header. The search shrinks instead. */

@@ -1,0 +1,53 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.shell {
+  height: 100%;
+}
+
+/* The panel supplies its own header and padding, so the popup's chrome is
+   removed rather than nested inside. Scoped to this popup's wrapper class —
+   not a blanket override of dx-popup everywhere. */
+::ng-deep .shell__panel-wrapper {
+  .dx-popup-content {
+    padding: 0;
+  }
+
+  .dx-overlay-content {
+    border-radius: 0;
+  }
+}
+
+/* In `shrink` mode the drawer sets the panel's width and the nav fills it —
+   which is what lets it animate down to the 60px rail. In `overlap` mode the
+   drawer sizes itself to its CONTENT instead, so a nav with no width of its own
+   renders 1px wide and the menu is simply missing. The width is therefore given
+   only in the mode that needs it. */
+.shell__nav--floating {
+  width: 248px;
+  max-width: 85vw;
+}
+
+.shell__body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--ams-surface);
+}
+
+.shell__content {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 1.25rem;
+}
+
+/* Breakpoints match core/layout/media-query.ts. A layout that changes at one
+   width in TypeScript and another in CSS has a band where it is neither. */
+@media (max-width: 767.98px) {
+  .shell__content {
+    padding: 0.75rem;
+  }
+}

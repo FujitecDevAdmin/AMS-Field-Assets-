@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Assets' cross-module contracts, and NOTHING else.
+
+    Named .PublicApi and not .Contracts because there is already a business
+    module called Contracts - maintenance contracts and AMC - and a suffix
+    that cannot tell a module from a contract assembly is a rule no test can
+    enforce. .PublicApi is also the word doc 01 rule 3 already uses.
+
+    Rule 2 forbids a module referencing another module, and rule 3 says to
+    depend on its PublicApi contract instead. Those two are only compatible if
+    the contract lives somewhere a module may reference - which is here.
+
+    What belongs: the interface another module calls, and the DTOs it passes.
+    What does not: EF Core, DbContext, entities, or any implementation. The
+    architecture tests check that, because a contract assembly that grows an EF
+    dependency drags it into every consumer and quietly rebuilds the coupling
+    this project exists to remove.
+
+    One assembly per PUBLISHING module, not one shared AMS.PublicApi. With
+    fifteen modules a single shared project would be referenced by all of them,
+    and "which modules does this one actually depend on" would stop being
+    answerable from the build - the exact question schema-per-module exists to
+    keep answerable. See docs/00DESIGNDECISIONS.md.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

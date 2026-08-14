@@ -1,0 +1,28 @@
+/* Design tokens. Every component reads these rather than repeating a value —
+   the brand red in particular exists in three places by necessity (this file,
+   themes/_fujitec.scss for the DevExtreme theme, and the logo artwork it was
+   sampled from) and must not gain a fourth. */
+
+:root {
+  /* Sampled from public/fujitec-logo.png. themes/_fujitec.scss carries the same
+     value into the compiled DevExtreme theme. */
+  --ams-brand: #ca0012;
+  --ams-brand-contrast: #ffffff;
+  --ams-brand-tint: rgb(202 0 18 / 8%);
+
+  --ams-surface: #f5f6f8;
+  --ams-surface-raised: #ffffff;
+  --ams-border: rgb(0 0 0 / 9%);
+  --ams-text-muted: rgb(0 0 0 / 55%);
+
+  --ams-header-height: 56px;
+
+  /* One height for EVERY control in the app — inputs, buttons, tabs, drop-down
+     buttons. DevExtreme sizes each widget family separately (an editor from its
+     floating-label padding, a button from its content padding), so a form built
+     from stock widgets lands on three different heights in the same row. They
+     are all normalised to this in styles/_devextreme.scss. */
+  --ams-control-height: 40px;
+  --ams-control-pad-x: 0.75rem;
+  --ams-radius: 8px;
+}

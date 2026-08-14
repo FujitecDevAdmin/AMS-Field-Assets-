@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AMS</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!--
+      Fujitec DevExtreme theme (themes/*.scss, compiled by `npm run theme:build`).
+      rel="dx-theme" + data-theme is how DevExtreme finds and activates a theme;
+      data-theme keeps the stock material.orange.* names because DevExtreme looks
+      chart/viz styling up by theme NAME — an unregistered name silently falls
+      back to the generic palette.
+    -->
+    <link
+      rel="dx-theme"
+      data-theme="material.orange.light"
+      href="assets/themes/dx.material.fujitec.light.css"
+      data-active="true"
+    />
+    <link
+      rel="dx-theme"
+      data-theme="material.orange.dark"
+      href="assets/themes/dx.material.fujitec.dark.css"
+      data-active="false"
+    />
+  </head>
+  <!--
+    dx-viewport carries the theme's colours and typography to plain page elements
+    (headings, labels), not only DevExtreme components.
+  -->
+  <body class="dx-viewport">
+    <ams-root></ams-root>
+  </body>
+</html>

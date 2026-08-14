@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SharedKernel deliberately references NOTHING. The moment it takes a
+    dependency on EF Core, ASP.NET or a module, every module inherits that
+    dependency and the kernel stops being shared - it becomes the place
+    people put things they could not find a home for.
+
+    docs/01ARCHITECTURE.md §1: "Result<T>, Error, IDispatcher, base types,
+    NO business logic".
+  -->
+
+</Project>

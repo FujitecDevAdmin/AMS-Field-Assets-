@@ -1,0 +1,12 @@
+namespace AMS.Modules.Organization.Features.SearchEmployees;
+
+/// <summary>
+/// The HTTP wire shape. Never a domain entity in either direction (docs/01 §3).
+/// </summary>
+public sealed record SearchEmployeesRequest(
+    string? Search,
+    int? DepartmentId,
+    int? LocationId,
+    bool? IsActive,
+    int? Skip,
+    int? Take);

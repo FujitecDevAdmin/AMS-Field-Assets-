@@ -1,0 +1,116 @@
+# ---------------------------------------------------------------------------
+# .NET
+# ---------------------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+*.dll
+*.exe
+*.pdb
+*.cache
+project.lock.json
+project.assets.json
+artifacts/
+TestResults/
+coverage/
+*.coverage
+*.trx
+BenchmarkDotNet.Artifacts/
+.idea/
+*.DotSettings.user
+
+# EF Core scaffolding scratch. Migrations themselves ARE committed.
+*.mdf
+*.ldf
+
+# ---------------------------------------------------------------------------
+# Angular / Node (src/Web/)
+# ---------------------------------------------------------------------------
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+.eslintcache
+
+# ---------------------------------------------------------------------------
+# Python (build/ tooling)
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+
+# ---------------------------------------------------------------------------
+# Flutter / Dart (src/Mobile/)
+# ---------------------------------------------------------------------------
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+src/Mobile/build/
+src/Mobile/**/build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+ios/Pods/
+android/.gradle/
+android/local.properties
+**/*.g.dart
+**/*.freezed.dart
+
+# ---------------------------------------------------------------------------
+# Secrets. Nothing here is ever committed, whatever the deadline.
+# ---------------------------------------------------------------------------
+appsettings.Local.json
+appsettings.*.Local.json
+*.local.env
+.env
+.env.*
+!.env.example
+secrets.json
+*.pfx
+*.p12
+*.key
+
+# ---------------------------------------------------------------------------
+# Office lock files. Created the moment somebody opens a workbook or document
+# and deleted when they close it; committing one is committing "this file was
+# open on my machine".
+# ---------------------------------------------------------------------------
+~$*
+*.xlk
+*.tmp
+
+# ---------------------------------------------------------------------------
+# Agent worktrees. Separate git repositories that live under .claude/; they are
+# working copies of THIS repo, not content belonging to it.
+# ---------------------------------------------------------------------------
+.claude/worktrees/
+
+# ---------------------------------------------------------------------------
+# OS noise
+# ---------------------------------------------------------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Playwright MCP scratch output. Not part of the build.
+.playwright-mcp/
+
+# Local assistant scratch files and generated review artifacts. Runtime assets
+# that ship with the application belong under src/ and remain tracked.
+.codex-work/
+outputs/

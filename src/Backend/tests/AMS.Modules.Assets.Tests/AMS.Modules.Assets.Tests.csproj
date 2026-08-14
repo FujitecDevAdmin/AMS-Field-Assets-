@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Assets tests. Integration, against a real SQL Server.
+
+    This project references a SECOND module on purpose. Production modules may
+    never do that (01 §2 rule 2), but the thing under test here is precisely
+    what happens when two modules write in one transaction, and a test that
+    could not see both ends would not be testing it.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Assets\AMS.Modules.Assets.csproj" />
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Organization\AMS.Modules.Organization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

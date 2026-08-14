@@ -1,0 +1,22 @@
+/* Global styles, in load order:
+     tokens      — the variables everything else reads
+     devextreme  — app-wide overrides of DevExtreme's own component styling
+     (below)     — the document reset
+
+   Component styles belong in the component (docs/04 §1). The DevExtreme THEME
+   is not imported here: it is loaded by the rel="dx-theme" links in index.html,
+   which is how DevExtreme switches between the light and dark bundles. */
+
+@use 'styles/tokens';
+@use 'styles/devextreme';
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: barlow, 'Segoe UI', system-ui, sans-serif;
+  background: var(--ams-surface);
+}

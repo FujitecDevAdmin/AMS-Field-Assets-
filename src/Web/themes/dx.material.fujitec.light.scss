@@ -1,0 +1,29 @@
+// Fujitec light theme.
+//
+// This mirrors devextreme/scss/bundles/dx.material.orange.light.scss exactly and
+// adds configuration. Keeping the same @use list matters: dropping an entry here
+// silently drops those components' styles from the build.
+//
+// $color stays "orange" so every derived value that DevExtreme keys off the
+// modificator (chart palettes, swatch names) resolves the way it always did; the
+// accent is then overridden outright.
+
+@use '../themes/fujitec' as brand;
+
+@use 'devextreme/scss/widgets/material/colors' with (
+  $color: 'orange',
+  $mode: 'light',
+  $base-accent: brand.$fujitec-red,
+  $base-font-family: brand.$ams-font-family
+);
+@use 'devextreme/scss/widgets/material/sizes' with ($size: 'default');
+@use 'devextreme/scss/widgets/material/typography';
+@use 'devextreme/scss/widgets/material/icons';
+@use 'devextreme/scss/widgets/material/widget';
+@use 'devextreme/scss/widgets/material/card';
+@use 'devextreme/scss/widgets/material/fieldset';
+@use 'devextreme/scss/widgets/material/common';
+@use 'devextreme/scss/widgets/base/resizable';
+@use 'devextreme/scss/widgets/base/draggable';
+@use 'devextreme/scss/widgets/base/ui';
+@use 'devextreme/scss/widgets/material';

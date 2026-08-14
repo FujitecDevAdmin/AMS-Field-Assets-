@@ -1,0 +1,120 @@
+<main class="signin">
+  <!-- The brand half. Decorative only: everything a screen reader needs is in
+       the form beside it, so the ornament is hidden from it. -->
+  <aside class="signin__brand">
+    <div class="signin__glow signin__glow--one" aria-hidden="true"></div>
+    <div class="signin__glow signin__glow--two" aria-hidden="true"></div>
+
+    <div class="signin__brand-body">
+      <img class="signin__mark" src="fujitec-logo.png" alt="Fujitec" />
+
+      <h1 class="signin__headline">Asset Management System</h1>
+      <p class="signin__blurb">
+        Every asset the company owns — allocated, moved, serviced and verified, with the record that
+        says who had it and when.
+      </p>
+
+      <ul class="signin__points">
+        <li><i class="dx-icon dx-icon-box" aria-hidden="true"></i> One register for every asset</li>
+        <li>
+          <i class="dx-icon dx-icon-map" aria-hidden="true"></i> Field verification that works
+          offline
+        </li>
+        <li><i class="dx-icon dx-icon-refresh" aria-hidden="true"></i> Reconciled against SAP</li>
+      </ul>
+    </div>
+
+    <p class="signin__rev">Revision 3</p>
+  </aside>
+
+  <!-- The form half. -->
+  <section class="signin__panel">
+    <div class="signin__form">
+      <img class="signin__mark signin__mark--compact" src="fujitec-logo.png" alt="Fujitec" />
+
+      @if (stage() === 'credentials') {
+        <h2 class="signin__title">Sign in</h2>
+        <p class="signin__sub">Use your AMS account.</p>
+
+        <label class="signin__label" for="signin-username">Username</label>
+        <dx-text-box
+          inputAttr='{ "id": "signin-username", "autocomplete": "username" }'
+          placeholder="Your username"
+          valueChangeEvent="input"
+          [(value)]="username"
+          [maxLength]="100"
+          [disabled]="busy()"
+          (onEnterKey)="submitCredentials()"
+        ></dx-text-box>
+
+        <label class="signin__label" for="signin-password">Password</label>
+        <dx-text-box
+          mode="password"
+          inputAttr='{ "id": "signin-password", "autocomplete": "current-password" }'
+          placeholder="Your password"
+          valueChangeEvent="input"
+          [(value)]="password"
+          [maxLength]="256"
+          [disabled]="busy()"
+          (onEnterKey)="submitCredentials()"
+        ></dx-text-box>
+
+        @if (error(); as message) {
+          <p class="signin__error" role="alert">
+            <i class="dx-icon dx-icon-warning" aria-hidden="true"></i>{{ message }}
+          </p>
+        }
+
+        <dx-button
+          class="signin__submit"
+          [text]="busy() ? 'Signing in…' : 'Sign in'"
+          type="default"
+          stylingMode="contained"
+          [disabled]="!canSubmitCredentials()"
+          (onClick)="submitCredentials()"
+        ></dx-button>
+      } @else {
+        <h2 class="signin__title">Two-factor code</h2>
+        <p class="signin__sub">
+          Enter the six-digit code from your authenticator app, or one of your recovery codes.
+        </p>
+
+        <label class="signin__label" for="signin-code">Code</label>
+        <dx-text-box
+          class="signin__code"
+          inputAttr='{ "id": "signin-code", "autocomplete": "one-time-code", "inputmode": "numeric" }'
+          placeholder="000000"
+          valueChangeEvent="input"
+          [(value)]="code"
+          [disabled]="busy()"
+          (onEnterKey)="submitCode()"
+        ></dx-text-box>
+
+        @if (error(); as message) {
+          <p class="signin__error" role="alert">
+            <i class="dx-icon dx-icon-warning" aria-hidden="true"></i>{{ message }}
+          </p>
+        }
+
+        <dx-button
+          class="signin__submit"
+          [text]="busy() ? 'Verifying…' : 'Verify'"
+          type="default"
+          stylingMode="contained"
+          [disabled]="!canSubmitCode()"
+          (onClick)="submitCode()"
+        ></dx-button>
+
+        <dx-button
+          class="signin__back"
+          text="Use a different account"
+          stylingMode="text"
+          [disabled]="busy()"
+          (onClick)="backToCredentials()"
+        ></dx-button>
+      }
+
+      <p class="signin__foot">Fujitec India · Asset Management System</p>
+    </div>
+  </section>
+</main>

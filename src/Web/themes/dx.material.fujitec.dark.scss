@@ -1,0 +1,24 @@
+// Fujitec dark theme. See the light bundle for why the @use list is copied
+// verbatim from the stock orange bundle and why $color stays "orange".
+//
+// The accent is the lifted red, not #CA0012 — see themes/_fujitec.scss.
+
+@use '../themes/fujitec' as brand;
+
+@use 'devextreme/scss/widgets/material/colors' with (
+  $color: 'orange',
+  $mode: 'dark',
+  $base-accent: brand.$fujitec-red-dark-surface,
+  $base-font-family: brand.$ams-font-family
+);
+@use 'devextreme/scss/widgets/material/sizes' with ($size: 'default');
+@use 'devextreme/scss/widgets/material/typography';
+@use 'devextreme/scss/widgets/material/icons';
+@use 'devextreme/scss/widgets/material/widget';
+@use 'devextreme/scss/widgets/material/card';
+@use 'devextreme/scss/widgets/material/fieldset';
+@use 'devextreme/scss/widgets/material/common';
+@use 'devextreme/scss/widgets/base/resizable';
+@use 'devextreme/scss/widgets/base/draggable';
+@use 'devextreme/scss/widgets/base/ui';
+@use 'devextreme/scss/widgets/material';

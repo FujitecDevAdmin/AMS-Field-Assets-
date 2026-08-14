@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Integration, against a real SQL Server. The rules being tested are the ones
+    the database enforces — UX_AssetAllocation_OneActivePerAsset above all — and
+    a mocked DbContext would pass while the schema disagreed (docs/01 §7).
+
+    Both schemas are built, because an allocation writes to [Allocations] and
+    its timeline entry to [Assets] in one transaction. Testing that with one
+    schema present would prove something the application does not do.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Allocations\AMS.Modules.Allocations.csproj" />
+    <!-- The timeline implementation, to prove the contract really writes. -->
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Assets\AMS.Modules.Assets.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

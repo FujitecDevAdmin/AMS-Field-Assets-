@@ -1,0 +1,76 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1200px;
+}
+
+.home__title {
+  margin: 0;
+  /* Scales with the viewport between the two bounds — no breakpoint needed. */
+  font-size: clamp(1.125rem, 1rem + 1vw, 1.375rem);
+  font-weight: 600;
+}
+
+.home__sub {
+  margin: 0.25rem 0 0;
+  color: var(--ams-text-muted);
+}
+
+/* auto-fit + minmax is the whole responsive story for the tiles: four across on
+   a desktop, two on a tablet, one on a phone, with no breakpoint to maintain. */
+.home__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  gap: 1rem;
+}
+
+.tile,
+.card {
+  background: var(--ams-surface-raised);
+  border: 1px solid var(--ams-border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* Deliberately not the brand colour: a dashboard where every number is red has
+   no way left to say "this one is wrong". */
+.tile__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tile__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.tile__hint {
+  font-size: 0.6875rem;
+  color: var(--ams-text-muted);
+}
+
+.card__title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.card__body {
+  margin: 0 0 1rem;
+  max-width: 60ch;
+  color: var(--ams-text-muted);
+}
+
+.card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

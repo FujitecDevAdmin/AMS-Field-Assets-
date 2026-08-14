@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Integration, against a real SQL Server, with BOTH schemas built: a receipt
+    writes to [Movements] and moves the asset in [Assets] through a contract.
+    Testing that with one schema present would prove something the application
+    does not do.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Movements\AMS.Modules.Movements.csproj" />
+    <!-- The contract implementations, to prove a receipt really moves the asset. -->
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Assets\AMS.Modules.Assets.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

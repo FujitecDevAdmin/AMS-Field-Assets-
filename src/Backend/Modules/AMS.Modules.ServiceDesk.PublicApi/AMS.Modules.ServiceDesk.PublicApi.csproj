@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ServiceDesk's cross-module contracts, and NOTHING else.
+
+    Rule 2 forbids a module referencing another module; rule 3 says to depend on
+    its PublicApi contract instead. Those two are only compatible if the
+    contract lives somewhere a module may reference - which is here.
+
+    What belongs: the interface another module calls, and the DTOs it passes.
+    What does not: EF Core, DbContext, entities, or any implementation.
+    AMS.ArchitectureTests checks that.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

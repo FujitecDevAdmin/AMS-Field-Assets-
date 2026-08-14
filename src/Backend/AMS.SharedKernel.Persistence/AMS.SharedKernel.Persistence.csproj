@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The EF-facing half of the kernel. Split from AMS.SharedKernel for exactly
+    the reason that project's own comment gives: it must reference NOTHING, and
+    the moment it takes an EF Core dependency every module and every unit test
+    inherits it.
+
+    It cannot live in AMS.Infrastructure either: modules are forbidden from
+    referencing the host or infrastructure (01 §2), and every module's
+    Add*Module needs the unit of work to build its DbContext on the request's
+    shared connection - which is what makes architecture rule 4a work.
+
+    Same split, same reason, as AMS.SharedKernel.Web. See
+    docs/00DESIGNDECISIONS.md.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,68 @@
+<div class="side-nav" [class.side-nav--compact]="compact()">
+  <a class="side-nav__brand" routerLink="/" title="Asset Management System">
+    <img class="side-nav__logo" src="fujitec-logo.png" alt="Fujitec" />
+    @if (!compact()) {
+      <span class="side-nav__product">Asset Management</span>
+    }
+  </a>
+
+  <dx-tree-view
+    #tree
+    class="side-nav__tree"
+    [items]="items()"
+    keyExpr="id"
+    displayExpr="text"
+    itemsExpr="items"
+    selectionMode="single"
+    selectedExpr="selected"
+    expandedExpr="expanded"
+    expandEvent="click"
+    [useNativeScrolling]="true"
+    [focusStateEnabled]="false"
+    [searchEnabled]="false"
+    [searchEditorOptions]="{ placeholder: 'Filter menu…', mode: 'search', stylingMode: 'filled' }"
+    (onItemClick)="onItemClick($event)"
+    (onItemExpanded)="onExpanded($event)"
+    (onItemCollapsed)="onCollapsed($event)"
+  >
+    <div *dxTemplate="let item of 'item'">
+      <span class="nav-row">
+        @if (item.icon) {
+          <i class="dx-icon dx-icon-{{ item.icon }} nav-row__icon"></i>
+        }
+        <span class="nav-row__text">{{ item.text }}</span>
+
+        @if (item.badge) {
+          <!-- In the rail this collapses to a dot: the number will not fit, but
+               "something is waiting here" still has to survive the collapse. -->
+          <span class="nav-row__badge" [attr.aria-label]="item.badge + ' waiting'">
+            {{ item.badge }}
+          </span>
+        }
+
+        @if (item.pinnable) {
+          <button
+            type="button"
+            class="nav-row__pin"
+            [class.nav-row__pin--on]="item.pinned"
+            [attr.aria-label]="(item.pinned ? 'Unpin ' : 'Pin ') + item.text"
+            [title]="item.pinned ? 'Unpin' : 'Pin to top'"
+            (click)="togglePin(item, $event)"
+          >
+            <i
+              class="dx-icon"
+              [class.dx-icon-pin]="!item.pinned"
+              [class.dx-icon-unpin]="item.pinned"
+            ></i>
+          </button>
+        }
+      </span>
+    </div>
+  </dx-tree-view>
+
+  @if (!compact()) {
+    <div class="side-nav__foot">
+      <span class="side-nav__version">Revision 2</span>
+    </div>
+  }
+</div>

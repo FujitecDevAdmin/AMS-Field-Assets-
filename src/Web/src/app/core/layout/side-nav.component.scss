@@ -1,0 +1,394 @@
+@use 'sass:math';
+
+/* Layout constants for the nav. The icon column and the indent are derived from
+   each other rather than typed twice: a child row starts exactly where its
+   parent's label starts, which is what makes the level read without a guide. */
+$rail-width: 60px;
+$row-height: 42px;
+$pad-x: 16px;
+$icon-size: 20px;
+$icon-gap: 12px;
+$indent: $pad-x + $icon-size + $icon-gap; // 48px — the parent's label column
+$row-inset: 8px; // how far the row's pill stops short of the drawer edge
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--ams-surface-raised);
+  border-right: 1px solid var(--ams-border);
+}
+
+.side-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: var(--ams-header-height);
+  padding: 0 $pad-x;
+  border-bottom: 1px solid var(--ams-border);
+  text-decoration: none;
+  flex: 0 0 auto;
+  /* The drawer clips at 248px; without this the product name is cut mid-word
+     rather than wrapped. */
+  overflow: hidden;
+}
+
+.side-nav__logo {
+  width: 88px;
+  flex: 0 0 auto;
+  transition: width 0.2s ease;
+}
+
+.side-nav__product {
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ams-text-muted);
+  max-width: 104px;
+}
+
+.side-nav__tree {
+  flex: 1 1 auto;
+  /* A flex item defaults to `min-height: auto`, which refuses to shrink below
+     its content — so with several groups open the tree grew past the drawer and
+     ran off the bottom of the screen instead of scrolling, taking the footer
+     with it. `overflow-y: auto` cannot bite until this is 0. */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 0.5rem;
+}
+
+.side-nav__foot {
+  flex: 0 0 auto;
+  padding: 0.75rem $pad-x;
+  border-top: 1px solid var(--ams-border);
+}
+
+.side-nav__version {
+  font-size: 0.6875rem;
+  color: var(--ams-text-muted);
+}
+
+.side-nav--compact {
+  .side-nav__brand {
+    padding: 0 0.5rem;
+    justify-content: center;
+  }
+
+  /* The wordmark cannot shrink to a 60px rail — clip to the F and keep the mark. */
+  .side-nav__logo {
+    width: 44px;
+    object-fit: cover;
+    object-position: left;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The row, rendered by our own item template.
+   --------------------------------------------------------------------------- */
+/* Spacing is per element, not a row `gap`. A gap applies between EVERY child,
+   so icon + label + badge + pin charged three gaps — 36px taken out of the
+   label's width on rows that needed it most, which is what was clipping
+   "My Approvals" and "Data Import" to an ellipsis. The icon keeps the full
+   gap because $indent is derived from it; the trailing controls need far
+   less. */
+.nav-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+/* DevExtreme's .dx-icon ships `line-height: 24px`. Resizing the box without
+   resizing the line draws the glyph on a 24px line inside a smaller element,
+   which pushes it down and clips it — so line-height is set with every size
+   here, not just font-size. */
+.nav-row__icon {
+  flex: 0 0 auto;
+  width: $icon-size;
+  height: $icon-size;
+  font-size: $icon-size;
+  line-height: $icon-size;
+  margin: 0 $icon-gap 0 0;
+  color: var(--ams-text-muted);
+}
+
+.nav-row__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Deliberately small. The count is a hint that something is waiting, not a
+   figure anybody reads off the menu — at the previous 20px it was the loudest
+   thing in the sidebar and competed with the labels it belongs to. */
+.nav-row__badge {
+  flex: 0 0 auto;
+  min-width: 1rem;
+  margin-left: 0.5rem;
+  padding: 0 0.3125rem;
+  border-radius: 0.5rem;
+  background: var(--ams-brand);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+}
+
+/* The pin is revealed on hover so a menu at rest is a list of destinations, not
+   a column of buttons. A row that is already pinned keeps it visible — that is
+   the only way to unpin without hunting. */
+.nav-row__pin {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 0.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ams-text-muted);
+  cursor: pointer;
+  opacity: 0;
+
+  &:hover {
+    background: rgb(0 0 0 / 6%);
+    color: var(--ams-brand);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--ams-brand);
+    outline-offset: -2px;
+  }
+
+  .dx-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    margin: 0;
+  }
+}
+
+.nav-row__pin--on {
+  opacity: 1;
+  color: var(--ams-brand);
+}
+
+/* ---------------------------------------------------------------------------
+   The tree's own DOM.
+   DevExtreme renders each row as
+       .dx-treeview-item > [toggle] + .dx-treeview-item-content
+   with the expander first and the level's indent applied as padding on the
+   NODE. Both are undone here:
+
+   - The expander moves to the end of the row. Left-hand chevrons put a 24px
+     gap between the edge and the icon of every expandable row, and none in
+     front of the leaves, so no two rows in the menu started at the same x.
+   - The indent moves from the node to the item, so the hover and selected
+     backgrounds span the full drawer width instead of starting part-way in.
+   --------------------------------------------------------------------------- */
+:host ::ng-deep .side-nav__tree {
+  .dx-treeview-node {
+    padding-left: 0;
+  }
+
+  /* Rows are inset pills rather than full-bleed bars: the hover and selected
+     surfaces stop short of the drawer edge, which reads as a list of chips
+     instead of a stack of table rows. The side margin is subtracted from the
+     padding so the icon column stays exactly where $indent puts it. */
+  .dx-treeview-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: $row-height;
+    margin: 1px $row-inset;
+    padding: 0 8px 0 ($pad-x - $row-inset);
+    border-radius: 10px;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
+  }
+
+  .dx-treeview-item:hover {
+    background: rgb(0 0 0 / 4%);
+  }
+
+  .dx-treeview-item:hover .nav-row__pin {
+    opacity: 1;
+  }
+
+  .dx-treeview-item-content {
+    order: 1;
+    flex: 1 1 auto;
+    display: block;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .dx-treeview-toggle-item-visibility {
+    order: 2;
+    flex: 0 0 auto;
+    position: static;
+    margin: 0 0 0 8px;
+    color: var(--ams-text-muted);
+  }
+
+  /* A spacer that exists only to reserve the expander's width on leaf rows.
+     With the expander on the right it reserves it in the wrong place. */
+  .dx-treeview-expander-icon-stub {
+    display: none;
+  }
+
+  /* Level 2+. The child row starts at the parent's label column, and the guide
+     rule runs down the parent's icon column so the group a row belongs to is
+     readable without counting pixels.
+
+     The doubled container is deliberate: the tree's ROOT <ul> also carries
+     .dx-treeview-node-container, so a single one matches every level and
+     indents the top level along with the children. A container inside a
+     container is level 2. */
+  .dx-treeview-node-container .dx-treeview-node-container {
+    .dx-treeview-item {
+      padding-left: $indent - $row-inset;
+      font-weight: 400;
+    }
+
+    .dx-treeview-item::before {
+      content: '';
+      position: absolute;
+      left: $pad-x + math.div($icon-size, 2) - $row-inset;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--ams-border);
+    }
+
+    .nav-row__icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+      line-height: 18px;
+    }
+  }
+
+  /* The tree's search box. It is chrome, not a row, so it gets a rule under it
+     rather than sitting in the list.
+
+     No padding of its own: a wrapper padding here is added to the editor's,
+     which made this box taller than the header's search and started its glyph
+     12px further in — two search boxes in one screen that did not match. The
+     editor's height and inset come from styles/_devextreme.scss for both. */
+  /* Only the surround. The pill itself — radius, fill, no underline — is what
+     every search box in the app gets from styles/_devextreme.scss, so this one
+     and the header's cannot drift apart. */
+  .dx-treeview-search {
+    margin: 0.5rem $row-inset;
+    padding: 0;
+    border-bottom: 0;
+  }
+}
+
+/* The selected module is the one thing in the nav that carries the brand
+   colour — everything else stays neutral so it reads as the accent, not as
+   decoration. The whole pill takes the tint and the label takes the colour,
+   instead of a hard bar down the drawer edge. */
+:host ::ng-deep .dx-treeview-node[aria-selected='true'] > .dx-treeview-item {
+  background: var(--ams-brand-tint);
+
+  &:hover {
+    background: var(--ams-brand-tint);
+  }
+
+  .nav-row__icon,
+  .nav-row__text {
+    color: var(--ams-brand);
+  }
+
+  .nav-row__text {
+    font-weight: 600;
+  }
+}
+
+/* Collapsed rail: icons only.
+   The tree keeps rendering its labels at 60px, which wraps every caption to one
+   character per line. Hiding the label outright — rather than shrinking the
+   font — keeps the row a clean centred square. Child groups and the expander go
+   with it: there is no room to reveal them, and a rail that expands sideways
+   over the content is a menu nobody aimed for. */
+:host ::ng-deep .side-nav--compact .side-nav__tree {
+  /* Doubled again, for the same reason as the indent above: a single
+     .dx-treeview-node-container matches the root list and hides the whole
+     menu, leaving a rail of blank space. */
+  .dx-treeview-node-container .dx-treeview-node-container {
+    display: none;
+  }
+
+  .dx-treeview-toggle-item-visibility {
+    display: none;
+  }
+
+  .dx-treeview-item {
+    padding: 0;
+  }
+
+  .dx-treeview-item-content {
+    flex: 0 0 auto;
+    width: $rail-width;
+  }
+
+  .nav-row {
+    position: relative;
+    justify-content: center;
+  }
+
+  /* The icon's trailing margin is there to set the label column; in the rail
+     there is no label, and it would push the icon off centre. */
+  .nav-row__icon {
+    margin-right: 0;
+  }
+
+  .nav-row__text,
+  .nav-row__pin {
+    display: none;
+  }
+
+  /* The count cannot fit in the rail, but "something is waiting in here" must
+     survive the collapse — so the badge becomes a dot on the icon's top-right
+     corner. Anchored with `left`, computed from where the icon actually sits
+     (centred in the rail), rather than with `right` off the row's edge, which
+     left it floating in the gap beside the icon.
+
+     The ring is the drawer's own surface, so the dot reads as sitting ON the
+     icon instead of colliding with it. */
+  .nav-row__badge {
+    $dot: 8px;
+
+    position: absolute;
+    left: math.div($rail-width + $icon-size, 2) - math.div($dot, 2); // icon's right edge
+    top: math.div($row-height - $icon-size, 2) - math.div($dot, 2); // icon's top edge
+    min-width: $dot;
+    width: $dot;
+    height: $dot;
+    padding: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--ams-surface-raised);
+    font-size: 0;
+    line-height: 0;
+  }
+}

@@ -1,0 +1,36 @@
+using AMS.SharedKernel.Messaging;
+using AMS.SharedKernel.Web.Http;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+
+namespace AMS.Modules.Movements.Features.GetGrnQueue;
+
+/// <summary>
+/// Route, capability, typed results. Zero logic - if you feel an <c>if</c>
+/// coming on, it belongs in the handler (docs/02 §6).
+/// </summary>
+public static class GetGrnQueueEndpoint
+{
+    public static void Map(RouteGroupBuilder group)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+
+        group.MapGet("/grn-queue", async (
+                [AsParameters] GetGrnQueueRequest request,
+                IDispatcher dispatcher,
+                CancellationToken ct) =>
+            {
+                var message = GetGrnQueueMapper.ToQuery(request);
+                var result = await dispatcher.SendAsync(message, ct);
+
+                return result.ToHttpResult();
+            })
+            .RequireCapability(Capabilities.Movements.View)
+            .WithName("GetGrnQueue")
+            .Produces<GetGrnQueueResponse>(StatusCodes.Status200OK)
+            .ProducesValidationProblem()
+
+            ;
+    }
+}

@@ -1,0 +1,80 @@
+<dx-toolbar class="app-header">
+  <dxi-item location="before">
+    <div *dxTemplate>
+      <dx-button
+        icon="menu"
+        stylingMode="text"
+        hint="Toggle navigation"
+        aria-label="Toggle navigation"
+        (onClick)="menuToggled.emit()"
+      >
+      </dx-button>
+    </div>
+  </dxi-item>
+
+  <dxi-item location="before" cssClass="app-header__search-slot">
+    <div *dxTemplate>
+      <dx-text-box
+        #searchBox
+        class="app-header__search"
+        mode="search"
+        placeholder="Search assets, tickets, people…"
+        valueChangeEvent="input"
+        [(value)]="searchText"
+        [showClearButton]="true"
+        (onEnterKey)="onSearchEnter()"
+        aria-label="Global search"
+      >
+        <dxi-button name="clear"></dxi-button>
+        <dxi-button
+          name="shortcut"
+          location="after"
+          [options]="{
+            text: 'Ctrl K',
+            stylingMode: 'text',
+            elementAttr: { class: 'app-header__kbd' },
+            activeStateEnabled: false,
+            focusStateEnabled: false,
+            hoverStateEnabled: false,
+          }"
+        >
+        </dxi-button>
+      </dx-text-box>
+    </div>
+  </dxi-item>
+
+  <dxi-item location="after">
+    <div *dxTemplate>
+      <span class="app-header__bell">
+        <dx-button
+          icon="bell"
+          stylingMode="text"
+          hint="Notifications"
+          aria-label="Notifications"
+          (onClick)="notificationsToggled.emit()"
+        >
+        </dx-button>
+        @if (unreadCount() > 0) {
+          <span class="app-header__badge" aria-hidden="true">{{ unreadCount() }}</span>
+        }
+      </span>
+    </div>
+  </dxi-item>
+
+  <dxi-item location="after">
+    <div *dxTemplate>
+      <dx-drop-down-button
+        class="app-header__user"
+        icon="user"
+        [text]="userName()"
+        stylingMode="text"
+        [items]="userMenu"
+        displayExpr="text"
+        keyExpr="id"
+        [dropDownOptions]="{ width: 220 }"
+        (onItemClick)="onUserMenuClick($event)"
+      >
+      </dx-drop-down-button>
+    </div>
+  </dxi-item>
+</dx-toolbar>

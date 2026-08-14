@@ -1,0 +1,20 @@
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">AUDIT MANAGEMENT</p>
+    <h1>Auditors</h1>
+    <p>Manage the auditors who perform field asset verification.</p>
+  </div>
+  <dx-button text="Add Auditor" icon="plus" type="default" (onClick)="showAddAuditor()" />
+</section>
+
+@if (isAddPanelVisible()) {
+  <section class="add-panel">
+    <h2>Add Auditor</h2>
+    <p>The auditor-entry form will appear here when the auditor API is connected.</p>
+  </section>
+}
+
+<section class="content-card">
+  <h2>Auditor list</h2>
+  <p>No auditor records are available yet.</p>
+</section>

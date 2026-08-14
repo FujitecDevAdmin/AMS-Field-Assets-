@@ -1,0 +1,45 @@
+<aside class="panel" aria-label="Notifications">
+  <header class="panel__head">
+    <h2 class="panel__title">Notifications</h2>
+    <div class="panel__actions">
+      <dx-button
+        icon="check"
+        stylingMode="text"
+        hint="Mark all as read"
+        aria-label="Mark all as read"
+        (onClick)="allRead.emit()"
+      >
+      </dx-button>
+      <dx-button
+        icon="close"
+        stylingMode="text"
+        hint="Close"
+        aria-label="Close notifications"
+        (onClick)="closed.emit()"
+      >
+      </dx-button>
+    </div>
+  </header>
+
+  <dx-list
+    class="panel__list"
+    [dataSource]="notifications()"
+    keyExpr="id"
+    [activeStateEnabled]="false"
+    [focusStateEnabled]="false"
+    noDataText="Nothing to read."
+  >
+    <div *dxTemplate="let item of 'item'">
+      <div class="note" [class.note--unread]="!item.read">
+        <i
+          class="dx-icon dx-icon-{{ iconFor(item.kind) }} note__icon note__icon--{{ item.kind }}"
+        ></i>
+        <div class="note__body">
+          <span class="note__title">{{ item.title }}</span>
+          <span class="note__detail">{{ item.detail }}</span>
+          <span class="note__when">{{ item.when }}</span>
+        </div>
+      </div>
+    </div>
+  </dx-list>
+</aside>

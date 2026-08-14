@@ -1,0 +1,24 @@
+// Fujitec brand palette — the single place either theme reads its colours from.
+//
+// #CA0012 is sampled from the supplied Fujitec wordmark, not from a third-party
+// brand-colour site: none of them publish a value for Fujitec, and the asset is
+// the artwork the company actually ships. The same value is in
+// src/styles.scss as --ams-brand; they must not drift.
+$fujitec-red: #ca0012;
+
+// Material dark themes lighten the accent rather than reuse the light one — the
+// stock blue theme goes #1564C0 -> #90CAF9 for exactly this reason. #CA0012 on
+// the dark surface (#292929) lands at 2.1:1, which fails as text and as a border.
+//
+// Red is awkward here: lightening it far enough for 4.5:1 turns it pink, and a
+// pink accent is not the Fujitec mark. This value is hue 356deg at 58% lightness
+// and measures 3.7:1 — a deliberate choice to stay recognisably red.
+//
+// What that costs: it clears the 3:1 bar for buttons, borders, focus rings and
+// large text, but not the 4.5:1 bar for small accent-coloured text. If a screen
+// ever needs small text in the accent colour, that screen is the thing to change.
+$fujitec-red-dark-surface: #ef3945;
+
+// Set in the theme rather than patched over it afterwards, so DevExtreme's own
+// components render in Barlow from first paint with no Roboto flash.
+$ams-font-family: barlow, 'Segoe UI', system-ui, sans-serif;

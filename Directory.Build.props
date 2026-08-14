@@ -1,0 +1,92 @@
+<Project>
+
+  <!--
+    ==========================================================================
+    AMS — Directory.Build.props
+    ==========================================================================
+    Applies to EVERY project under src/ and tests/. Settings live here, not in
+    individual .csproj files, so that adding the seventeenth module cannot
+    accidentally opt out of the standards the other sixteen keep.
+
+    docs/02BACKENDCODINGSTANDARDS.md §1 is the source of these values. If you
+    are about to relax one of them for a single project, that is the signal to
+    fix the code instead.
+    ==========================================================================
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+
+    <!-- InvariantGlobalization is deliberately NOT set. Microsoft.Data.SqlClient
+         throws "Globalization Invariant Mode is not supported" the moment it
+         opens a connection, so a container image built that way fails on its
+         first query rather than at startup. Everything here talks to SQL Server. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 02 §1. A warning nobody has to fix is a warning everybody stops reading. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningLevel>9999</WarningLevel>
+
+    <!-- Runs the IDExxxx style analyzers during BUILD, not just in the IDE.
+         Without this, .editorconfig only binds whoever happens to use Visual
+         Studio, and the other tools in this repo ignore it entirely. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- IDE0005 (unused usings) silently does nothing at build time unless the
+         documentation file is generated. This line is why that rule works. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- CS1591: we generate the doc file for the analyzer above, not because
+         every public member needs an XML comment. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <AnalysisLevel>latest-Recommended</AnalysisLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    <ReportAnalyzer>false</ReportAnalyzer>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Deterministic, reproducible output. Two developers building the same
+         commit should produce the same bytes. -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <EnableSourceLink Condition="'$(CI)' == 'true'">true</EnableSourceLink>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Central Package Management: versions live in Directory.Packages.props.
+         Five developers adding packages independently is how a solution ends
+         up with three versions of the same library. -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>moderate</NuGetAuditLevel>
+  </PropertyGroup>
+
+  <!-- Analyzers every project gets, without anybody remembering to add them. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Test projects: not shipped, allowed to be pragmatic about naming.
+       GenerateDocumentationFile stays TRUE here as well: turning it off
+       disables IDE0005 for the whole compilation and Roslyn then fails the
+       build telling you so. Unused usings are noise in a test too. -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('Tests'))">
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1707;CA2007</NoWarn>
+  </PropertyGroup>
+
+</Project>

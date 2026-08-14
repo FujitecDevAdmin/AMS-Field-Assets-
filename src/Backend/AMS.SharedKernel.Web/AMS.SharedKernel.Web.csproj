@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The web-facing half of the kernel. Split from AMS.SharedKernel because that
+    project must reference NOTHING - the moment it takes an ASP.NET dependency,
+    every module and every unit test inherits it.
+
+    Endpoint helpers cannot live in AMS.Infrastructure either: modules are
+    forbidden from referencing the host or infrastructure (01 §2), and every
+    module's *Endpoint.cs needs these. So they live here, in a project modules
+    are explicitly permitted to reference. See docs/00DESIGNDECISIONS.md.
+  -->
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The validation filter. Validators target the Request, so the check has
+         to happen where the Request exists - the HTTP edge. -->
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>

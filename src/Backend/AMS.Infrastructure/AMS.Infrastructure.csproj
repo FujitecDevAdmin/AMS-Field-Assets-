@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+    <ProjectReference Include="..\AMS.SharedKernel.Web\AMS.SharedKernel.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <!-- Server-side xlsx/docx/pdf. Wrapped behind IWorkbookWriter so the
+         vendor type never reaches a module - see docs/02 §11. -->
+    <PackageReference Include="DevExpress.Document.Processor" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+  </ItemGroup>
+
+</Project>

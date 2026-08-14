@@ -1,0 +1,291 @@
+<section class="asset-hero">
+  <div class="asset-hero-copy">
+    <p class="eyebrow">INVENTORY MANAGEMENT</p>
+    <h1>Field Assets</h1>
+    <p>Manage, track, import and review company assets.</p>
+  </div>
+</section>
+
+@if (store.selectedFile(); as file) {
+  <div class="import-notice">
+    <strong>{{ file.name }}</strong> selected ({{ (file.size / 1024).toFixed(1) }} KB).
+    <dx-button
+      text="Upload and import"
+      icon="upload"
+      type="default"
+      [disabled]="store.importing()"
+      (onClick)="importSelected()"
+    />
+  </div>
+}
+
+@if (store.importResult(); as result) {
+  <div class="import-result">
+    <strong>{{ result.importedRows }} assets imported.</strong>
+    {{ result.reactivatedRows }} previously deleted assets restored;
+    {{ result.skippedRows }} skipped; {{ result.createdAssetTypes }} asset types created.
+    @if (skippedReportResult; as report) {
+      <dx-button
+        class="skipped-report-button"
+        text="Download skipped rows"
+        icon="download"
+        type="default"
+        stylingMode="outlined"
+        [disabled]="isGeneratingSkippedReport"
+        (onClick)="downloadSkippedRows(report)"
+      />
+    }
+    @if (result.errors.length > 0) {
+      <details>
+        <summary>Show import errors</summary>
+        <ul>
+          @for (error of result.errors; track error.rowNumber) {
+            <li>Row {{ error.rowNumber }}: {{ error.message }}</li>
+          }
+        </ul>
+      </details>
+    }
+    @if (skippedReportError) {
+      <div class="skipped-report-error">{{ skippedReportError }}</div>
+    }
+  </div>
+}
+
+<section class="workspace">
+  <main class="register-panel">
+    <div class="register-toolbar">
+      <div class="asset-count">
+        <div><strong>{{ store.totalCount() }}</strong> <span>total assets</span></div>
+        <span>{{ store.pageLabel() }}</span>
+      </div>
+      <div class="table-controls">
+        <dx-text-box
+          width="330"
+          mode="search"
+          placeholder="Search asset number, name, serial, make or model"
+          [value]="store.search()"
+          valueChangeEvent="keyup"
+          (onValueChanged)="onSearch($event.value ?? '')"
+        />
+        <span class="page-size-label">Records per page</span>
+        <dx-select-box
+          width="88"
+          [items]="store.pageSizes"
+          [value]="store.pageSize()"
+          (onValueChanged)="onPageSizeChanged($event.value ?? 10)"
+        />
+        <dx-button text="Previous" icon="chevronleft" [disabled]="!store.canGoBack()" (onClick)="store.previousPage()" />
+        <span class="toolbar-page-label">{{ store.pageLabel() }}</span>
+        <dx-button text="Next" icon="chevronright" [disabled]="!store.canGoForward()" (onClick)="store.nextPage()" />
+      </div>
+    </div>
+
+    @if (store.error(); as error) {
+      <div class="error-message">{{ error }}</div>
+    }
+
+    <dx-data-grid
+      [dataSource]="store.rows()"
+      keyExpr="id"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [columnAutoWidth]="false"
+      [columnWidth]="170"
+      [allowColumnResizing]="true"
+      columnResizingMode="widget"
+      [hoverStateEnabled]="true"
+      (onExporting)="onExporting($event)"
+    >
+      <dxo-scrolling mode="standard" [useNative]="true" showScrollbar="always" />
+      <dxo-paging [enabled]="false" />
+      <dxo-column-chooser [enabled]="true" mode="select" />
+      <dxo-export [enabled]="true" [formats]="['xlsx']" />
+      <dxo-toolbar>
+        <dxi-item location="before" template="tableToolsLabel" />
+        <dxi-item name="columnChooserButton" location="after" />
+        <dxi-item name="exportButton" location="after" />
+        <dxi-item location="after" template="importExcelButton" />
+        <dxi-item location="after" template="downloadTemplateButton" />
+      </dxo-toolbar>
+      <div *dxTemplate="let _ of 'tableToolsLabel'">
+        <div class="table-tools-label">
+          <strong>Table tools</strong>
+          <span>Choose columns, export, import or download the template</span>
+        </div>
+      </div>
+      <div *dxTemplate="let _ of 'importExcelButton'">
+        <label class="grid-import-button" title="Import Excel">
+          <i class="dx-icon dx-icon-upload"></i>
+          <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onFileSelected($event)" />
+        </label>
+      </div>
+      <div *dxTemplate="let _ of 'downloadTemplateButton'">
+        <a
+          class="grid-import-button"
+          href="/templates/AMS_Asset_Import_Template.xlsx"
+          download="AMS_Asset_Import_Template.xlsx"
+          title="Download Template"
+          aria-label="Download Template"
+        >
+          <i class="dx-icon dx-icon-download"></i>
+        </a>
+      </div>
+      <dxi-column dataField="assetNumber" caption="Asset number" [fixed]="true" />
+      <dxi-column dataField="assetName" caption="Asset name" [fixed]="true" />
+      <dxi-column dataField="typeName" caption="Type" />
+      <dxi-column dataField="className" caption="Class" />
+      <dxi-column dataField="statusName" caption="Status" cellTemplate="statusCell" />
+      <dxi-column dataField="serialNumber" caption="Serial number" />
+      <dxi-column dataField="costCenter" caption="Cost centre" />
+      <dxi-column dataField="quantity" caption="Quantity" dataType="number" />
+      <dxi-column dataField="currentLocationId" caption="Location ID" dataType="number" />
+      <dxi-column dataField="acquisitionDate" caption="Acquired" dataType="date" />
+      @for (column of importedChooserColumns; track column.dataField) {
+        <dxi-column
+          [dataField]="column.dataField"
+          [caption]="column.caption"
+          [visible]="false"
+          [calculateCellValue]="column.calculateCellValue"
+        />
+      }
+      <dxi-column caption="Actions" cellTemplate="viewAction" [fixed]="true" fixedPosition="right" [allowExporting]="false" [allowSorting]="false" />
+      <div *dxTemplate="let cell of 'viewAction'">
+        <div class="row-actions">
+          <dx-button text="View" type="default" stylingMode="outlined" (onClick)="viewAsset(cell.data)" />
+          <dx-button text="Edit" type="default" stylingMode="outlined" (onClick)="editAsset(cell.data)" />
+        </div>
+      </div>
+      <div *dxTemplate="let cell of 'statusCell'">
+        <span class="asset-status">{{ cell.value || '—' }}</span>
+      </div>
+    </dx-data-grid>
+
+    <div class="pager">
+      <span>Rows per page</span>
+      <dx-select-box
+        width="90"
+        [items]="store.pageSizes"
+        [value]="store.pageSize()"
+        (onValueChanged)="onPageSizeChanged($event.value ?? 10)"
+      />
+      <dx-button text="Previous" icon="chevronleft" [disabled]="!store.canGoBack()" (onClick)="store.previousPage()" />
+      <span>{{ store.pageLabel() }}</span>
+      <dx-button text="Next" icon="chevronright" [disabled]="!store.canGoForward()" (onClick)="store.nextPage()" />
+    </div>
+    <dx-load-panel [visible]="store.loading()" [showPane]="true" [shading]="false" />
+  </main>
+</section>
+
+<dx-popup
+  title="Asset details"
+  [visible]="isDetailVisible"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  [hideOnOutsideClick]="true"
+  [width]="'92vw'"
+  [height]="'88vh'"
+  (onHiding)="isDetailVisible = false"
+>
+  <div class="detail-popup-content">
+    <header class="detail-heading">
+      <div class="detail-identity">
+        <span class="detail-kicker">Asset number</span>
+        <strong>{{ selectedAsset?.assetNumber }}</strong>
+        <h3>{{ selectedAsset?.assetName }}</h3>
+      </div>
+      <div class="detail-summary">
+        <span>{{ selectedAsset?.typeName }}</span>
+        <span>{{ selectedAsset?.statusName }}</span>
+        <span>{{ importedFields.length }} fields</span>
+      </div>
+    </header>
+    <div class="detail-categories">
+      @for (category of detailCategories; track category.title) {
+        <section class="detail-category-card">
+          <h4>{{ category.title }}</h4>
+          @for (group of category.groups; track group.title) {
+            <div class="detail-group">
+              <h5>{{ group.title }}</h5>
+              <dl class="detail-list">
+                @for (field of group.fields; track field.name) {
+                  <div class="detail-row" [class.detail-row-empty]="field.isEmpty">
+                    <dt>{{ field.name }}:</dt>
+                    <dd>{{ field.value }}</dd>
+                  </div>
+                }
+              </dl>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  </div>
+</dx-popup>
+
+<dx-popup
+  title="Edit asset details"
+  [wrapperAttr]="{ class: 'asset-edit-popup' }"
+  [visible]="isEditVisible"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  [hideOnOutsideClick]="false"
+  [width]="'90vw'"
+  [height]="'88vh'"
+  (onHiding)="isEditVisible = false"
+>
+  <div class="edit-popup-content">
+    <div class="edit-heading">
+      <div class="edit-identity">
+        <span class="edit-eyebrow">ASSET MASTER RECORD</span>
+        <strong>{{ selectedAsset?.assetNumber }}</strong>
+        <h3>{{ selectedAsset?.assetName }}</h3>
+      </div>
+      <div class="edit-meta">
+        <span>{{ selectedAsset?.typeName }}</span>
+        <span>{{ selectedAsset?.statusName }}</span>
+        <span>{{ editableFields.length }} fields</span>
+      </div>
+    </div>
+    <div class="edit-protection-note">
+      <span class="edit-lock">&#128274;</span>
+      <div>
+        <strong>Protected identification fields</strong>
+        <p>Asset Number, Asset Name, ERP Number and Host Number are controlled identifiers and cannot be changed.</p>
+      </div>
+    </div>
+    <div class="edit-category-grid">
+      @for (column of editCategoryColumns; track $index) {
+        <div class="edit-category-column">
+          @for (category of column; track category.title) {
+            <section class="edit-category-card">
+              <header>{{ category.title }}</header>
+              @for (group of category.groups; track group.title) {
+                <div class="edit-category-group">
+                  <h4>{{ group.title }}</h4>
+                  <div class="edit-field-grid">
+                    @for (field of group.fields; track field.name) {
+                      <div class="edit-field" [class.edit-field-readonly]="field.isReadOnly">
+                        <span>{{ field.name }}</span>
+                        <dx-text-box
+                          [value]="field.value"
+                          [disabled]="field.isReadOnly"
+                          valueChangeEvent="change keyup"
+                          (onValueChanged)="updateEditableField(field.name, $event.value ?? '')"
+                        />
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </section>
+          }
+        </div>
+      }
+    </div>
+    <div class="edit-footer">
+      <span>Review the modified information before saving.</span>
+      <dx-button text="Cancel" stylingMode="outlined" (onClick)="isEditVisible = false" />
+      <dx-button text="Save changes" icon="save" type="default" [disabled]="store.savingDetails()" (onClick)="saveEditedAsset()" />
+    </div>
+  </div>
+</dx-popup>

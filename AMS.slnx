@@ -1,0 +1,50 @@
+<Solution>
+  <Folder Name="/src/Backend/">
+    <Project Path="src/Backend/AMS.Api/AMS.Api.csproj" />
+    <Project Path="src/Backend/AMS.Infrastructure/AMS.Infrastructure.csproj" />
+    <Project Path="src/Backend/AMS.Reporting/AMS.Reporting.csproj" />
+    <Project Path="src/Backend/AMS.SharedKernel.Web/AMS.SharedKernel.Web.csproj" />
+    <Project Path="src/Backend/AMS.SharedKernel.Persistence/AMS.SharedKernel.Persistence.csproj" />
+    <Project Path="src/Backend/AMS.SharedKernel/AMS.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Backend/Modules/">
+    <Project Path="src/Backend/Modules/AMS.Modules.Allocations/AMS.Modules.Allocations.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Assets/AMS.Modules.Assets.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Assets.PublicApi/AMS.Modules.Assets.PublicApi.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Identity.PublicApi/AMS.Modules.Identity.PublicApi.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Notifications.PublicApi/AMS.Modules.Notifications.PublicApi.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.ServiceDesk.PublicApi/AMS.Modules.ServiceDesk.PublicApi.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Organization.PublicApi/AMS.Modules.Organization.PublicApi.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.ServiceLevel.PublicApi/AMS.Modules.ServiceLevel.PublicApi.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Audit/AMS.Modules.Audit.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Contracts/AMS.Modules.Contracts.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.DataImport/AMS.Modules.DataImport.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Discovery/AMS.Modules.Discovery.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Identity/AMS.Modules.Identity.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Movements/AMS.Modules.Movements.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Notifications/AMS.Modules.Notifications.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Organization/AMS.Modules.Organization.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.SapSync/AMS.Modules.SapSync.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.ServiceDesk/AMS.Modules.ServiceDesk.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.ServiceLevel/AMS.Modules.ServiceLevel.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Transfers/AMS.Modules.Transfers.csproj" />
+    <Project Path="src/Backend/Modules/AMS.Modules.Verification/AMS.Modules.Verification.csproj" />
+  </Folder>
+  <Folder Name="/src/Backend/tests/">
+    <Project Path="src/Backend/tests/AMS.ArchitectureTests/AMS.ArchitectureTests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Api.Tests/AMS.Api.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Allocations.Tests/AMS.Modules.Allocations.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Assets.Tests/AMS.Modules.Assets.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Identity.Tests/AMS.Modules.Identity.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Movements.Tests/AMS.Modules.Movements.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Organization.Tests/AMS.Modules.Organization.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.ServiceDesk.Tests/AMS.Modules.ServiceDesk.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.ServiceLevel.Tests/AMS.Modules.ServiceLevel.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Notifications.Tests/AMS.Modules.Notifications.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Contracts.Tests/AMS.Modules.Contracts.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Verification.Tests/AMS.Modules.Verification.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Discovery.Tests/AMS.Modules.Discovery.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.Modules.Transfers.Tests/AMS.Modules.Transfers.Tests.csproj" />
+    <Project Path="src/Backend/tests/AMS.PersistenceGates.Tests/AMS.PersistenceGates.Tests.csproj" />
+  </Folder>
+</Solution>

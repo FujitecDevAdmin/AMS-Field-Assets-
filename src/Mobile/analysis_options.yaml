@@ -1,0 +1,53 @@
+# docs/05FLUTTERMOBILEAUDIT.md §2.
+#
+# The device is the system of record until it syncs, and it may hold that role
+# for days. An implicit cast that goes wrong on a phone in a plant room is not
+# a stack trace anybody will ever read, so the analyzer is set to refuse the
+# things that fail silently.
+#
+# CI runs `flutter analyze --fatal-infos --fatal-warnings` — that, not this
+# file, is what makes a lint stop a build. The analyzer has no "all rules are
+# errors" switch; the rules elevated below are the ones whose violation is a
+# correctness bug rather than a style opinion.
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+    strict-inference: true
+
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.drift.dart"
+
+  errors:
+    # A dynamic call is an unchecked call. §2 has no room for one.
+    avoid_dynamic_calls: error
+    # An ignored Future is an upload that never happened.
+    unawaited_futures: error
+    discarded_futures: error
+    # §2: expected failures are values. A swallowed exception is neither.
+    empty_catches: error
+    # Generated drift/riverpod code is excluded above; anything left is ours.
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - avoid_slow_async_io
+    - cancel_subscriptions
+    - close_sinks
+    - discarded_futures
+    - prefer_final_locals
+    - prefer_single_quotes
+    - require_trailing_commas
+    - unawaited_futures
+    - unnecessary_await_in_return
+    # Time is UTC everywhere (§2). DateTime.now() is device-local by default;
+    # the capture clock is DateTime.now().toUtc() and nothing else.
+    - prefer_const_constructors
+    - use_build_context_synchronously

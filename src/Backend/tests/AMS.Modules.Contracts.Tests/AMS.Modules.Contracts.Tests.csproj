@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Integration, against a real SQL Server, plus the reminder worker.
+
+    The worker's tests move a clock rather than waiting a day, and the licence
+    key is protected over a real ephemeral key ring - a pass-through fake would
+    prove nothing about a key written by one slice and read by another.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Contracts\AMS.Modules.Contracts.csproj" />
+    <!--
+      Referenced for the INTERFACES only. The tests stub them: who a vendor is
+      and whether a message was sent belong to two other modules, and Contracts
+      should be testable without their databases.
+    -->
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Organization.PublicApi\AMS.Modules.Organization.PublicApi.csproj" />
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Notifications.PublicApi\AMS.Modules.Notifications.PublicApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

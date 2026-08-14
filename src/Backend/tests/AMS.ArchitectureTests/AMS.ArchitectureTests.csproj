@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+
+  <!-- Every project the rules assert against. This list growing is the
+       intended way to bring a new module under the architecture rules. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\AMS.Infrastructure\AMS.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\AMS.Reporting\AMS.Reporting.csproj" />
+    <ProjectReference Include="..\..\AMS.Api\AMS.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\**\*.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

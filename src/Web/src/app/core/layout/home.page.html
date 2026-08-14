@@ -1,0 +1,37 @@
+<section class="home">
+  <header class="home__head">
+    <h1 class="home__title">Asset Management System</h1>
+    <p class="home__sub">
+      Shell only. No module screens are wired up yet — the navigation lists what is coming.
+    </p>
+  </header>
+
+  <div class="home__tiles">
+    @for (tile of tiles; track tile.label) {
+      <article class="tile">
+        <span class="tile__value">{{ tile.value }}</span>
+        <span class="tile__label">{{ tile.label }}</span>
+        <span class="tile__hint">{{ tile.hint }}</span>
+      </article>
+    }
+  </div>
+
+  <article class="card">
+    <h2 class="card__title">Toaster</h2>
+    <p class="card__body">
+      One service raises every message, so a conflict looks the same on every screen. Errors stay up
+      longer than confirmations and close on click.
+    </p>
+    <div class="card__actions">
+      <dx-button text="Success" stylingMode="outlined" (onClick)="showSuccess()"></dx-button>
+      <dx-button text="Info" stylingMode="outlined" (onClick)="showInfo()"></dx-button>
+      <dx-button text="Warning" stylingMode="outlined" (onClick)="showWarning()"></dx-button>
+      <dx-button
+        text="Conflict (409)"
+        type="danger"
+        stylingMode="contained"
+        (onClick)="showError()"
+      ></dx-button>
+    </div>
+  </article>
+</section>

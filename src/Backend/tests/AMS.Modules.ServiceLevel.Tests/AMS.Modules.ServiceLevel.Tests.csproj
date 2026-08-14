@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Two kinds of test in one project, on purpose.
+
+    The calendar ARITHMETIC is pure: state a working week, ask what four
+    working hours from Friday afternoon means, check the answer. Those tests
+    touch nothing. They are the ones that matter most, because an SLA report
+    nobody trusts is worse than no SLA report.
+
+    The SLICES are integration, against a real SQL Server, like every other
+    module's - the rules under test there are the ones the schema enforces.
+  -->
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\AMS.Modules.ServiceLevel\AMS.Modules.ServiceLevel.csproj" />
+    <!--
+      Referenced for the INTERFACE only. The tests stub it: which branch a
+      calendar belongs to and what time zone it keeps are Organization's
+      answers, and ServiceLevel should be testable without its database.
+    -->
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Organization.PublicApi\AMS.Modules.Organization.PublicApi.csproj" />
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Identity.PublicApi\AMS.Modules.Identity.PublicApi.csproj" />
+    <ProjectReference Include="..\..\Modules\AMS.Modules.Notifications.PublicApi\AMS.Modules.Notifications.PublicApi.csproj" />
+    <ProjectReference Include="..\..\Modules\AMS.Modules.ServiceDesk.PublicApi\AMS.Modules.ServiceDesk.PublicApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+</Project>

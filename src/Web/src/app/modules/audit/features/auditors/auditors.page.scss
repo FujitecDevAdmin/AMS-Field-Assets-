@@ -1,0 +1,9 @@
+:host { display: block; padding: 28px; color: var(--ams-text); }
+.page-heading { align-items: flex-end; display: flex; gap: 24px; justify-content: space-between; margin-bottom: 20px; }
+.eyebrow { color: #ca0012; font-size: 12px; font-weight: 700; letter-spacing: .12em; margin: 0 0 6px; }
+h1 { font-size: 30px; margin: 0; }
+h2 { margin: 0 0 8px; }
+.page-heading p:last-child, .content-card p, .add-panel p { color: var(--ams-text-muted); margin: 7px 0 0; }
+.content-card, .add-panel { background: var(--ams-surface-elevated, #fff); border: 1px solid var(--ams-border, #e2e5e9); border-radius: 10px; padding: 20px; }
+.add-panel { background: #fff8e6; border-color: #f1d28a; margin-bottom: 16px; }
+@media (max-width: 700px) { :host { padding: 16px; } .page-heading { align-items: flex-start; flex-direction: column; } }
