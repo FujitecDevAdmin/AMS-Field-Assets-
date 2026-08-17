@@ -47,8 +47,8 @@ public sealed class GetUserHandler(IdentityDbContext db)
         var branches = await db.UserBranches
             .AsNoTracking()
             .Where(b => b.UserId == request.UserId)
-            .Select(b => new { b.LocationId, b.IsPrimary })
-            .OrderBy(b => b.LocationId)
+            .Select(b => new { b.BranchId, b.IsPrimary })
+            .OrderBy(b => b.BranchId)
             .ToListAsync(ct);
 
         return new GetUserResponse(
@@ -63,8 +63,8 @@ public sealed class GetUserHandler(IdentityDbContext db)
             user.MfaEnabled,
             user.HasAllBranches,
             roleIds,
-            [.. branches.Select(b => b.LocationId)],
-            branches.FirstOrDefault(b => b.IsPrimary)?.LocationId,
+            [.. branches.Select(b => b.BranchId)],
+            branches.FirstOrDefault(b => b.IsPrimary)?.BranchId,
             Convert.ToBase64String(user.RowVersion));
     }
 }

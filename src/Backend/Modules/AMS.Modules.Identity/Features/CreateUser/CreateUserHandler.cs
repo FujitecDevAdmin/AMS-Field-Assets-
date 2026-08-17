@@ -49,7 +49,7 @@ public sealed class CreateUserHandler(
             db.UserBranches.Add(new UserBranch
             {
                 UserId = user.Id,                     // filled in by the fixup on save
-                LocationId = branchId,
+                BranchId = branchId,
                 IsPrimary = branchId == request.PrimaryBranchId,
                 GrantedOnUtc = now,
                 GrantedBy = currentUser.Username,

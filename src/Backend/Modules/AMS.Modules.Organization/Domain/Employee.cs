@@ -22,7 +22,7 @@ public sealed class Employee
 
     public int? DepartmentId { get; set; }
 
-    public int? LocationId { get; set; }
+    public int? BranchId { get; set; }
 
     public int? ReportingManagerId { get; set; }
 

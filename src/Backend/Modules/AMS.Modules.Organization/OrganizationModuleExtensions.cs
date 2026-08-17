@@ -3,7 +3,7 @@ using AMS.Modules.Organization.PublicApi.Organization;
 using AMS.Modules.Organization.Features.CreateApplication;
 using AMS.Modules.Organization.Features.CreateDepartment;
 using AMS.Modules.Organization.Features.CreateEmployee;
-using AMS.Modules.Organization.Features.CreateLocation;
+using AMS.Modules.Organization.Features.CreateBranch;
 using AMS.Modules.Organization.Features.CreateRegion;
 using AMS.Modules.Organization.Features.CreateVendor;
 using AMS.Modules.Organization.Features.DeactivateEmployee;
@@ -15,13 +15,13 @@ using AMS.Modules.Organization.Features.RevokeApplicationAccess;
 using AMS.Modules.Organization.Features.SearchApplications;
 using AMS.Modules.Organization.Features.SearchDepartments;
 using AMS.Modules.Organization.Features.SearchEmployees;
-using AMS.Modules.Organization.Features.SearchLocations;
+using AMS.Modules.Organization.Features.SearchBranches;
 using AMS.Modules.Organization.Features.SearchRegions;
 using AMS.Modules.Organization.Features.SearchVendors;
 using AMS.Modules.Organization.Features.UpdateApplication;
 using AMS.Modules.Organization.Features.UpdateDepartment;
 using AMS.Modules.Organization.Features.UpdateEmployee;
-using AMS.Modules.Organization.Features.UpdateLocation;
+using AMS.Modules.Organization.Features.UpdateBranch;
 using AMS.Modules.Organization.Features.UpdateRegion;
 using AMS.Modules.Organization.Features.UpdateVendor;
 using AMS.Modules.Organization.Persistence;
@@ -61,7 +61,7 @@ public static class OrganizationModuleExtensions
         // they may ask it.
 
         services.AddScoped<IEmployeeDirectory, EmployeeDirectory>();
-        services.AddScoped<ILocationDirectory, LocationDirectory>();
+        services.AddScoped<IBranchDirectory, BranchDirectory>();
         services.AddScoped<IVendorDirectory, VendorDirectory>();
 
 
@@ -75,9 +75,9 @@ public static class OrganizationModuleExtensions
         services.AddSingleton(new SqlErrorTranslator()
             .Register("UX_Region_Name", "Region.NameTaken",
                 "A region with that name already exists.")
-            .Register("UX_Location_Code", "Location.CodeTaken",
+            .Register("UX_Branch_Code", "Branch.CodeTaken",
                 "A branch with that code already exists.")
-            .Register("UX_Location_OneHeadOffice", "Location.HeadOfficeExists",
+            .Register("UX_Branch_OneHeadOffice", "Branch.HeadOfficeExists",
                 "Another branch is already the head office. Clear that one first.")
             .Register("UX_Department_Name", "Department.NameTaken",
                 "A department with that name already exists.")
@@ -108,9 +108,9 @@ public static class OrganizationModuleExtensions
         SearchRegionsEndpoint.Map(group);
         CreateRegionEndpoint.Map(group);
         UpdateRegionEndpoint.Map(group);
-        SearchLocationsEndpoint.Map(group);
-        CreateLocationEndpoint.Map(group);
-        UpdateLocationEndpoint.Map(group);
+        SearchBranchesEndpoint.Map(group);
+        CreateBranchEndpoint.Map(group);
+        UpdateBranchEndpoint.Map(group);
         SearchDepartmentsEndpoint.Map(group);
         CreateDepartmentEndpoint.Map(group);
         UpdateDepartmentEndpoint.Map(group);
@@ -144,9 +144,9 @@ public static class OrganizationModuleExtensions
         services.AddScoped<IRequestHandler<CreateRegionCommand, CreateRegionResponse>, CreateRegionHandler>();
         services.AddScoped<IRequestHandler<UpdateRegionCommand, UpdateRegionResponse>, UpdateRegionHandler>();
 
-        services.AddScoped<IRequestHandler<SearchLocationsQuery, SearchLocationsResponse>, SearchLocationsHandler>();
-        services.AddScoped<IRequestHandler<CreateLocationCommand, CreateLocationResponse>, CreateLocationHandler>();
-        services.AddScoped<IRequestHandler<UpdateLocationCommand, UpdateLocationResponse>, UpdateLocationHandler>();
+        services.AddScoped<IRequestHandler<SearchBranchesQuery, SearchBranchesResponse>, SearchBranchesHandler>();
+        services.AddScoped<IRequestHandler<CreateBranchCommand, CreateBranchResponse>, CreateBranchHandler>();
+        services.AddScoped<IRequestHandler<UpdateBranchCommand, UpdateBranchResponse>, UpdateBranchHandler>();
 
         services.AddScoped<IRequestHandler<SearchDepartmentsQuery, SearchDepartmentsResponse>, SearchDepartmentsHandler>();
         services.AddScoped<IRequestHandler<CreateDepartmentCommand, CreateDepartmentResponse>, CreateDepartmentHandler>();

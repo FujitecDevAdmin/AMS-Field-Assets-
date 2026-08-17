@@ -48,18 +48,18 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .OnDelete(DeleteBehavior.NoAction)
             .HasConstraintName("FK_Employee_Employee_ReportingManagerId");
 
-        builder.HasOne<Location>()
+        builder.HasOne<Branch>()
             .WithMany()
-            .HasForeignKey(x => x.LocationId)
+            .HasForeignKey(x => x.BranchId)
             .OnDelete(DeleteBehavior.NoAction)
-            .HasConstraintName("FK_Employee_Location_LocationId");
+            .HasConstraintName("FK_Employee_Branch_BranchId");
 
         builder.HasIndex(x => x.EmployeeCode)
             .IsUnique()
             .HasDatabaseName("UX_Employee_Code");
 
-        builder.HasIndex(x => new { x.LocationId, x.FullName })
-            .HasDatabaseName("IX_Employee_Location");
+        builder.HasIndex(x => new { x.BranchId, x.FullName })
+            .HasDatabaseName("IX_Employee_Branch");
 
         builder.HasIndex(x => x.DepartmentId)
             .HasDatabaseName("IX_Employee_DepartmentId");

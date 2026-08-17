@@ -39,9 +39,9 @@ public sealed class SearchEmployeesHandler(OrganizationDbContext db)
             query = query.Where(e => e.DepartmentId == request.DepartmentId.Value);
         }
 
-        if (request.LocationId.HasValue)
+        if (request.BranchId.HasValue)
         {
-            query = query.Where(e => e.LocationId == request.LocationId.Value);
+            query = query.Where(e => e.BranchId == request.BranchId.Value);
         }
 
         if (request.IsActive.HasValue)
@@ -62,7 +62,7 @@ public sealed class SearchEmployeesHandler(OrganizationDbContext db)
                 e.Email,
                 e.Phone,
                 db.Departments.Where(d => d.Id == e.DepartmentId).Select(d => d.DepartmentName).FirstOrDefault(),
-                db.Locations.Where(l => l.Id == e.LocationId).Select(l => l.LocationName).FirstOrDefault(),
+                db.Branches.Where(l => l.Id == e.BranchId).Select(l => l.BranchName).FirstOrDefault(),
                 db.Employees.Where(m => m.Id == e.ReportingManagerId).Select(m => m.FullName).FirstOrDefault(),
                 e.IsActive))
             .ToListAsync(ct);

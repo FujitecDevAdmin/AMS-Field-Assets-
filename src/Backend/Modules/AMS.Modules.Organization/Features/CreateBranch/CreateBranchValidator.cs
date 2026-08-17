@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace AMS.Modules.Organization.Features.CreateLocation;
+namespace AMS.Modules.Organization.Features.CreateBranch;
 
 /// <summary>
 /// Shape only. Lengths mirror the schema exactly.
@@ -13,12 +13,12 @@ namespace AMS.Modules.Organization.Features.CreateLocation;
 /// Every Request has a validator, even a trivial one, so nobody forgets when a
 /// field is added later.
 /// </remarks>
-public sealed class CreateLocationValidator : AbstractValidator<CreateLocationRequest>
+public sealed class CreateBranchValidator : AbstractValidator<CreateBranchRequest>
 {
-    public CreateLocationValidator()
+    public CreateBranchValidator()
     {
-        RuleFor(x => x.LocationCode).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.LocationName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.BranchCode).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.BranchName).NotEmpty().MaximumLength(100);
         // Not optional: a branch without a time zone cannot say what 09:00 means
         // there, and every SLA measurement taken against it would be wrong.
         RuleFor(x => x.TimeZoneId).NotEmpty().MaximumLength(64);

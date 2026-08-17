@@ -12,6 +12,6 @@ public sealed record UpdateEmployeeCommand(
     string? Email,
     string? Phone,
     int? DepartmentId,
-    int? LocationId,
+    int? BranchId,
     int? ReportingManagerId,
     string ETag) : ICommand<UpdateEmployeeResponse>;

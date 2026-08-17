@@ -13,7 +13,7 @@ public static class SearchEmployeesMapper
         return new SearchEmployeesQuery(
             request.Search?.Trim(),
             request.DepartmentId,
-            request.LocationId,
+            request.BranchId,
             request.IsActive,
             request.Skip ?? 0,
             request.Take ?? 50);

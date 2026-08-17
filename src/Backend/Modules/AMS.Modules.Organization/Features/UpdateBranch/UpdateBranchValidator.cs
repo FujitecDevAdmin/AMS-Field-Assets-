@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace AMS.Modules.Organization.Features.UpdateLocation;
+namespace AMS.Modules.Organization.Features.UpdateBranch;
 
 /// <summary>
 /// Shape only. Lengths mirror the schema exactly.
@@ -13,12 +13,12 @@ namespace AMS.Modules.Organization.Features.UpdateLocation;
 /// Every Request has a validator, even a trivial one, so nobody forgets when a
 /// field is added later.
 /// </remarks>
-public sealed class UpdateLocationValidator : AbstractValidator<UpdateLocationRequest>
+public sealed class UpdateBranchValidator : AbstractValidator<UpdateBranchRequest>
 {
-    public UpdateLocationValidator()
+    public UpdateBranchValidator()
     {
-        RuleFor(x => x.LocationCode).NotEmpty().MaximumLength(20);
-        RuleFor(x => x.LocationName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.BranchCode).NotEmpty().MaximumLength(20);
+        RuleFor(x => x.BranchName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.TimeZoneId).NotEmpty().MaximumLength(64);
         RuleFor(x => x.RegionId).GreaterThan(0).When(x => x.RegionId.HasValue);
     }

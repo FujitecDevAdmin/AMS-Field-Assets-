@@ -1,4 +1,4 @@
-﻿using AMS.Modules.Identity.Domain;
+using AMS.Modules.Identity.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,7 +11,7 @@ public sealed class UserBranchConfiguration : IEntityTypeConfiguration<UserBranc
     {
         builder.ToTable("UserBranch");
 
-        builder.HasKey(x => new { x.UserId, x.LocationId }).HasName("PK_UserBranch");
+        builder.HasKey(x => new { x.UserId, x.BranchId }).HasName("PK_UserBranch");
 
         builder.Property(x => x.IsPrimary).IsRequired();
         builder.Property(x => x.GrantedOnUtc).IsRequired();
@@ -23,7 +23,7 @@ public sealed class UserBranchConfiguration : IEntityTypeConfiguration<UserBranc
             .OnDelete(DeleteBehavior.Cascade)
             .HasConstraintName("FK_UserBranch_User_UserId");
 
-        // LocationId is Organization.Location, id only. No FK, no navigation.
+        // BranchId is Organization.Branch, id only. No FK, no navigation.
 
         // One primary branch per user, enforced where two concurrent writers
         // cannot both win. Application code catches 2601/2627 and returns 409;

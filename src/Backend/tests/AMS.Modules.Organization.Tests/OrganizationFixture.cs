@@ -57,8 +57,8 @@ public sealed class OrganizationFixture : IAsyncLifetime
     /// </summary>
     public SqlErrorTranslator SqlErrors { get; } = new SqlErrorTranslator()
         .Register("UX_Region_Name", "Region.NameTaken", "A region with that name already exists.")
-        .Register("UX_Location_Code", "Location.CodeTaken", "A branch with that code already exists.")
-        .Register("UX_Location_OneHeadOffice", "Location.HeadOfficeExists",
+        .Register("UX_Branch_Code", "Branch.CodeTaken", "A branch with that code already exists.")
+        .Register("UX_Branch_OneHeadOffice", "Branch.HeadOfficeExists",
             "Another branch is already the head office. Clear that one first.")
         .Register("UX_Department_Name", "Department.NameTaken", "A department with that name already exists.")
         .Register("UX_Vendor_Name", "Vendor.NameTaken", "A vendor with that name already exists.")
@@ -110,7 +110,7 @@ public sealed class OrganizationFixture : IAsyncLifetime
 
         await ExecuteAsync("""
             DELETE FROM [Organization].[Application];
-            DELETE FROM [Organization].[Location];
+            DELETE FROM [Organization].[Branch];
             DELETE FROM [Organization].[Region];
             DELETE FROM [Organization].[Department];
             DELETE FROM [Organization].[Vendor];

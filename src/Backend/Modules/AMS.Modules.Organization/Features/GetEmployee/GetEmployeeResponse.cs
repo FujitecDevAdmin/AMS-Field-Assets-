@@ -10,8 +10,8 @@ namespace AMS.Modules.Organization.Features.GetEmployee;
 /// <param name="Phone">See the handler.</param>
 /// <param name="DepartmentId">See the handler.</param>
 /// <param name="DepartmentName">Denormalised for display; null when DepartmentId is.</param>
-/// <param name="LocationId">See the handler.</param>
-/// <param name="LocationName">Denormalised for display; null when LocationId is.</param>
+/// <param name="BranchId">See the handler.</param>
+/// <param name="BranchName">Denormalised for display; null when BranchId is.</param>
 /// <param name="ReportingManagerId">See the handler.</param>
 /// <param name="ReportingManagerName">Denormalised for display; null when the employee reports to nobody.</param>
 /// <param name="IsActive">See the handler.</param>
@@ -24,8 +24,8 @@ public sealed record GetEmployeeResponse(
     string? Phone,
     int? DepartmentId,
     string? DepartmentName,
-    int? LocationId,
-    string? LocationName,
+    int? BranchId,
+    string? BranchName,
     int? ReportingManagerId,
     string? ReportingManagerName,
     bool IsActive,

@@ -47,7 +47,7 @@ public sealed class CreateEmployeeHandler(
             Email = request.Email,
             Phone = request.Phone,
             DepartmentId = request.DepartmentId,
-            LocationId = request.LocationId,
+            BranchId = request.BranchId,
             ReportingManagerId = request.ReportingManagerId,
             IsActive = true,
             ConcurrencyStamp = Guid.NewGuid(),

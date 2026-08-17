@@ -6,34 +6,34 @@ using AMS.SharedKernel.Persistence;
 using AMS.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
 
-namespace AMS.Modules.Organization.Features.CreateLocation;
+namespace AMS.Modules.Organization.Features.CreateBranch;
 
 /// <summary>
-/// Open a branch. Catalogue: Branches and locations, Put a branch in a region,
+/// Open a branch. Catalogue: Branches and branches, Put a branch in a region,
 /// Branch time zone.
 /// </summary>
 /// <remarks>
 /// Two database rules do the work here, and neither is re-implemented in code:
-/// <c>UX_Location_Code</c> keeps codes unique, and
-/// <c>UX_Location_OneHeadOffice</c> is a filtered unique index that makes a
+/// <c>UX_Branch_Code</c> keeps codes unique, and
+/// <c>UX_Branch_OneHeadOffice</c> is a filtered unique index that makes a
 /// second head office impossible rather than merely unlikely.
 /// </remarks>
-public sealed class CreateLocationHandler(
+public sealed class CreateBranchHandler(
     OrganizationDbContext db,
     IClock clock,
     ICurrentUser currentUser,
-    SqlErrorTranslator sqlErrors) : IRequestHandler<CreateLocationCommand, CreateLocationResponse>
+    SqlErrorTranslator sqlErrors) : IRequestHandler<CreateBranchCommand, CreateBranchResponse>
 {
-    public async Task<Result<CreateLocationResponse>> HandleAsync(
-        CreateLocationCommand request,
+    public async Task<Result<CreateBranchResponse>> HandleAsync(
+        CreateBranchCommand request,
         CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var location = new Location
+        var branch = new Branch
         {
-            LocationCode = request.LocationCode,
-            LocationName = request.LocationName,
+            BranchCode = request.BranchCode,
+            BranchName = request.BranchName,
             RegionId = request.RegionId,
             TimeZoneId = request.TimeZoneId,
             IsHeadOffice = request.IsHeadOffice,
@@ -42,7 +42,7 @@ public sealed class CreateLocationHandler(
             CreatedBy = currentUser.Username,
         };
 
-        db.Locations.Add(location);
+        db.Branches.Add(branch);
 
         try
         {
@@ -59,7 +59,7 @@ public sealed class CreateLocationHandler(
             throw;
         }
 
-        return new CreateLocationResponse(
-            location.Id, location.LocationCode, location.LocationName, location.IsHeadOffice);
+        return new CreateBranchResponse(
+            branch.Id, branch.BranchCode, branch.BranchName, branch.IsHeadOffice);
     }
 }

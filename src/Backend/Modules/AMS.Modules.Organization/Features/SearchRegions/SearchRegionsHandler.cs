@@ -36,7 +36,7 @@ public sealed class SearchRegionsHandler(OrganizationDbContext db)
                 r.RegionName,
                 r.Description,
                 r.IsActive,
-                db.Locations.Count(l => l.RegionId == r.Id)))
+                db.Branches.Count(l => l.RegionId == r.Id)))
             .ToListAsync(ct);
 
         return new SearchRegionsResponse(rows);

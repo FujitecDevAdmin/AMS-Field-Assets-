@@ -10,8 +10,8 @@ public sealed class UserBranch : IGrantable
 {
     public int UserId { get; set; }
 
-    /// <summary><c>Organization.Location</c> — id only, no foreign key.</summary>
-    public int LocationId { get; set; }
+    /// <summary><c>Organization.Branch</c> — id only, no foreign key.</summary>
+    public int BranchId { get; set; }
 
     /// <summary>
     /// At most one per user, enforced by the filtered unique index

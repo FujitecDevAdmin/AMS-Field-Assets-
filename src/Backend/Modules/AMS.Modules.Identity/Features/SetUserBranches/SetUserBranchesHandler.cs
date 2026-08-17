@@ -19,7 +19,7 @@ namespace AMS.Modules.Identity.Features.SetUserBranches;
 /// the statement fails. Replacing the set sidesteps the ordering entirely.
 /// </para>
 /// <para>
-/// Branch ids belong to <c>Organization.Location</c> and carry no foreign key
+/// Branch ids belong to <c>Organization.Branch</c> and carry no foreign key
 /// (01 §2 rule 2), so this handler cannot verify they exist and does not
 /// pretend to.
 /// </para>
@@ -52,7 +52,7 @@ public sealed class SetUserBranchesHandler(
             db.UserBranches.Add(new UserBranch
             {
                 UserId = request.UserId,
-                LocationId = branchId,
+                BranchId = branchId,
                 IsPrimary = branchId == request.PrimaryBranchId,
                 GrantedOnUtc = clock.UtcNow,
                 GrantedBy = currentUser.Username,

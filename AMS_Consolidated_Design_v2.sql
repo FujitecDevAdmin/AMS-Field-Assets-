@@ -436,11 +436,11 @@ IF OBJECT_ID(N'[Identity].[UserBranch]', N'U') IS NULL
 BEGIN
     CREATE TABLE [Identity].[UserBranch] (
         [UserId]     int NOT NULL,
-        [LocationId] int NOT NULL,   -- Organization.Location, id only
+        [BranchId]   int NOT NULL,   -- Organization.Branch, id only
         [IsPrimary]  bit NOT NULL,
         [GrantedOnUtc]          datetime2     NOT NULL,   -- A
         [GrantedBy]             nvarchar(100) NULL,   -- A
-        CONSTRAINT [PK_UserBranch] PRIMARY KEY ([UserId], [LocationId]),
+        CONSTRAINT [PK_UserBranch] PRIMARY KEY ([UserId], [BranchId]),
         CONSTRAINT [FK_UserBranch_User_UserId] FOREIGN KEY ([UserId]) REFERENCES [Identity].[User] ([Id]) ON DELETE CASCADE
     );
 END
@@ -502,14 +502,14 @@ BEGIN
     );
 END
 GO
-IF OBJECT_ID(N'[Organization].[Location]', N'U') IS NULL
+IF OBJECT_ID(N'[Organization].[Branch]', N'U') IS NULL
 BEGIN
-    CREATE TABLE [Organization].[Location] (
+    CREATE TABLE [Organization].[Branch] (
         [Id]            int           NOT NULL IDENTITY,
-        [LocationCode]  nvarchar(20)  NOT NULL,
-        [LocationName]  nvarchar(100) NOT NULL,
+        [BranchCode]    nvarchar(20)  NOT NULL,
+        [BranchName]    nvarchar(100) NOT NULL,
         [RegionId]      int           NULL,                                         -- NEW
-        [TimeZoneId]    nvarchar(64)  NOT NULL CONSTRAINT [DF_Location_TimeZoneId]  -- NEW
+        [TimeZoneId]    nvarchar(64)  NOT NULL CONSTRAINT [DF_Branch_TimeZoneId]  -- NEW
                                       DEFAULT (N'India Standard Time'),
         [IsHeadOffice]  bit           NOT NULL,
         [IsActive]      bit           NOT NULL,
@@ -517,8 +517,8 @@ BEGIN
         [CreatedBy]     nvarchar(100) NULL,
         [ModifiedOnUtc] datetime2     NULL,
         [ModifiedBy]    nvarchar(100) NULL,
-        CONSTRAINT [PK_Location] PRIMARY KEY ([Id]),
-        CONSTRAINT [FK_Location_Region_RegionId] FOREIGN KEY ([RegionId])
+        CONSTRAINT [PK_Branch] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_Branch_Region_RegionId] FOREIGN KEY ([RegionId])
             REFERENCES [Organization].[Region] ([Id]) ON DELETE NO ACTION
     );
 END
@@ -566,7 +566,7 @@ BEGIN
         [Email]              nvarchar(256) NULL,
         [Phone]              nvarchar(40)  NULL,
         [DepartmentId]       int           NULL,
-        [LocationId]         int           NULL,
+        [BranchId]           int           NULL,
         [ReportingManagerId] int           NULL,
         [IsActive]           bit           NOT NULL,
         [CreatedOnUtc]       datetime2     NOT NULL,
@@ -595,7 +595,7 @@ BEGIN
         CONSTRAINT [PK_Employee] PRIMARY KEY ([Id]),
         CONSTRAINT [FK_Employee_Department_DepartmentId] FOREIGN KEY ([DepartmentId]) REFERENCES [Organization].[Department] ([Id]) ON DELETE NO ACTION,
         CONSTRAINT [FK_Employee_Employee_ReportingManagerId] FOREIGN KEY ([ReportingManagerId]) REFERENCES [Organization].[Employee] ([Id]) ON DELETE NO ACTION,
-        CONSTRAINT [FK_Employee_Location_LocationId] FOREIGN KEY ([LocationId]) REFERENCES [Organization].[Location] ([Id]) ON DELETE NO ACTION
+        CONSTRAINT [FK_Employee_Branch_BranchId] FOREIGN KEY ([BranchId]) REFERENCES [Organization].[Branch] ([Id]) ON DELETE NO ACTION
     ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [Organization].[EmployeeHistory]));
 END
 GO
@@ -634,20 +634,20 @@ END
 GO
 IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Region]'), N'UX_Region_Name', N'IndexID') IS NULL
     CREATE UNIQUE INDEX [UX_Region_Name] ON [Organization].[Region] ([RegionName]);              -- NEW
-IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Location]'), N'UX_Location_Code', N'IndexID') IS NULL
-    CREATE UNIQUE INDEX [UX_Location_Code] ON [Organization].[Location] ([LocationCode]);
-IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Location]'), N'UX_Location_OneHeadOffice', N'IndexID') IS NULL
-    CREATE UNIQUE INDEX [UX_Location_OneHeadOffice] ON [Organization].[Location] ([IsHeadOffice]) WHERE [IsHeadOffice] = 1;
-IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Location]'), N'IX_Location_RegionId', N'IndexID') IS NULL
-    CREATE INDEX [IX_Location_RegionId] ON [Organization].[Location] ([RegionId]);   -- NEW
+IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Branch]'), N'UX_Branch_Code', N'IndexID') IS NULL
+    CREATE UNIQUE INDEX [UX_Branch_Code] ON [Organization].[Branch] ([BranchCode]);
+IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Branch]'), N'UX_Branch_OneHeadOffice', N'IndexID') IS NULL
+    CREATE UNIQUE INDEX [UX_Branch_OneHeadOffice] ON [Organization].[Branch] ([IsHeadOffice]) WHERE [IsHeadOffice] = 1;
+IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Branch]'), N'IX_Branch_RegionId', N'IndexID') IS NULL
+    CREATE INDEX [IX_Branch_RegionId] ON [Organization].[Branch] ([RegionId]);   -- NEW
 IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Department]'), N'UX_Department_Name', N'IndexID') IS NULL
     CREATE UNIQUE INDEX [UX_Department_Name] ON [Organization].[Department] ([DepartmentName]);
 IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Vendor]'), N'UX_Vendor_Name', N'IndexID') IS NULL
     CREATE UNIQUE INDEX [UX_Vendor_Name] ON [Organization].[Vendor] ([VendorName]);
 IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Employee]'), N'UX_Employee_Code', N'IndexID') IS NULL
     CREATE UNIQUE INDEX [UX_Employee_Code] ON [Organization].[Employee] ([EmployeeCode]);
-IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Employee]'), N'IX_Employee_Location', N'IndexID') IS NULL
-    CREATE INDEX [IX_Employee_Location] ON [Organization].[Employee] ([LocationId], [FullName]);
+IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Employee]'), N'IX_Employee_Branch', N'IndexID') IS NULL
+    CREATE INDEX [IX_Employee_Branch] ON [Organization].[Employee] ([BranchId], [FullName]);
 IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Employee]'), N'IX_Employee_DepartmentId', N'IndexID') IS NULL
     CREATE INDEX [IX_Employee_DepartmentId] ON [Organization].[Employee] ([DepartmentId]);
 IF INDEXPROPERTY(OBJECT_ID(N'[Organization].[Employee]'), N'IX_Employee_ReportingManagerId', N'IndexID') IS NULL

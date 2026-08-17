@@ -38,14 +38,14 @@ public sealed class EmployeeDirectoryTests(OrganizationFixture fixture)
     public async Task The_directory_shows_department_branch_and_manager_names()
     {
         await fixture.ResetAsync();
-        var (departmentId, locationId) = await SeedMasterDataAsync();
+        var (departmentId, branchId) = await SeedMasterDataAsync();
         var manager = await CreateAsync("E-0001", "Manager Person");
 
-        await CreateAsync("E-1002", "Reportee", departmentId, locationId, manager.Value.Id);
+        await CreateAsync("E-1002", "Reportee", departmentId, branchId, manager.Value.Id);
 
         var row = (await SearchAsync(search: "Reportee")).Value.Rows.Single();
         row.DepartmentName.ShouldBe("IT");
-        row.LocationName.ShouldBe("Bangalore");
+        row.BranchName.ShouldBe("Bangalore");
         row.ReportingManagerName.ShouldBe("Manager Person");
     }
 
@@ -68,12 +68,12 @@ public sealed class EmployeeDirectoryTests(OrganizationFixture fixture)
     public async Task The_directory_filters_by_department_branch_and_active_flag()
     {
         await fixture.ResetAsync();
-        var (departmentId, locationId) = await SeedMasterDataAsync();
-        await CreateAsync("E-3001", "In IT", departmentId, locationId);
+        var (departmentId, branchId) = await SeedMasterDataAsync();
+        await CreateAsync("E-3001", "In IT", departmentId, branchId);
         var other = await CreateAsync("E-3002", "Elsewhere");
 
         (await SearchAsync(departmentId: departmentId)).Value.TotalCount.ShouldBe(1);
-        (await SearchAsync(locationId: locationId)).Value.TotalCount.ShouldBe(1);
+        (await SearchAsync(branchId: branchId)).Value.TotalCount.ShouldBe(1);
 
         await DeactivateAsync(other.Value.Id, other.Value.ETag);
         (await SearchAsync(isActive: false)).Value.TotalCount.ShouldBe(1);
@@ -294,7 +294,7 @@ public sealed class EmployeeDirectoryTests(OrganizationFixture fixture)
 
     // ------------------------------------------------------------ helpers
 
-    private async Task<(int DepartmentId, int LocationId)> SeedMasterDataAsync()
+    private async Task<(int DepartmentId, int BranchId)> SeedMasterDataAsync()
     {
         await using var context = fixture.NewContext();
 
@@ -305,10 +305,10 @@ public sealed class EmployeeDirectoryTests(OrganizationFixture fixture)
             CreatedOnUtc = fixture.Clock.UtcNow,
             CreatedBy = "test",
         };
-        var location = new Domain.Location
+        var branch = new Domain.Branch
         {
-            LocationCode = "BLR",
-            LocationName = "Bangalore",
+            BranchCode = "BLR",
+            BranchName = "Bangalore",
             TimeZoneId = "India Standard Time",
             IsHeadOffice = false,
             IsActive = true,
@@ -317,20 +317,20 @@ public sealed class EmployeeDirectoryTests(OrganizationFixture fixture)
         };
 
         context.Departments.Add(department);
-        context.Locations.Add(location);
+        context.Branches.Add(branch);
         await context.SaveChangesAsync();
 
-        return (department.Id, location.Id);
+        return (department.Id, branch.Id);
     }
 
     private async Task<Result<CreateEmployeeResponse>> CreateAsync(
-        string code, string name, int? departmentId = null, int? locationId = null, int? managerId = null)
+        string code, string name, int? departmentId = null, int? branchId = null, int? managerId = null)
     {
         await using var context = fixture.NewContext();
         return await new CreateEmployeeHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
             .HandleAsync(
                 new CreateEmployeeCommand(
-                    code.ToUpperInvariant(), name, null, null, departmentId, locationId, managerId),
+                    code.ToUpperInvariant(), name, null, null, departmentId, branchId, managerId),
                 TestContext.Current.CancellationToken);
     }
 
@@ -359,13 +359,13 @@ public sealed class EmployeeDirectoryTests(OrganizationFixture fixture)
     }
 
     private async Task<Result<SearchEmployeesResponse>> SearchAsync(
-        string? search = null, int? departmentId = null, int? locationId = null,
+        string? search = null, int? departmentId = null, int? branchId = null,
         bool? isActive = null, int skip = 0, int take = 50)
     {
         await using var context = fixture.NewContext();
         return await new SearchEmployeesHandler(context)
             .HandleAsync(
-                new SearchEmployeesQuery(search, departmentId, locationId, isActive, skip, take),
+                new SearchEmployeesQuery(search, departmentId, branchId, isActive, skip, take),
                 TestContext.Current.CancellationToken);
     }
 }

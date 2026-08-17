@@ -9,5 +9,5 @@ public sealed record CreateEmployeeRequest(
     string? Email,
     string? Phone,
     int? DepartmentId,
-    int? LocationId,
+    int? BranchId,
     int? ReportingManagerId);

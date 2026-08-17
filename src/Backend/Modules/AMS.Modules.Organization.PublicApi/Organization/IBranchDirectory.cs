@@ -7,19 +7,19 @@ namespace AMS.Modules.Organization.PublicApi.Organization;
 /// about its people. A branch opens at 09:00 where it stands, and the only way
 /// to turn that into an instant is to know which 09:00 is meant.
 /// </remarks>
-public interface ILocationDirectory
+public interface IBranchDirectory
 {
     /// <summary>
     /// The branch's time zone id, or null if the branch is unknown.
     /// </summary>
     /// <remarks>
     /// A Windows time zone id — <c>India Standard Time</c> — because that is
-    /// what <c>Organization.Location.TimeZoneId</c> stores and defaults to.
+    /// what <c>Organization.Branch.TimeZoneId</c> stores and defaults to.
     /// </remarks>
-    Task<string?> TimeZoneOfAsync(int locationId, CancellationToken ct);
+    Task<string?> TimeZoneOfAsync(int branchId, CancellationToken ct);
 
     /// <summary>Whether a branch exists and is in use.</summary>
-    Task<bool> IsActiveAsync(int locationId, CancellationToken ct);
+    Task<bool> IsActiveAsync(int branchId, CancellationToken ct);
 }
 
 /// <summary>Who to write to at a vendor.</summary>

@@ -51,7 +51,7 @@ public sealed class GetMyProfileHandler(IdentityDbContext db)
             : await db.UserBranches
                 .AsNoTracking()
                 .Where(b => b.UserId == request.UserId)
-                .Select(b => b.LocationId)
+                .Select(b => b.BranchId)
                 .OrderBy(id => id)
                 .ToListAsync(ct);
 

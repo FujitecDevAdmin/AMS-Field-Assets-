@@ -70,7 +70,7 @@ public sealed class UpdateEmployeeHandler(
         employee.Email = request.Email;
         employee.Phone = request.Phone;
         employee.DepartmentId = request.DepartmentId;
-        employee.LocationId = request.LocationId;
+        employee.BranchId = request.BranchId;
         employee.ReportingManagerId = request.ReportingManagerId;
 
         // The stamp moves because the application changed the row, not because

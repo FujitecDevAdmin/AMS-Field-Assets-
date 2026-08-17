@@ -9,6 +9,6 @@ public sealed record UpdateEmployeeRequest(
     string? Email,
     string? Phone,
     int? DepartmentId,
-    int? LocationId,
+    int? BranchId,
     int? ReportingManagerId,
     string ETag);

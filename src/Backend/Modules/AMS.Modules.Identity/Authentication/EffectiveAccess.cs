@@ -81,7 +81,7 @@ public sealed class EffectiveAccess(IdentityDbContext db)
             : await db.UserBranches
                 .AsNoTracking()
                 .Where(b => b.UserId == userId)
-                .Select(b => b.LocationId)
+                .Select(b => b.BranchId)
                 .OrderBy(id => id)
                 .ToListAsync(ct);
 
@@ -134,7 +134,7 @@ public sealed class EffectiveAccess(IdentityDbContext db)
         {
             query = query.Where(u =>
                 u.HasAllBranches
-                || db.UserBranches.Any(b => b.UserId == u.Id && b.LocationId == branch));
+                || db.UserBranches.Any(b => b.UserId == u.Id && b.BranchId == branch));
         }
 
         return await query.Select(u => u.Id).OrderBy(id => id).ToListAsync(ct);

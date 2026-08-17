@@ -1,16 +1,16 @@
-namespace AMS.Modules.Organization.Features.SearchLocations;
+namespace AMS.Modules.Organization.Features.SearchBranches;
 
 /// <summary>
 /// Request to query. Explicit,
 /// greppable, compile-checked - no AutoMapper (docs/02 §4).
 /// </summary>
-public static class SearchLocationsMapper
+public static class SearchBranchesMapper
 {
-    public static SearchLocationsQuery ToQuery(SearchLocationsRequest request)
+    public static SearchBranchesQuery ToQuery(SearchBranchesRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return new SearchLocationsQuery(
+        return new SearchBranchesQuery(
             request.IsActive,
             request.RegionId,
             request.Search?.Trim());

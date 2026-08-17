@@ -11,5 +11,5 @@ public sealed record CreateEmployeeCommand(
     string? Email,
     string? Phone,
     int? DepartmentId,
-    int? LocationId,
+    int? BranchId,
     int? ReportingManagerId) : ICommand<CreateEmployeeResponse>;

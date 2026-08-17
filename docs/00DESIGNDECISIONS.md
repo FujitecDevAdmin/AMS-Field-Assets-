@@ -16,6 +16,22 @@ where the evidence lives. If there is no evidence, say so.
 
 ---
 
+## 2026-08-17 — Rename the Organization location master to Branch
+
+The organization master formerly named `[Organization].[Location]` is now
+`[Organization].[Branch]`. Its identifying fields are `BranchId`, `BranchCode`
+and `BranchName`, including employee and identity user-branch assignments.
+This removes the ambiguity between an administrative branch and a physical
+asset/audit location. Location terminology remains valid where a record
+describes a physical place rather than the Organization branch master.
+
+Cost: API routes and JSON contracts under Organization change from locations
+to branches, and deployment requires data-preserving table/column renames.
+Evidence: Organization and Identity EF models and their 20260817 rename
+migrations.
+
+---
+
 ## 2026-08-13 — Retain the imported FAR row for register drill-down
 
 `Assets.Asset` gains nullable `ImportedDataJson nvarchar(max)`. The Field Asset

@@ -12,6 +12,6 @@ public sealed record SearchRegionsResponse(IReadOnlyList<SearchRegionsResponse.R
     /// <param name="RegionName">Unique, enforced by UX_Region_Name.</param>
     /// <param name="Description">May be null.</param>
     /// <param name="IsActive">Retired regions stay, because branches still point at them.</param>
-    /// <param name="LocationCount">Branches in this region. Retiring one that has branches is worth a warning.</param>
-    public sealed record Row(int Id, string RegionName, string? Description, bool IsActive, int LocationCount);
+    /// <param name="BranchCount">Branches in this region. Retiring one that has branches is worth a warning.</param>
+    public sealed record Row(int Id, string RegionName, string? Description, bool IsActive, int BranchCount);
 }

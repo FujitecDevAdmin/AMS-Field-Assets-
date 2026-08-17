@@ -24,22 +24,22 @@ public sealed class EmployeeDirectory(OrganizationDbContext db) : IEmployeeDirec
         await db.Employees
             .AsNoTracking()
             .Where(e => e.Id == employeeId)
-            .Select(e => e.LocationId)
+            .Select(e => e.BranchId)
             .SingleOrDefaultAsync(ct);
 }
 
 /// <summary>Organization's answer to "where is this branch, and is it in use".</summary>
-public sealed class LocationDirectory(OrganizationDbContext db) : ILocationDirectory
+public sealed class BranchDirectory(OrganizationDbContext db) : IBranchDirectory
 {
-    public async Task<string?> TimeZoneOfAsync(int locationId, CancellationToken ct) =>
-        await db.Locations
+    public async Task<string?> TimeZoneOfAsync(int branchId, CancellationToken ct) =>
+        await db.Branches
             .AsNoTracking()
-            .Where(l => l.Id == locationId)
+            .Where(l => l.Id == branchId)
             .Select(l => l.TimeZoneId)
             .SingleOrDefaultAsync(ct);
 
-    public async Task<bool> IsActiveAsync(int locationId, CancellationToken ct) =>
-        await db.Locations.AsNoTracking().AnyAsync(l => l.Id == locationId && l.IsActive, ct);
+    public async Task<bool> IsActiveAsync(int branchId, CancellationToken ct) =>
+        await db.Branches.AsNoTracking().AnyAsync(l => l.Id == branchId && l.IsActive, ct);
 }
 
 /// <summary>Organization's answer to "who supplies this".</summary>

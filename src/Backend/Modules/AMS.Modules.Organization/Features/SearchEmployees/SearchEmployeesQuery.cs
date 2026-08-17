@@ -8,7 +8,7 @@ namespace AMS.Modules.Organization.Features.SearchEmployees;
 public sealed record SearchEmployeesQuery(
     string? Search,
     int? DepartmentId,
-    int? LocationId,
+    int? BranchId,
     bool? IsActive,
     int Skip,
     int Take) : IQuery<SearchEmployeesResponse>;

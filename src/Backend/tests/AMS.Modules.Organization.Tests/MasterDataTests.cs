@@ -1,13 +1,13 @@
 using AMS.Modules.Organization.Features.CreateDepartment;
-using AMS.Modules.Organization.Features.CreateLocation;
+using AMS.Modules.Organization.Features.CreateBranch;
 using AMS.Modules.Organization.Features.CreateRegion;
 using AMS.Modules.Organization.Features.CreateVendor;
 using AMS.Modules.Organization.Features.SearchDepartments;
-using AMS.Modules.Organization.Features.SearchLocations;
+using AMS.Modules.Organization.Features.SearchBranches;
 using AMS.Modules.Organization.Features.SearchRegions;
 using AMS.Modules.Organization.Features.SearchVendors;
 using AMS.Modules.Organization.Features.UpdateDepartment;
-using AMS.Modules.Organization.Features.UpdateLocation;
+using AMS.Modules.Organization.Features.UpdateBranch;
 using AMS.Modules.Organization.Features.UpdateRegion;
 using AMS.Modules.Organization.Features.UpdateVendor;
 using AMS.SharedKernel.Results;
@@ -16,7 +16,7 @@ namespace AMS.Modules.Organization.Tests;
 
 /// <summary>
 /// Catalogue screens: Regions, Branches, Departments, Vendors. Features:
-/// Branches and locations, Departments, Vendors, Regions, Put a branch in a
+/// Branches and branches, Departments, Vendors, Regions, Put a branch in a
 /// region, Branch time zone.
 /// </summary>
 [Collection(nameof(OrganizationCollectionDefinition))]
@@ -54,10 +54,10 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
     {
         await fixture.ResetAsync();
         var region = await CreateRegionAsync("West");
-        await CreateLocationAsync("BLR", "Bangalore", region.Value.Id);
-        await CreateLocationAsync("PNQ", "Pune", region.Value.Id);
+        await CreateBranchAsync("BLR", "Bangalore", region.Value.Id);
+        await CreateBranchAsync("PNQ", "Pune", region.Value.Id);
 
-        (await SearchRegionsAsync(null)).Value.Rows.Single().LocationCount.ShouldBe(2);
+        (await SearchRegionsAsync(null)).Value.Rows.Single().BranchCount.ShouldBe(2);
     }
 
     [Fact]
@@ -89,10 +89,10 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         await fixture.ResetAsync();
         var region = await CreateRegionAsync("North");
 
-        var result = await CreateLocationAsync("DEL", "Delhi", region.Value.Id);
+        var result = await CreateBranchAsync("DEL", "Delhi", region.Value.Id);
 
         result.IsSuccess.ShouldBeTrue();
-        var row = (await SearchLocationsAsync()).Value.Rows.Single();
+        var row = (await SearchBranchesAsync()).Value.Rows.Single();
         row.RegionName.ShouldBe("North");
         row.TimeZoneId.ShouldBe(TimeZone);
     }
@@ -101,26 +101,26 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
     public async Task A_branch_code_is_upper_cased_so_case_cannot_duplicate_it()
     {
         await fixture.ResetAsync();
-        await CreateLocationAsync("del", "Delhi", null);
+        await CreateBranchAsync("del", "Delhi", null);
 
-        var result = await CreateLocationAsync("DEL", "Delhi Again", null);
+        var result = await CreateBranchAsync("DEL", "Delhi Again", null);
 
         result.IsSuccess.ShouldBeFalse();
-        result.Error!.Code.ShouldBe("Location.CodeTaken");
+        result.Error!.Code.ShouldBe("Branch.CodeTaken");
     }
 
     [Fact]
     public async Task Only_one_branch_can_be_head_office()
     {
-        // UX_Location_OneHeadOffice makes a second one impossible rather than
+        // UX_Branch_OneHeadOffice makes a second one impossible rather than
         // merely unlikely.
         await fixture.ResetAsync();
-        await CreateLocationAsync("HO1", "Head Office", null, isHeadOffice: true);
+        await CreateBranchAsync("HO1", "Head Office", null, isHeadOffice: true);
 
-        var result = await CreateLocationAsync("HO2", "Another Head Office", null, isHeadOffice: true);
+        var result = await CreateBranchAsync("HO2", "Another Head Office", null, isHeadOffice: true);
 
         result.IsSuccess.ShouldBeFalse();
-        result.Error!.Code.ShouldBe("Location.HeadOfficeExists");
+        result.Error!.Code.ShouldBe("Branch.HeadOfficeExists");
         result.Error.Kind.ShouldBe(ErrorKind.Conflict);
     }
 
@@ -131,28 +131,28 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         // collide with the first.
         await fixture.ResetAsync();
 
-        (await CreateLocationAsync("B1", "One", null)).IsSuccess.ShouldBeTrue();
-        (await CreateLocationAsync("B2", "Two", null)).IsSuccess.ShouldBeTrue();
-        (await CreateLocationAsync("B3", "Three", null)).IsSuccess.ShouldBeTrue();
+        (await CreateBranchAsync("B1", "One", null)).IsSuccess.ShouldBeTrue();
+        (await CreateBranchAsync("B2", "Two", null)).IsSuccess.ShouldBeTrue();
+        (await CreateBranchAsync("B3", "Three", null)).IsSuccess.ShouldBeTrue();
     }
 
     [Fact]
     public async Task Moving_head_office_requires_clearing_the_old_one_first()
     {
         await fixture.ResetAsync();
-        var first = await CreateLocationAsync("HO1", "Head Office", null, isHeadOffice: true);
-        var second = await CreateLocationAsync("BR2", "Branch", null);
+        var first = await CreateBranchAsync("HO1", "Head Office", null, isHeadOffice: true);
+        var second = await CreateBranchAsync("BR2", "Branch", null);
 
         // Straight to the new one: refused, because two would be flagged.
-        var refused = await UpdateLocationAsync(second.Value.Id, "BR2", "Branch", isHeadOffice: true);
-        refused.Error!.Code.ShouldBe("Location.HeadOfficeExists");
+        var refused = await UpdateBranchAsync(second.Value.Id, "BR2", "Branch", isHeadOffice: true);
+        refused.Error!.Code.ShouldBe("Branch.HeadOfficeExists");
 
         // Clear, then set. Now it works.
-        await UpdateLocationAsync(first.Value.Id, "HO1", "Head Office", isHeadOffice: false);
-        (await UpdateLocationAsync(second.Value.Id, "BR2", "Branch", isHeadOffice: true)).IsSuccess.ShouldBeTrue();
+        await UpdateBranchAsync(first.Value.Id, "HO1", "Head Office", isHeadOffice: false);
+        (await UpdateBranchAsync(second.Value.Id, "BR2", "Branch", isHeadOffice: true)).IsSuccess.ShouldBeTrue();
 
         (await fixture.ScalarAsync<int>(
-            "SELECT COUNT(*) FROM [Organization].[Location] WHERE [IsHeadOffice] = 1;")).ShouldBe(1);
+            "SELECT COUNT(*) FROM [Organization].[Branch] WHERE [IsHeadOffice] = 1;")).ShouldBe(1);
     }
 
     [Fact]
@@ -161,13 +161,13 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         await fixture.ResetAsync();
         var north = await CreateRegionAsync("North");
         var south = await CreateRegionAsync("South");
-        var branch = await CreateLocationAsync("MAA", "Chennai", north.Value.Id);
+        var branch = await CreateBranchAsync("MAA", "Chennai", north.Value.Id);
 
-        await UpdateLocationAsync(branch.Value.Id, "MAA", "Chennai", regionId: south.Value.Id);
+        await UpdateBranchAsync(branch.Value.Id, "MAA", "Chennai", regionId: south.Value.Id);
 
-        (await SearchLocationsAsync(regionId: south.Value.Id)).Value.Rows.Single()
-            .LocationName.ShouldBe("Chennai");
-        (await SearchLocationsAsync(regionId: north.Value.Id)).Value.Rows.ShouldBeEmpty();
+        (await SearchBranchesAsync(regionId: south.Value.Id)).Value.Rows.Single()
+            .BranchName.ShouldBe("Chennai");
+        (await SearchBranchesAsync(regionId: north.Value.Id)).Value.Rows.ShouldBeEmpty();
     }
 
     [Fact]
@@ -176,10 +176,10 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         // Opening a branch before somebody decides its region is normal.
         await fixture.ResetAsync();
 
-        var result = await CreateLocationAsync("TMP", "Temporary", null);
+        var result = await CreateBranchAsync("TMP", "Temporary", null);
 
         result.IsSuccess.ShouldBeTrue();
-        (await SearchLocationsAsync()).Value.Rows.Single().RegionName.ShouldBeNull();
+        (await SearchBranchesAsync()).Value.Rows.Single().RegionName.ShouldBeNull();
     }
 
     // --------------------------------------------------------- Departments
@@ -307,17 +307,17 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
             .HandleAsync(new SearchRegionsQuery(isActive, null), TestContext.Current.CancellationToken);
     }
 
-    private async Task<Result<CreateLocationResponse>> CreateLocationAsync(
+    private async Task<Result<CreateBranchResponse>> CreateBranchAsync(
         string code, string name, int? regionId, bool isHeadOffice = false)
     {
         await using var context = fixture.NewContext();
-        return await new CreateLocationHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
+        return await new CreateBranchHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
             .HandleAsync(
-                new CreateLocationCommand(code.ToUpperInvariant(), name, regionId, TimeZone, isHeadOffice),
+                new CreateBranchCommand(code.ToUpperInvariant(), name, regionId, TimeZone, isHeadOffice),
                 TestContext.Current.CancellationToken);
     }
 
-    private async Task<Result<UpdateLocationResponse>> UpdateLocationAsync(
+    private async Task<Result<UpdateBranchResponse>> UpdateBranchAsync(
         int id,
         string code,
         string name,
@@ -326,17 +326,17 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         bool isActive = true)
     {
         await using var context = fixture.NewContext();
-        return await new UpdateLocationHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
+        return await new UpdateBranchHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
             .HandleAsync(
-                new UpdateLocationCommand(id, code, name, regionId, TimeZone, isHeadOffice, isActive),
+                new UpdateBranchCommand(id, code, name, regionId, TimeZone, isHeadOffice, isActive),
                 TestContext.Current.CancellationToken);
     }
 
-    private async Task<Result<SearchLocationsResponse>> SearchLocationsAsync(int? regionId = null)
+    private async Task<Result<SearchBranchesResponse>> SearchBranchesAsync(int? regionId = null)
     {
         await using var context = fixture.NewContext();
-        return await new SearchLocationsHandler(context)
-            .HandleAsync(new SearchLocationsQuery(null, regionId, null), TestContext.Current.CancellationToken);
+        return await new SearchBranchesHandler(context)
+            .HandleAsync(new SearchBranchesQuery(null, regionId, null), TestContext.Current.CancellationToken);
     }
 
     private async Task<Result<CreateDepartmentResponse>> CreateDepartmentAsync(string name)

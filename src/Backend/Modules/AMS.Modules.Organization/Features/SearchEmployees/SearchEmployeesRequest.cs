@@ -6,7 +6,7 @@ namespace AMS.Modules.Organization.Features.SearchEmployees;
 public sealed record SearchEmployeesRequest(
     string? Search,
     int? DepartmentId,
-    int? LocationId,
+    int? BranchId,
     bool? IsActive,
     int? Skip,
     int? Take);

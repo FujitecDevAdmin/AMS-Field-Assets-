@@ -17,7 +17,7 @@ public static class UpdateEmployeeMapper
             string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
             string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
             request.DepartmentId,
-            request.LocationId,
+            request.BranchId,
             request.ReportingManagerId,
             request.ETag);
     }

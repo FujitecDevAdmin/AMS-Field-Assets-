@@ -21,7 +21,7 @@ public sealed class OrganizationDbContext(DbContextOptions<OrganizationDbContext
 
     public DbSet<EmployeeApplication> EmployeeApplications => Set<EmployeeApplication>();
 
-    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Branch> Branches => Set<Branch>();
 
     public DbSet<Region> Regions => Set<Region>();
 

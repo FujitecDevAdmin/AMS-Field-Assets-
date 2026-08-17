@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace AMS.Modules.Organization.Features.SearchLocations;
+namespace AMS.Modules.Organization.Features.SearchBranches;
 
 /// <summary>
 /// Shape only. Lengths mirror the schema exactly.
@@ -13,9 +13,9 @@ namespace AMS.Modules.Organization.Features.SearchLocations;
 /// Every Request has a validator, even a trivial one, so nobody forgets when a
 /// field is added later.
 /// </remarks>
-public sealed class SearchLocationsValidator : AbstractValidator<SearchLocationsRequest>
+public sealed class SearchBranchesValidator : AbstractValidator<SearchBranchesRequest>
 {
-    public SearchLocationsValidator()
+    public SearchBranchesValidator()
     {
         RuleFor(x => x.Search).MaximumLength(100);
     }

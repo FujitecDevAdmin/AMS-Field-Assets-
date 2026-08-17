@@ -14,7 +14,7 @@ public sealed record SearchEmployeesResponse(
     /// <param name="Email">May be null.</param>
     /// <param name="Phone">May be null.</param>
     /// <param name="DepartmentName">Null when the employee has no department.</param>
-    /// <param name="LocationName">Null when the employee has no branch.</param>
+    /// <param name="BranchName">Null when the employee has no branch.</param>
     /// <param name="ReportingManagerName">Null when they report to nobody.</param>
     /// <param name="IsActive">Leavers stay in the directory, greyed.</param>
     public sealed record Row(
@@ -24,7 +24,7 @@ public sealed record SearchEmployeesResponse(
         string? Email,
         string? Phone,
         string? DepartmentName,
-        string? LocationName,
+        string? BranchName,
         string? ReportingManagerName,
         bool IsActive);
 }

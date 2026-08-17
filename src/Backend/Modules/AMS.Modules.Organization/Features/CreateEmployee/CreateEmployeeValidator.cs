@@ -23,7 +23,7 @@ public sealed class CreateEmployeeValidator : AbstractValidator<CreateEmployeeRe
             .When(x => !string.IsNullOrWhiteSpace(x.Email));
         RuleFor(x => x.Phone).MaximumLength(40);
         RuleFor(x => x.DepartmentId).GreaterThan(0).When(x => x.DepartmentId.HasValue);
-        RuleFor(x => x.LocationId).GreaterThan(0).When(x => x.LocationId.HasValue);
+        RuleFor(x => x.BranchId).GreaterThan(0).When(x => x.BranchId.HasValue);
         RuleFor(x => x.ReportingManagerId).GreaterThan(0).When(x => x.ReportingManagerId.HasValue);
     }
 }
