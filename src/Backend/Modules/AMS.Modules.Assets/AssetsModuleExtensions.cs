@@ -2,12 +2,15 @@ using AMS.Modules.Assets.Features.CreateAssetClass;
 using AMS.Modules.Assets.Features.CreateAssetStatus;
 using AMS.Modules.Assets.Features.CreateAssetType;
 using AMS.Modules.Assets.Features.CreateChartOfAccount;
+using AMS.Modules.Assets.Features.CreateAuditorLocation;
 using AMS.Modules.Assets.Features.DefineCustomField;
 using AMS.Modules.Assets.Features.DeleteAsset;
 using AMS.Modules.Assets.Features.GetAsset;
+using AMS.Modules.Assets.Features.GetAssetDashboard;
 using AMS.Modules.Assets.Features.GetAssetTimeline;
 using AMS.Modules.Assets.Features.GetAssetTypeCustomFields;
 using AMS.Modules.Assets.Features.ImportAssetsExcel;
+using AMS.Modules.Assets.Features.ListAuditorLocations;
 using AMS.Modules.Assets.Features.SaveAssetDetails;
 using AMS.Modules.Assets.Features.SetAssetCustomValues;
 using AMS.Modules.Assets.Features.RegisterAsset;
@@ -140,6 +143,7 @@ public static class AssetsModuleExtensions
         // group root and /{id}, and a later /{id:int} would otherwise be
         // shadowed by nothing — but reading them together is what matters.
         SearchAssetsEndpoint.Map(group);
+        GetAssetDashboardEndpoint.Map(group);
         RegisterAssetEndpoint.Map(group);
         UpdateAssetEndpoint.Map(group);
         DeleteAssetEndpoint.Map(group);
@@ -151,6 +155,8 @@ public static class AssetsModuleExtensions
         SetAssetCustomValuesEndpoint.Map(group);
         ImportAssetsExcelEndpoint.Map(group);
         UpdateImportedAssetDetailsEndpoint.Map(group);
+        ListAuditorLocationsEndpoint.Map(group);
+        CreateAuditorLocationEndpoint.Map(group);
 
         // Asset types, and the custom fields that hang off them.
         SearchAssetTypesEndpoint.Map(group);
@@ -179,6 +185,7 @@ public static class AssetsModuleExtensions
     private static void AddHandlers(IServiceCollection services)
     {
         services.AddScoped<IRequestHandler<SearchAssetsQuery, SearchAssetsResponse>, SearchAssetsHandler>();
+        services.AddScoped<IRequestHandler<GetAssetDashboardQuery, GetAssetDashboardResponse>, GetAssetDashboardHandler>();
         services.AddScoped<IRequestHandler<RegisterAssetCommand, RegisterAssetResponse>, RegisterAssetHandler>();
         services.AddScoped<IRequestHandler<UpdateAssetCommand, UpdateAssetResponse>, UpdateAssetHandler>();
         services.AddScoped<IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>, DeleteAssetHandler>();
@@ -188,6 +195,8 @@ public static class AssetsModuleExtensions
         services.AddScoped<IRequestHandler<SetAssetCustomValuesCommand, SetAssetCustomValuesResponse>, SetAssetCustomValuesHandler>();
         services.AddScoped<IRequestHandler<ImportAssetsExcelCommand, ImportAssetsExcelResponse>, ImportAssetsExcelHandler>();
         services.AddScoped<IRequestHandler<UpdateImportedAssetDetailsCommand, UpdateImportedAssetDetailsResponse>, UpdateImportedAssetDetailsHandler>();
+        services.AddScoped<IRequestHandler<ListAuditorLocationsQuery, ListAuditorLocationsResponse>, ListAuditorLocationsHandler>();
+        services.AddScoped<IRequestHandler<CreateAuditorLocationCommand, CreateAuditorLocationResponse>, CreateAuditorLocationHandler>();
 
         services.AddScoped<IRequestHandler<SearchAssetTypesQuery, SearchAssetTypesResponse>, SearchAssetTypesHandler>();
         services.AddScoped<IRequestHandler<CreateAssetTypeCommand, CreateAssetTypeResponse>, CreateAssetTypeHandler>();

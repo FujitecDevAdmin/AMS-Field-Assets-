@@ -21,5 +21,8 @@ public static class Capabilities
 
         /// <summary>Create, rename, retire roles and set what they grant.</summary>
         public const string RoleManage = "role.manage";
+
+        /// <summary>Create auditor accounts from the Field Assets administration portal.</summary>
+        public const string FieldAssetManage = "field-asset.manage";
     }
 }
