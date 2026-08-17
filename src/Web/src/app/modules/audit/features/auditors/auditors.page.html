@@ -1,20 +1,331 @@
-<section class="page-heading">
+<section class="auditor-hero">
   <div>
     <p class="eyebrow">AUDIT MANAGEMENT</p>
     <h1>Auditors</h1>
-    <p>Manage the auditors who perform field asset verification.</p>
+    <p>Manage verification accounts, branch access and account security.</p>
   </div>
-  <dx-button text="Add Auditor" icon="plus" type="default" (onClick)="showAddAuditor()" />
+  <div class="hero-actions">
+    <dx-button
+      text="Add Location"
+      icon="map"
+      stylingMode="outlined"
+      (onClick)="showAddLocation()"
+    />
+    <dx-button text="Add Auditor" icon="plus" type="default" (onClick)="showAddAuditor()" />
+  </div>
 </section>
 
-@if (isAddPanelVisible()) {
-  <section class="add-panel">
-    <h2>Add Auditor</h2>
-    <p>The auditor-entry form will appear here when the auditor API is connected.</p>
-  </section>
-}
-
-<section class="content-card">
-  <h2>Auditor list</h2>
-  <p>No auditor records are available yet.</p>
+<section class="summary-grid" aria-label="Auditor summary">
+  <article class="summary-card">
+    <span class="summary-icon summary-icon-red">A</span>
+    <div>
+      <strong>{{ activeCount() }}</strong
+      ><span>Active auditors</span>
+    </div>
+  </article>
+  <article class="summary-card">
+    <span class="summary-icon summary-icon-green">✓</span>
+    <div>
+      <strong>{{ verificationCount() }}</strong
+      ><span>Verifications completed</span>
+    </div>
+  </article>
+  <article class="summary-card">
+    <span class="summary-icon summary-icon-blue">M</span>
+    <div>
+      <strong>{{ mfaCount() }}</strong
+      ><span>MFA enabled</span>
+    </div>
+  </article>
+  <article class="summary-card">
+    <span class="summary-icon summary-icon-amber">!</span>
+    <div>
+      <strong>{{ lockedCount() }}</strong
+      ><span>Locked accounts</span>
+    </div>
+  </article>
 </section>
+
+<section class="auditor-register">
+  <header class="register-header">
+    <div>
+      <h2>Auditor directory</h2>
+      <p>Identity users authorised to perform physical asset verification.</p>
+    </div>
+    <div class="register-controls">
+      <dx-text-box
+        width="310"
+        mode="search"
+        placeholder="Search name, username or email"
+        [value]="search()"
+        valueChangeEvent="keyup"
+        (onValueChanged)="search.set($event.value ?? '')"
+      />
+      <dx-select-box
+        width="150"
+        [items]="statusOptions"
+        [value]="selectedStatus()"
+        (onValueChanged)="selectedStatus.set($event.value ?? statusOptions[0])"
+      />
+    </div>
+  </header>
+
+  <dx-data-grid
+    [dataSource]="auditors()"
+    keyExpr="id"
+    [showBorders]="true"
+    [rowAlternationEnabled]="true"
+    [columnAutoWidth]="false"
+    [columnWidth]="155"
+    [allowColumnResizing]="true"
+    columnResizingMode="widget"
+    [hoverStateEnabled]="true"
+    noDataText="No auditor accounts have been configured."
+    (onExporting)="exportTable($event, 'AMS_Auditor_Directory')"
+  >
+    <dxo-paging [pageSize]="10" />
+    <dxo-pager
+      [visible]="true"
+      [showPageSizeSelector]="true"
+      [allowedPageSizes]="[10, 20, 50, 100]"
+      [showInfo]="true"
+    />
+    <dxo-export [enabled]="true" [formats]="['xlsx']" />
+    <dxo-toolbar><dxi-item name="exportButton" location="after" /></dxo-toolbar>
+    <dxi-column dataField="displayName" caption="Auditor name" [width]="205" />
+    <dxi-column dataField="username" caption="Username" />
+    <dxi-column dataField="email" caption="Email" [width]="220" />
+    <dxi-column dataField="employeeId" caption="Employee ID" />
+    <dxi-column dataField="branchScope" caption="Branch access" [width]="190" />
+    <dxi-column dataField="completedVerifications" caption="Verified assets" dataType="number" />
+    <dxi-column dataField="mfaEnabled" caption="MFA" cellTemplate="mfaCell" />
+    <dxi-column dataField="isActive" caption="Account status" cellTemplate="statusCell" />
+    <dxi-column
+      dataField="lastLoginOnUtc"
+      caption="Last login"
+      dataType="datetime"
+      format="dd MMM yyyy, HH:mm"
+      [width]="180"
+    />
+    <dxi-column caption="Actions" cellTemplate="actionsCell" [width]="130" [allowSorting]="false" />
+    <div *dxTemplate="let cell of 'mfaCell'">
+      <span class="security-badge" [class.security-badge-enabled]="cell.value">
+        {{ cell.value ? 'Enabled' : 'Pending' }}
+      </span>
+    </div>
+    <div *dxTemplate="let cell of 'statusCell'">
+      <span
+        class="status-badge"
+        [class.status-badge-inactive]="!cell.data.isActive"
+        [class.status-badge-locked]="cell.data.isLocked"
+      >
+        {{ cell.data.isLocked ? 'Locked' : cell.data.isActive ? 'Active' : 'Inactive' }}
+      </span>
+    </div>
+    <div *dxTemplate="let _ of 'actionsCell'" class="action-buttons">
+      <dx-button text="View" stylingMode="outlined" />
+      <dx-button icon="overflow" stylingMode="text" />
+    </div>
+  </dx-data-grid>
+</section>
+
+<dx-popup
+  title="Add auditor account"
+  [visible]="isAddPanelVisible()"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  [hideOnOutsideClick]="false"
+  [width]="720"
+  [height]="'auto'"
+  (onHiding)="closeAddAuditor()"
+>
+  <div class="auditor-form">
+    <div class="form-intro">
+      <span class="form-intro-icon">A</span>
+      <div>
+        <strong>New verification account</strong>
+        <p>
+          The account will use the central Identity password policy and verification capabilities.
+        </p>
+      </div>
+    </div>
+
+    <section class="form-section">
+      <header>
+        <span>1</span>
+        <div><strong>Identity</strong><small>Identity.User</small></div>
+      </header>
+      <div class="form-grid">
+        <label
+          ><span>Display name *</span
+          ><dx-text-box
+            placeholder="Full auditor name"
+            [value]="displayName()"
+            valueChangeEvent="keyup"
+            (onValueChanged)="displayName.set($event.value ?? '')"
+        /></label>
+        <label
+          ><span>Username *</span
+          ><dx-text-box
+            placeholder="Login username"
+            [value]="username()"
+            valueChangeEvent="keyup"
+            (onValueChanged)="username.set($event.value ?? '')"
+        /></label>
+        <label
+          ><span>Email address</span
+          ><dx-text-box
+            mode="email"
+            placeholder="name@company.com"
+            [value]="email()"
+            valueChangeEvent="keyup"
+            (onValueChanged)="email.set($event.value ?? '')"
+        /></label>
+        <label
+          ><span>Employee ID</span
+          ><dx-text-box
+            placeholder="Organization employee ID"
+            [value]="employeeId()"
+            valueChangeEvent="keyup"
+            (onValueChanged)="employeeId.set($event.value ?? '')"
+        /></label>
+        <label class="form-grid-wide"
+          ><span>Temporary password * (minimum 12 characters)</span
+          ><dx-text-box
+            mode="password"
+            placeholder="Must be changed at first login"
+            [value]="temporaryPassword()"
+            valueChangeEvent="keyup"
+            (onValueChanged)="temporaryPassword.set($event.value ?? '')"
+        /></label>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <header>
+        <span>2</span>
+        <div>
+          <strong>Access and security</strong
+          ><small>UserBranch and verification capabilities</small>
+        </div>
+      </header>
+      <div class="access-options">
+        <dx-check-box
+          text="Access all branches"
+          [value]="hasAllBranches()"
+          (onValueChanged)="hasAllBranches.set($event.value ?? false)"
+        />
+        <dx-check-box
+          text="Require MFA enrolment"
+          [value]="requireMfa()"
+          (onValueChanged)="requireMfa.set($event.value ?? true)"
+        />
+        <dx-check-box text="Require password change on first login" [value]="true" />
+      </div>
+      <div class="branch-field-header">
+        <span>Assigned branches</span>
+      </div>
+      <dx-tag-box
+        class="branch-field"
+        [items]="locations()"
+        displayExpr="locationName"
+        valueExpr="locationId"
+        [searchEnabled]="true"
+        [showSelectionControls]="true"
+        [applyValueMode]="'useButtons'"
+        placeholder="Select one or more assigned locations"
+        [value]="selectedLocationIds()"
+        [disabled]="hasAllBranches()"
+        (onValueChanged)="selectedLocationIds.set($event.value ?? [])"
+      />
+    </section>
+
+    <footer class="form-footer">
+      @if (auditorFormError()) {
+        <p class="auditor-form-error">{{ auditorFormError() }}</p>
+      } @else {
+        <p>Required: name, valid username and a password of at least 12 characters.</p>
+      }
+      <dx-button text="Cancel" stylingMode="outlined" (onClick)="closeAddAuditor()" />
+      <dx-button
+        text="Create Auditor"
+        icon="save"
+        type="default"
+        [disabled]="!canCreateAuditor()"
+        (onClick)="createAuditor()"
+      />
+    </footer>
+  </div>
+</dx-popup>
+
+<dx-popup
+  title="Add assigned location"
+  [visible]="isLocationPanelVisible()"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  [hideOnOutsideClick]="false"
+  [width]="760"
+  [height]="650"
+  (onHiding)="closeAddLocation()"
+>
+  <div class="location-manager">
+    <div class="location-manager-intro">
+      <div>
+        <strong>Assigned location directory</strong>
+        <p>
+          These values are stored in Assets.CustomFieldDefinition and are separate from
+          Organisation.Location.
+        </p>
+      </div>
+      <span>{{ locations().length }} locations</span>
+    </div>
+
+    <dx-data-grid
+      class="location-grid"
+      [dataSource]="locations()"
+      keyExpr="id"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [columnAutoWidth]="true"
+      (onExporting)="exportTable($event, 'AMS_Assigned_Locations')"
+    >
+      <dxo-search-panel [visible]="true" placeholder="Search assigned locations" />
+      <dxo-scrolling mode="standard" />
+      <dxo-paging [pageSize]="10" />
+      <dxo-pager [visible]="true" [showInfo]="true" />
+      <dxo-export [enabled]="true" [formats]="['xlsx']" />
+      <dxo-toolbar>
+        <dxi-item name="searchPanel" location="after" />
+        <dxi-item name="exportButton" location="after" />
+      </dxo-toolbar>
+      <dxi-column dataField="locationId" caption="Location ID" [width]="110" />
+      <dxi-column dataField="locationName" caption="Location name" />
+    </dx-data-grid>
+
+    <div class="location-create">
+      <label>
+        <span>New location name *</span>
+        <dx-text-box
+          placeholder="Enter the assigned location"
+          [value]="newLocationName()"
+          valueChangeEvent="keyup"
+          (onValueChanged)="newLocationName.set($event.value ?? '')"
+        />
+      </label>
+      @if (locationError()) {
+        <p class="location-error">{{ locationError() }}</p>
+      }
+      <div class="location-actions">
+        <dx-button text="Cancel" stylingMode="outlined" (onClick)="closeAddLocation()" />
+        <dx-button
+          text="Save Location"
+          icon="save"
+          type="default"
+          [disabled]="newLocationName().trim().length === 0 || isSavingLocation()"
+          (onClick)="saveLocation()"
+        />
+      </div>
+    </div>
+  </div>
+</dx-popup>
