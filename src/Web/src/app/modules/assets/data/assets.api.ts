@@ -7,11 +7,16 @@ import type {
   ImportedAssetDetailsUpdateResponse,
   AssetRegisterFilters,
   AssetRegisterResponse,
+  AssetDashboardResponse,
 } from './models/asset-register.models';
 
 @Injectable({ providedIn: 'root' })
 export class AssetsApi {
   private readonly http = inject(HttpClient);
+
+  dashboard(): Observable<AssetDashboardResponse> {
+    return this.http.get<AssetDashboardResponse>('/api/v1/assets/dashboard');
+  }
 
   search(
     search: string,

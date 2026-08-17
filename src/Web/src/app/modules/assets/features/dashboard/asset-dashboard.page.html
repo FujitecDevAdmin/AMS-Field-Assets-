@@ -1,0 +1,242 @@
+<section class="dashboard">
+  <header class="dashboard-hero">
+    <div>
+      <p class="eyebrow"><span class="live-dot"></span> LIVE ASSET INTELLIGENCE</p>
+      <h1>Asset command centre</h1>
+      <p>Operational inventory health, verification, custody and financial exposure.</p>
+    </div>
+    <div class="hero-actions">
+      <div class="updated-at">
+        <span>Last synchronized</span
+        ><strong>{{
+          store.lastUpdated()
+            ? (store.lastUpdated() | date: 'dd MMM, HH:mm:ss')
+            : 'Waiting for data'
+        }}</strong
+        ><small>Auto-refreshes every 30 seconds</small>
+      </div>
+      <dx-button
+        icon="refresh"
+        text="Refresh now"
+        type="default"
+        [disabled]="store.loading()"
+        (onClick)="store.load()"
+      /><a routerLink="/field-assets" class="register-link">Open asset register →</a>
+    </div>
+  </header>
+
+  @if (store.error(); as error) {
+    <div class="dashboard-error"><i class="dx-icon-warning"></i>{{ error }}</div>
+  }
+
+  @if (store.data(); as data) {
+    <section class="kpi-grid" aria-label="Asset key performance indicators">
+      <article class="kpi kpi-primary">
+        <div class="kpi-icon"><i class="dx-icon-box"></i></div>
+        <div>
+          <span>Total assets</span><strong>{{ formatNumber(data.totalAssets) }}</strong
+          ><small>{{ formatCurrency(data.totalAssetValue) }} portfolio value</small>
+        </div>
+      </article>
+      <article class="kpi kpi-success">
+        <div class="kpi-icon"><i class="dx-icon-check"></i></div>
+        <div>
+          <span>Verified assets</span><strong>{{ formatNumber(data.verifiedAssets) }}</strong
+          ><small>{{ store.verificationRate() }}% of register</small>
+        </div>
+      </article>
+      <article class="kpi kpi-warning">
+        <div class="kpi-icon"><i class="dx-icon-clock"></i></div>
+        <div>
+          <span>Pending verification</span
+          ><strong>{{ formatNumber(data.pendingVerification) }}</strong
+          ><small>Requires physical check</small>
+        </div>
+      </article>
+      <article class="kpi kpi-danger">
+        <div class="kpi-icon"><i class="dx-icon-find"></i></div>
+        <div>
+          <span>Missing assets</span><strong>{{ formatNumber(data.missingAssets) }}</strong
+          ><small>Investigate immediately</small>
+        </div>
+      </article>
+      <article class="kpi kpi-info">
+        <div class="kpi-icon"><i class="dx-icon-user"></i></div>
+        <div>
+          <span>Employee-mapped</span><strong>{{ formatNumber(data.employeeMappedAssets) }}</strong
+          ><small>{{ store.mappingRate() }}% custody coverage</small>
+        </div>
+      </article>
+      <article class="kpi kpi-neutral">
+        <div class="kpi-icon"><i class="dx-icon-unselectall"></i></div>
+        <div>
+          <span>Unmapped assets</span><strong>{{ formatNumber(data.unmappedAssets) }}</strong
+          ><small>No employee custodian</small>
+        </div>
+      </article>
+      <article class="kpi kpi-repair">
+        <div class="kpi-icon"><i class="dx-icon-preferences"></i></div>
+        <div>
+          <span>Under repair</span><strong>{{ formatNumber(data.assetsUnderRepair) }}</strong
+          ><small>Unavailable inventory</small>
+        </div>
+      </article>
+      <article class="kpi kpi-muted">
+        <div class="kpi-icon"><i class="dx-icon-trash"></i></div>
+        <div>
+          <span>Disposed assets</span><strong>{{ formatNumber(data.disposedAssets) }}</strong
+          ><small>Terminal lifecycle state</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="health-strip">
+      <div class="health-copy">
+        <span>Register health</span
+        ><strong>{{ store.verificationRate() >= 80 ? 'On track' : 'Needs attention' }}</strong
+        ><small>Verification and custody completeness</small>
+      </div>
+      <div class="health-metric">
+        <div>
+          <span>Physical verification</span><strong>{{ store.verificationRate() }}%</strong>
+        </div>
+        <div class="progress"><i [style.width.%]="store.verificationRate()"></i></div>
+      </div>
+      <div class="health-metric">
+        <div>
+          <span>Employee mapping</span><strong>{{ store.mappingRate() }}%</strong>
+        </div>
+        <div class="progress progress-blue"><i [style.width.%]="store.mappingRate()"></i></div>
+      </div>
+      <div class="health-alert">
+        <span>{{ data.pendingVerification + data.missingAssets + data.assetsUnderRepair }}</span
+        ><small>assets need attention</small>
+      </div>
+    </section>
+
+    <section class="analytics-grid">
+      <article class="chart-card">
+        <header>
+          <div>
+            <span class="card-kicker">MOVEMENT</span>
+            <h2>Asset activity trend</h2>
+            <p>New assets and physical verifications over six months</p>
+          </div>
+          <div class="view-controls">
+            <dx-select-box
+              width="96"
+              [items]="viewModes"
+              [value]="trendView"
+              (onValueChanged)="setTrendView($event.value ?? 'Chart')"
+            />
+            @if (trendView === 'Chart') {
+              <dx-select-box
+                width="100"
+                [items]="trendChartTypes"
+                [value]="trendChartType"
+                (onValueChanged)="setTrendChart($event.value ?? 'bar')"
+              />
+            }
+          </div>
+        </header>
+        @if (trendView === 'Chart') {
+          <dx-chart [dataSource]="data.assetTrend" [palette]="['#c70c1f', '#1f6feb']"
+            ><dxo-size [height]="310" /><dxo-common-series-settings
+              argumentField="period"
+              [type]="trendChartType" /><dxi-series
+              valueField="added"
+              name="Assets added" /><dxi-series valueField="verified" name="Verified" /><dxo-legend
+              verticalAlignment="top"
+              horizontalAlignment="right" /><dxo-tooltip [enabled]="true"
+          /></dx-chart>
+        } @else {
+          <ams-analytics-table
+            title="Asset activity trend"
+            fileName="AMS_Asset_Activity_Trend"
+            [rows]="data.assetTrend"
+            [columns]="trendColumns"
+            [pageSize]="10"
+          />
+        }
+      </article>
+
+      <article class="chart-card">
+        <header>
+          <div>
+            <span class="card-kicker">FINANCIAL VIEW</span>
+            <h2>Asset value by location</h2>
+            <p>Top locations by imported asset value</p>
+          </div>
+          <dx-select-box
+            width="96"
+            [items]="viewModes"
+            [value]="locationView"
+            (onValueChanged)="setLocationView($event.value ?? 'Chart')"
+          />
+        </header>
+        @if (locationView === 'Chart') {
+          <dx-chart [dataSource]="data.assetValueByLocation" [rotated]="true" palette="Soft Pastel"
+            ><dxo-size [height]="310" /><dxo-common-series-settings
+              argumentField="name"
+              type="bar" /><dxi-series valueField="value" name="Asset value" /><dxo-legend
+              [visible]="false" /><dxo-tooltip
+              [enabled]="true"
+              [customizeTooltip]="currencyTooltip"
+          /></dx-chart>
+        } @else {
+          <ams-analytics-table
+            title="Asset value by location"
+            fileName="AMS_Asset_Value_By_Location"
+            [rows]="data.assetValueByLocation"
+            [columns]="valueColumns"
+            [pageSize]="10"
+            [searchable]="true"
+          />
+        }
+      </article>
+    </section>
+
+    <section class="table-grid">
+      <article class="table-card">
+        <ams-analytics-table
+          title="Assets by status"
+          fileName="AMS_Assets_By_Status"
+          [rows]="data.assetsByStatus"
+          [columns]="breakdownColumns"
+        />
+      </article>
+      <article class="table-card">
+        <ams-analytics-table
+          title="Asset value by department"
+          fileName="AMS_Asset_Value_By_Department"
+          [rows]="data.assetValueByDepartment"
+          [columns]="valueColumns"
+        />
+      </article>
+      <article class="table-card">
+        <ams-analytics-table
+          title="Assets by type"
+          fileName="AMS_Assets_By_Type"
+          [rows]="data.assetsByType"
+          [columns]="breakdownColumns"
+        />
+      </article>
+      <article class="table-card">
+        <ams-analytics-table
+          title="Recently added assets"
+          fileName="AMS_Recently_Added_Assets"
+          [rows]="data.recentAssets"
+          [columns]="recentColumns"
+          [searchable]="true"
+        />
+      </article>
+    </section>
+  }
+
+  <dx-load-panel
+    [visible]="store.loading() && !store.data()"
+    [showPane]="true"
+    [shading]="false"
+    message="Building live dashboard…"
+  />
+</section>

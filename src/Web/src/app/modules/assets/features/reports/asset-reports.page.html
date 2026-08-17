@@ -1,0 +1,212 @@
+<section class="reports-page">
+  <header class="reports-hero">
+    <div>
+      <p>ASSET ANALYTICS</p>
+      <h1>Reports and insights</h1>
+      <span>Visual analysis with complete Excel-ready detail tables.</span>
+    </div>
+    <div class="report-actions">
+      <small>Generated {{ store.lastUpdated() | date: 'dd MMM yyyy, HH:mm' }}</small
+      ><dx-button
+        text="Refresh reports"
+        icon="refresh"
+        type="default"
+        [disabled]="store.loading()"
+        (onClick)="store.load()"
+      />
+    </div>
+  </header>
+
+  @if (store.error(); as error) {
+    <div class="report-error">{{ error }}</div>
+  }
+
+  @if (store.data(); as data) {
+    <section class="report-summary">
+      <div>
+        <span>Total assets</span><strong>{{ data.totalAssets }}</strong>
+      </div>
+      <div>
+        <span>Portfolio value</span><strong>{{ formatCurrency(data.totalAssetValue) }}</strong>
+      </div>
+      <div>
+        <span>Verified</span><strong>{{ store.verificationRate() }}%</strong>
+      </div>
+      <div>
+        <span>Mapped</span><strong>{{ store.mappingRate() }}%</strong>
+      </div>
+    </section>
+
+    <div class="section-heading">
+      <span>VISUAL REPORTS</span>
+      <h2>Six portfolio perspectives</h2>
+      <p>Charts highlight patterns; the detailed exportable tables follow below.</p>
+    </div>
+    <section class="charts-grid">
+      <article class="report-card">
+        <header>
+          <span>01</span>
+          <div>
+            <h3>Asset activity trend</h3>
+            <p>Added versus verified</p>
+          </div>
+        </header>
+        <dx-chart [dataSource]="data.assetTrend" [palette]="['#bf1022', '#2777cb']"
+          ><dxo-size [height]="280" /><dxo-common-series-settings
+            argumentField="period"
+            type="line" /><dxi-series valueField="added" name="Added" /><dxi-series
+            valueField="verified"
+            name="Verified" /><dxo-tooltip [enabled]="true"
+        /></dx-chart>
+      </article>
+      <article class="report-card">
+        <header>
+          <span>02</span>
+          <div>
+            <h3>Lifecycle status</h3>
+            <p>Assets by current status</p>
+          </div>
+        </header>
+        <dx-pie-chart [dataSource]="data.assetsByStatus" palette="Material"
+          ><dxo-size [height]="280" /><dxi-series
+            argumentField="name"
+            valueField="count" /><dxo-legend
+            verticalAlignment="bottom"
+            horizontalAlignment="center" /><dxo-tooltip [enabled]="true"
+        /></dx-pie-chart>
+      </article>
+      <article class="report-card">
+        <header>
+          <span>03</span>
+          <div>
+            <h3>Asset type composition</h3>
+            <p>Largest inventory classes</p>
+          </div>
+        </header>
+        <dx-chart [dataSource]="data.assetsByType" [rotated]="true" palette="Soft"
+          ><dxo-size [height]="280" /><dxo-common-series-settings
+            argumentField="name"
+            type="bar" /><dxi-series valueField="count" name="Assets" /><dxo-legend
+            [visible]="false" /><dxo-tooltip [enabled]="true"
+        /></dx-chart>
+      </article>
+      <article class="report-card">
+        <header>
+          <span>04</span>
+          <div>
+            <h3>Value by location</h3>
+            <p>Financial concentration</p>
+          </div>
+        </header>
+        <dx-chart [dataSource]="data.assetValueByLocation" [rotated]="true" palette="Soft Pastel"
+          ><dxo-size [height]="280" /><dxo-common-series-settings
+            argumentField="name"
+            type="bar" /><dxi-series valueField="value" name="Value" /><dxo-legend
+            [visible]="false" /><dxo-tooltip [enabled]="true" [customizeTooltip]="currencyTooltip"
+        /></dx-chart>
+      </article>
+      <article class="report-card">
+        <header>
+          <span>05</span>
+          <div>
+            <h3>Value by department</h3>
+            <p>Departmental ownership</p>
+          </div>
+        </header>
+        <dx-pie-chart [dataSource]="data.assetValueByDepartment" palette="Harmony Light"
+          ><dxo-size [height]="280" /><dxi-series
+            argumentField="name"
+            valueField="value" /><dxo-legend
+            verticalAlignment="bottom"
+            horizontalAlignment="center" /><dxo-tooltip
+            [enabled]="true"
+            [customizeTooltip]="currencyTooltip"
+        /></dx-pie-chart>
+      </article>
+      <article class="report-card">
+        <header>
+          <span>06</span>
+          <div>
+            <h3>Verification coverage</h3>
+            <p>Verified versus pending</p>
+          </div>
+        </header>
+        <dx-pie-chart
+          type="doughnut"
+          [dataSource]="coverageRows()"
+          [palette]="['#17915a', '#e3a21a']"
+          ><dxo-size [height]="280" /><dxi-series argumentField="name" valueField="count"
+            ><dxo-label [visible]="true" /></dxi-series
+          ><dxo-legend verticalAlignment="bottom" horizontalAlignment="center" /><dxo-tooltip
+            [enabled]="true"
+        /></dx-pie-chart>
+      </article>
+    </section>
+
+    <div class="section-heading table-heading">
+      <span>DETAILED REPORTS</span>
+      <h2>Exportable report tables</h2>
+      <p>Every table includes an Excel export action in its top toolbar.</p>
+    </div>
+    <section class="reports-table-grid">
+      <article>
+        <ams-analytics-table
+          title="Monthly asset activity"
+          fileName="AMS_Monthly_Asset_Activity"
+          [rows]="data.assetTrend"
+          [columns]="trendColumns"
+        />
+      </article>
+      <article>
+        <ams-analytics-table
+          title="Assets by status"
+          fileName="AMS_Assets_By_Status"
+          [rows]="data.assetsByStatus"
+          [columns]="breakdownColumns"
+          [searchable]="true"
+        />
+      </article>
+      <article>
+        <ams-analytics-table
+          title="Assets by type"
+          fileName="AMS_Assets_By_Type"
+          [rows]="data.assetsByType"
+          [columns]="breakdownColumns"
+          [searchable]="true"
+        />
+      </article>
+      <article>
+        <ams-analytics-table
+          title="Asset value by location"
+          fileName="AMS_Asset_Value_By_Location"
+          [rows]="data.assetValueByLocation"
+          [columns]="valueColumns"
+          [searchable]="true"
+        />
+      </article>
+      <article>
+        <ams-analytics-table
+          title="Asset value by department"
+          fileName="AMS_Asset_Value_By_Department"
+          [rows]="data.assetValueByDepartment"
+          [columns]="valueColumns"
+          [searchable]="true"
+        />
+      </article>
+      <article>
+        <ams-analytics-table
+          title="Verification coverage"
+          fileName="AMS_Verification_Coverage"
+          [rows]="coverageRows()"
+          [columns]="breakdownColumns"
+        />
+      </article>
+    </section>
+  }
+  <dx-load-panel
+    [visible]="store.loading() && !store.data()"
+    [showPane]="true"
+    [shading]="false"
+    message="Preparing reports…"
+  />
+</section>

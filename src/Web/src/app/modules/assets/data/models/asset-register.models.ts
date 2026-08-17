@@ -73,3 +73,43 @@ export interface ImportedAssetDetailsUpdateResponse {
   readonly assetId: number;
   readonly importedDataJson: string;
 }
+
+export interface AssetDashboardBreakdown {
+  readonly name: string;
+  readonly value: number;
+  readonly count: number;
+}
+
+export interface AssetDashboardTrendPoint {
+  readonly period: string;
+  readonly added: number;
+  readonly verified: number;
+}
+
+export interface AssetDashboardRecentAsset {
+  readonly id: number;
+  readonly assetNumber: string;
+  readonly assetName: string;
+  readonly status: string;
+  readonly location: string;
+  readonly createdOnUtc: string;
+}
+
+export interface AssetDashboardResponse {
+  readonly totalAssets: number;
+  readonly verifiedAssets: number;
+  readonly pendingVerification: number;
+  readonly missingAssets: number;
+  readonly employeeMappedAssets: number;
+  readonly unmappedAssets: number;
+  readonly assetsUnderRepair: number;
+  readonly disposedAssets: number;
+  readonly totalAssetValue: number;
+  readonly generatedOnUtc: string;
+  readonly assetValueByLocation: readonly AssetDashboardBreakdown[];
+  readonly assetValueByDepartment: readonly AssetDashboardBreakdown[];
+  readonly assetsByStatus: readonly AssetDashboardBreakdown[];
+  readonly assetsByType: readonly AssetDashboardBreakdown[];
+  readonly assetTrend: readonly AssetDashboardTrendPoint[];
+  readonly recentAssets: readonly AssetDashboardRecentAsset[];
+}

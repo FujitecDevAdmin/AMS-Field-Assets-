@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 
 import { anonymousOnlyGuard, authGuard } from './core/auth/auth.guard';
-import { HomePage } from './core/layout/home.page';
 import { NotBuiltPage } from './core/layout/not-built.page';
 import { ShellPage } from './core/layout/shell.page';
 import { SignInPage } from './modules/identity/features/sign-in/sign-in.page';
@@ -31,7 +30,11 @@ export const routes: Routes = [
     component: ShellPage,
     canActivate: [authGuard],
     children: [
-      { path: '', component: HomePage },
+      {
+        path: '',
+        loadChildren: () =>
+          import('./modules/assets/dashboard.routes').then((m) => m.ASSET_DASHBOARD_ROUTES),
+      },
       {
         path: 'field-assets',
         loadChildren: () =>
@@ -41,6 +44,11 @@ export const routes: Routes = [
         path: 'auditors',
         loadChildren: () =>
           import('./modules/audit/auditors.routes').then((m) => m.AUDITORS_ROUTES),
+      },
+      {
+        path: 'reports',
+        loadChildren: () =>
+          import('./modules/assets/reports.routes').then((m) => m.ASSET_REPORTS_ROUTES),
       },
       /* Every module route the menu lists, until that module has its own. A
          lazy loadChildren line above this one takes precedence, so modules
