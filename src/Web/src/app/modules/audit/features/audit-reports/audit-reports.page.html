@@ -1,0 +1,37 @@
+<section class="audit-reports-page">
+  <header class="ams-page-hero audit-reports-hero">
+    <div><p>AUDIT INTELLIGENCE</p><h1>Audit Reports</h1><span>Scanned and verified asset activity across every audit.</span></div>
+    <div class="hero-metrics"><div><strong>{{ total() }}</strong><span>verified records</span></div><div><strong>{{ exceptions() }}</strong><span>exceptions</span></div></div>
+  </header>
+
+  <section class="report-register">
+    <header><div><span>PHYSICAL VERIFICATION REGISTER</span><h2>Scanned and verified assets</h2><p>Live records from Verification.PhysicalVerification.</p></div><dx-button icon="refresh" hint="Refresh" stylingMode="text" [disabled]="loading()" (onClick)="load()" /></header>
+    <div class="filters">
+      <dx-text-box mode="search" placeholder="Search asset, audit, auditor or QR code" [value]="search()" valueChangeEvent="input" (onValueChanged)="search.set($event.value ?? '')" (onEnterKey)="load()" />
+      <dx-select-box [items]="branches()" valueExpr="id" displayExpr="branchName" placeholder="All branches" [showClearButton]="true" [value]="branchId()" (onValueChanged)="branchId.set($event.value ?? null); load()" />
+      <dx-select-box [items]="locations()" placeholder="All locations" [showClearButton]="true" [searchEnabled]="true" [value]="location()" (onValueChanged)="location.set($event.value ?? null); load()" />
+      <dx-button icon="search" hint="Apply filters" stylingMode="contained" (onClick)="load()" />
+      <dx-button icon="clear" hint="Clear filters" stylingMode="text" (onClick)="clearFilters()" />
+    </div>
+    @if (error(); as message) { <div class="error-banner">{{ message }}</div> }
+    <div class="grid-wrap">
+      <dx-data-grid [dataSource]="rows()" keyExpr="id" height="100%" [showBorders]="true" [showRowLines]="true" [showColumnLines]="true" [rowAlternationEnabled]="true" [columnAutoWidth]="true" [allowColumnResizing]="true" columnResizingMode="widget" noDataText="No verified assets match the selected filters.">
+        <dxo-scrolling mode="standard" [useNative]="true" showScrollbar="always" />
+        <dxo-paging [pageSize]="20" /><dxo-pager [showInfo]="true" [showPageSizeSelector]="true" [allowedPageSizes]="[20, 50, 100]" />
+        <dxo-export [enabled]="true" [allowExportSelectedData]="false" />
+        <dxi-column dataField="assetNumber" caption="Asset number" [minWidth]="150" />
+        <dxi-column dataField="assetName" caption="Asset name" [minWidth]="220" />
+        <dxi-column dataField="auditName" caption="Audit" [minWidth]="160" />
+        <dxi-column dataField="branchName" caption="Branch" [minWidth]="160" />
+        <dxi-column dataField="locationName" caption="Location" [minWidth]="170" />
+        <dxi-column dataField="auditorName" caption="Verified by" [minWidth]="150" />
+        <dxi-column dataField="workingCondition" caption="Condition" [minWidth]="125" />
+        <dxi-column dataField="serialVerified" caption="Serial checked" dataType="boolean" [width]="120" />
+        <dxi-column dataField="hasQrMismatch" caption="QR mismatch" dataType="boolean" [width]="115" />
+        <dxi-column dataField="verifiedOnUtc" caption="Verified on" dataType="datetime" format="dd MMM yyyy, HH:mm" [minWidth]="180" sortOrder="desc" />
+        <dxi-column dataField="remarks" caption="Remarks" [minWidth]="180" />
+      </dx-data-grid>
+      <dx-load-panel [visible]="loading()" [showPane]="true" [shading]="false" message="Loading audit records…" />
+    </div>
+  </section>
+</section>

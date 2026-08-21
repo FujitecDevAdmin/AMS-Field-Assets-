@@ -12,4 +12,7 @@ public sealed record SearchVerificationsQuery(
     bool ExceptionsOnly,
     bool MismatchesOnly,
     int Skip,
-    int Take) : IQuery<SearchVerificationsResponse>;
+    int Take,
+    int? BranchId = null,
+    string? Location = null,
+    string? Search = null) : IQuery<SearchVerificationsResponse>;

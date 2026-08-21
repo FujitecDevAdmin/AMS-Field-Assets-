@@ -46,6 +46,20 @@ export const routes: Routes = [
           import('./modules/audit/auditors.routes').then((m) => m.AUDITORS_ROUTES),
       },
       {
+        path: 'my-audits',
+        loadChildren: () =>
+          import('./modules/audit/my-audits.routes').then((m) => m.MY_AUDITS_ROUTES),
+      },
+      {
+        path: 'audit',
+        loadChildren: () => import('./modules/audit/audit.routes').then((m) => m.AUDIT_ROUTES),
+      },
+      {
+        path: 'audit-reports',
+        loadChildren: () =>
+          import('./modules/audit/audit-reports.routes').then((m) => m.AUDIT_REPORTS_ROUTES),
+      },
+      {
         path: 'reports',
         loadChildren: () =>
           import('./modules/assets/reports.routes').then((m) => m.ASSET_REPORTS_ROUTES),

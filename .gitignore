@@ -113,4 +113,5 @@ Desktop.ini
 # Local assistant scratch files and generated review artifacts. Runtime assets
 # that ship with the application belong under src/ and remain tracked.
 .codex-work/
+.codex-build/
 outputs/

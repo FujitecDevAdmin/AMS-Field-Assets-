@@ -6,6 +6,7 @@
   <ItemGroup>
     <!-- Its own contracts. The implementation lives here; the shape does not. -->
     <ProjectReference Include="..\AMS.Modules.Assets.PublicApi\AMS.Modules.Assets.PublicApi.csproj" />
+    <ProjectReference Include="..\AMS.Modules.Organization.PublicApi\AMS.Modules.Organization.PublicApi.csproj" />
     <ProjectReference Include="..\..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
     <ProjectReference Include="..\..\AMS.SharedKernel.Web\AMS.SharedKernel.Web.csproj" />
     <ProjectReference Include="..\..\AMS.SharedKernel.Persistence\AMS.SharedKernel.Persistence.csproj" />

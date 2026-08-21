@@ -52,6 +52,7 @@ public sealed record GetAssetResponse(
     /// <param name="CapitalisedFromAssetId">The asset under construction this settled from.</param>
     /// <param name="SplitFromAssetId">The bulk line this was carved out of.</param>
     /// <param name="Remarks">Free text.</param>
+    /// <param name="ImportedDataJson">Original imported workbook fields used by the Field Assets detail cards.</param>
     /// <param name="IsDeleted">Removed assets keep their record and their timeline.</param>
     /// <param name="LastPhysicalCheckOnUtc">When somebody last stood in front of it.</param>
     /// <param name="TracksHardware">Whether the screen should show the hardware section.</param>
@@ -84,6 +85,7 @@ public sealed record GetAssetResponse(
         int? CapitalisedFromAssetId,
         int? SplitFromAssetId,
         string? Remarks,
+        string? ImportedDataJson,
         bool IsDeleted,
         DateTime? LastPhysicalCheckOnUtc,
         bool TracksHardware,

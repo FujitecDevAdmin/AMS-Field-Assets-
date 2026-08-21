@@ -17,9 +17,12 @@ public sealed class SubmitVerificationValidator : AbstractValidator<SubmitVerifi
 {
     public SubmitVerificationValidator()
     {
+        RuleFor(x => x.CycleId).GreaterThan(0);
         RuleFor(x => x.AssetId).GreaterThan(0);
         RuleFor(x => x.WorkingCondition).MaximumLength(20);
-        RuleFor(x => x.ScannedQrValue).MaximumLength(200);
+        // Scanner payloads may be URLs or encoded data and can legitimately be
+        // longer than the persisted identifier. The handler resolves them to
+        // the asset's configured QR/barcode/asset number before saving.
         RuleFor(x => x.PhotoPath).MaximumLength(400);
         RuleFor(x => x.Remarks).MaximumLength(500);
         RuleFor(x => x.CountedQuantity).GreaterThanOrEqualTo(0).When(x => x.CountedQuantity.HasValue);

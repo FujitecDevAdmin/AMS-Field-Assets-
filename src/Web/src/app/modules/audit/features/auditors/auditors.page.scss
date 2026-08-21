@@ -120,6 +120,52 @@ h1 {
   display: flex;
   gap: 9px;
 }
+
+.register-tool-button {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: #f3f4f6;
+  color: #3c4651;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.register-tool-button:hover,
+.register-tool-button:focus-visible {
+  outline: none;
+  background: #e7e9ec;
+  color: #ca0012;
+  transform: translateY(-1px);
+}
+
+.register-tool-button:focus-visible {
+  box-shadow: 0 0 0 3px rgb(239 57 79 / 16%);
+}
+
+.register-tool-button--primary {
+  background: #f3f4f6;
+  color: #202733;
+}
+
+.register-tool-button--primary:hover,
+.register-tool-button--primary:focus-visible {
+  background: #e7e9ec;
+  color: #111820;
+}
+
+:host ::ng-deep .auditor-register .dx-datagrid-header-panel .dx-toolbar-items-container {
+  min-height: 48px;
+}
+
+:host ::ng-deep .auditor-register .dx-datagrid-export-button .dx-button {
+  border: 0;
+  border-radius: 7px;
+}
 .security-badge,
 .status-badge {
   background: #fff4df;
@@ -147,6 +193,90 @@ h1 {
   align-items: center;
   display: flex;
   gap: 4px;
+}
+
+.auditor-view-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 1.75rem;
+}
+
+.auditor-name-cell__view {
+  display: inline-grid;
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(239 57 79 / 9%);
+  color: #ef394f;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.auditor-name-cell__view:hover,
+.auditor-name-cell__view:focus-visible {
+  outline: none;
+  background: #ef394f;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.auditor-name-cell__view:focus-visible {
+  box-shadow: 0 0 0 3px rgb(239 57 79 / 18%);
+}
+
+.auditor-name-cell__view .dx-icon {
+  font-size: 0.9rem;
+}
+
+/* Keep every value and control on one consistent centre line. */
+:host ::ng-deep .auditor-register .dx-datagrid-headers .dx-header-row > td {
+  height: 48px;
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .auditor-register .dx-datagrid-rowsview .dx-data-row > td {
+  height: 52px;
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .auditor-register .dx-datagrid-headers .dx-header-row > td,
+:host ::ng-deep .auditor-register .dx-datagrid-rowsview .dx-data-row > td {
+  box-sizing: border-box;
+  padding-right: 14px;
+  padding-left: 14px;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .auditor-register .dx-scrollable-scrollbar.dx-scrollbar-horizontal {
+  height: 10px;
+}
+
+:host ::ng-deep .auditor-register .dx-datagrid-text-content {
+  line-height: 48px;
+}
+
+:host ::ng-deep .auditor-register .dx-template-wrapper {
+  display: flex;
+  align-items: center;
+  min-height: 100%;
+}
+
+.security-badge,
+.status-badge {
+  line-height: 1;
+  white-space: nowrap;
 }
 :host ::ng-deep .auditor-register .dx-datagrid-headers {
   background: linear-gradient(100deg, #263442, #3c4b5b);
@@ -272,7 +402,7 @@ h1 {
   display: block;
   margin: 0 13px 14px;
 }
-.location-manager {
+.branch-manager {
   background: #f4f6f8;
   display: flex;
   flex-direction: column;
@@ -281,7 +411,7 @@ h1 {
   margin: -20px;
   padding: 18px;
 }
-.location-manager-intro {
+.branch-manager-intro {
   align-items: center;
   background: linear-gradient(110deg, #98000e, #c90012);
   border-radius: 8px;
@@ -290,15 +420,15 @@ h1 {
   justify-content: space-between;
   padding: 14px 16px;
 }
-.location-manager-intro strong {
+.branch-manager-intro strong {
   font-size: 14px;
 }
-.location-manager-intro p {
+.branch-manager-intro p {
   font-size: 10px;
   margin: 4px 0 0;
   opacity: 0.88;
 }
-.location-manager-intro > span {
+.branch-manager-intro > span {
   background: rgb(255 255 255 / 16%);
   border: 1px solid rgb(255 255 255 / 28%);
   border-radius: 999px;
@@ -306,30 +436,30 @@ h1 {
   font-weight: 700;
   padding: 6px 10px;
 }
-.location-grid {
+.branch-grid {
   flex: 1 1 auto;
   min-height: 0;
 }
-.location-create {
+.branch-create {
   background: #fff;
   border: 1px solid #dce1e6;
   border-radius: 8px;
   padding: 13px;
 }
-.location-create label > span {
+.branch-create label > span {
   color: #4f5964;
   display: block;
   font-size: 10px;
   font-weight: 700;
   margin-bottom: 6px;
 }
-.location-actions {
+.branch-actions {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
   margin-top: 10px;
 }
-.location-error {
+.branch-error {
   color: #b00010;
   font-size: 10px;
   margin: 7px 0 0;
@@ -383,4 +513,42 @@ h1 {
     flex-direction: column;
     width: 100%;
   }
+}
+.auditor-view { display: block; width: 100%; padding: 4px; }
+.auditor-view-identity { position: relative; align-items: center; display: flex; gap: 18px; min-height: 92px; margin: 0 0 16px; padding: 18px 22px; overflow: hidden; background: linear-gradient(105deg, #fff 0%, #fff7f8 100%); border: 1px solid #eadfe1; border-radius: 14px; box-shadow: 0 4px 14px rgb(32 39 51 / 5%); }
+.auditor-view-identity::before { position: absolute; top: 0; bottom: 0; left: 0; width: 4px; content: ''; background: #ef394f; }
+.auditor-avatar { align-items: center; background: linear-gradient(145deg, #fff0f2, #ffe4e8); border: 1px solid #ffd9de; border-radius: 13px; color: #b10e20; display: flex; flex: 0 0 54px; font-size: 21px; font-weight: 800; height: 54px; justify-content: center; }
+.auditor-view-identity div { flex: 1; min-width: 0; }
+.auditor-view-identity div > span { color: var(--ams-text-muted); font-size: 10px; font-weight: 750; letter-spacing: .11em; }
+.auditor-view-identity h3 { margin: 4px 0; color: #202733; font-size: 20px; }
+.auditor-view-identity p { overflow: hidden; color: var(--ams-text-muted); font-size: 12px; margin: 0; text-overflow: ellipsis; white-space: nowrap; }
+.auditor-view-summary { display: grid; grid-template-columns: 1.35fr repeat(3, 1fr); column-gap: 14px; margin: 0 0 18px; }
+.auditor-view-summary article { box-sizing: border-box; display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 76px; padding: 14px 15px; background: #fff; border: 1px solid #e1e4e8; border-radius: 11px; box-shadow: 0 3px 10px rgb(32 39 51 / 4%); }
+.auditor-view-summary article > .dx-icon { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: #fff0f2; color: #d3162c; font-size: 15px; }
+.auditor-view-summary article div { display: grid; gap: 5px; min-width: 0; }
+.auditor-view-summary span { color: var(--ams-text-muted); font-size: 10px; line-height: 1; }
+.auditor-view-summary strong { overflow: hidden; color: #252c36; font-size: 13px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.auditor-activity { display: grid; grid-template-rows: auto 260px; width: 100%; margin: 0; overflow: hidden; border: 1px solid #dfe3e7; border-radius: 13px; background: #fff; box-shadow: 0 4px 14px rgb(32 39 51 / 4%); }
+.auditor-activity__header { display: flex; align-items: center; justify-content: space-between; min-height: 62px; padding: 10px 16px; border-bottom: 1px solid #e5e7ea; background: #fafafb; }
+.auditor-activity__header > div { display: flex; align-items: center; gap: 10px; }
+.auditor-activity__icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: #fff0f2; color: #d3162c; }
+.auditor-activity__header h4 { margin: 0 0 3px; color: #252c36; font-size: 13px; }
+.auditor-activity__header p { margin: 0; color: var(--ams-text-muted); font-size: 10px; }
+.auditor-activity__header > strong { padding: 5px 9px; border-radius: 999px; background: #fff0f2; color: #b10e20; font-size: 10px; }
+.auditor-activity-grid { min-width: 0; min-height: 0; position: relative; overflow: auto; }
+.auditor-activity-loading { align-items: center; background: rgb(255 255 255 / 88%); display: flex; inset: 0; justify-content: center; position: absolute; color: var(--ams-text-muted); font-size: 12px; z-index: 3; }
+:host ::ng-deep .auditor-activity-grid .dx-datagrid-nodata { color: #7d838c; font-size: 13px; }
+@media (max-width: 760px) {
+  .auditor-view { padding: 1px; }
+  .auditor-view-identity { align-items: flex-start; gap: 12px; margin-bottom: 14px; padding: 15px; }
+  .auditor-view-identity .status-badge { margin-left: auto; }
+  .auditor-view-summary { grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .auditor-view-summary article { min-height: 70px; }
+  .auditor-activity { grid-template-rows: auto 245px; }
+}
+
+@media (max-width: 520px) {
+  .auditor-view-summary { grid-template-columns: 1fr; }
+  .auditor-view-identity p { white-space: normal; }
+  .auditor-activity__header { padding: 10px 12px; }
 }

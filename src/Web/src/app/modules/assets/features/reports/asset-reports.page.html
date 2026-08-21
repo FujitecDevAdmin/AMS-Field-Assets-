@@ -1,21 +1,24 @@
 <section class="reports-page">
-  <header class="reports-hero">
+  <header class="reports-hero ams-page-hero">
     <div>
       <p>ASSET ANALYTICS</p>
       <h1>Reports and insights</h1>
       <span>Visual analysis with complete Excel-ready detail tables.</span>
     </div>
     <div class="report-actions">
-      <small>Generated {{ store.lastUpdated() | date: 'dd MMM yyyy, HH:mm' }}</small
-      ><dx-button
-        text="Refresh reports"
-        icon="refresh"
-        type="default"
-        [disabled]="store.loading()"
-        (onClick)="store.load()"
-      />
+      <small>Generated {{ store.lastUpdated() | date: 'dd MMM yyyy, HH:mm' }}</small>
     </div>
   </header>
+
+  <div class="title-action-row">
+    <dx-button
+      icon="refresh"
+      hint="Refresh reports"
+      stylingMode="text"
+      [disabled]="store.loading()"
+      (onClick)="store.load()"
+    />
+  </div>
 
   @if (store.error(); as error) {
     <div class="report-error">{{ error }}</div>
@@ -159,15 +162,6 @@
       </article>
       <article>
         <ams-analytics-table
-          title="Assets by status"
-          fileName="AMS_Assets_By_Status"
-          [rows]="data.assetsByStatus"
-          [columns]="breakdownColumns"
-          [searchable]="true"
-        />
-      </article>
-      <article>
-        <ams-analytics-table
           title="Assets by type"
           fileName="AMS_Assets_By_Type"
           [rows]="data.assetsByType"
@@ -193,7 +187,7 @@
           [searchable]="true"
         />
       </article>
-      <article>
+      <article class="reports-table-grid__wide">
         <ams-analytics-table
           title="Verification coverage"
           fileName="AMS_Verification_Coverage"

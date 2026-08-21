@@ -47,6 +47,24 @@ public sealed class GetAssetDashboardHandler(AssetsDbContext db, ICurrentUser cu
                 asset.ImportedDataJson))
             .ToListAsync(ct);
 
+        // PhysicalVerification is the source of truth. LastPhysicalCheckOnUtc is
+        // maintained as a fast asset snapshot, but older mobile captures predate
+        // that synchronization and must still appear in analytics.
+        var verificationDates = await db.Database
+            .SqlQueryRaw<DashboardVerificationRow>(
+                """
+                SELECT [AssetId], MAX([VerifiedOnUtc]) AS [LastVerifiedOnUtc]
+                FROM [Verification].[PhysicalVerification]
+                GROUP BY [AssetId]
+                """)
+            .ToListAsync(ct);
+        var latestVerificationByAsset = verificationDates
+            .ToDictionary(item => item.AssetId, item => item.LastVerifiedOnUtc);
+        rows = rows.Select(row => latestVerificationByAsset.TryGetValue(row.Id, out var verifiedOn)
+                && (!row.LastPhysicalCheckOnUtc.HasValue || verifiedOn > row.LastPhysicalCheckOnUtc)
+            ? row with { LastPhysicalCheckOnUtc = verifiedOn }
+            : row).ToList();
+
         var enriched = rows.Select(Enrich).ToList();
         var statusBreakdown = enriched.GroupBy(row => row.Status, StringComparer.OrdinalIgnoreCase)
             .Select(group => new AssetDashboardBreakdown(group.Key, group.Count(), group.Count()))
@@ -136,4 +154,11 @@ public sealed class GetAssetDashboardHandler(AssetsDbContext db, ICurrentUser cu
     private sealed record EnrichedRow(int Id, string AssetNumber, string AssetName, string Status, string Type,
         int? CurrentEmployeeId, DateTime? LastPhysicalCheckOnUtc, DateTime CreatedOnUtc,
         string Location, string Department, decimal Value);
+
+    private sealed class DashboardVerificationRow
+    {
+        public int AssetId { get; init; }
+
+        public DateTime LastVerifiedOnUtc { get; init; }
+    }
 }

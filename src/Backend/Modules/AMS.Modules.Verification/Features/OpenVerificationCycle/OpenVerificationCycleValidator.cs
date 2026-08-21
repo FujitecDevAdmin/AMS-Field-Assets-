@@ -18,5 +18,10 @@ public sealed class OpenVerificationCycleValidator : AbstractValidator<OpenVerif
     public OpenVerificationCycleValidator()
     {
         RuleFor(x => x.CycleName).NotEmpty().MaximumLength(120);
+        RuleFor(x => x.BranchId).GreaterThan(0);
+        RuleFor(x => x.AuditorUserIds).NotEmpty();
+        RuleForEach(x => x.AuditorUserIds).GreaterThan(0);
+        RuleFor(x => x.LocationBranchIds).NotEmpty();
+        RuleForEach(x => x.LocationBranchIds).GreaterThan(0);
     }
 }

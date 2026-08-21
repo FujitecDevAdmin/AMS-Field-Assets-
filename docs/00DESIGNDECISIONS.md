@@ -16,6 +16,27 @@ where the evidence lives. If there is no evidence, say so.
 
 ---
 
+## 2026-08-19 — Audit locations reuse Branch Master
+
+**Deviates from:** `docs/Audit_Module_Table_Design.docx`, which proposed a new
+`Organization.BranchLocation` directory for detailed locations below a branch.
+
+**Decision.** Audit creation uses existing `Organization.Branch` records for
+both the owning audit branch and its multi-selected audit locations. No second
+location master is introduced. Auditor and location selections are independent
+many-to-many mappings, so every selected auditor may cover every selected
+location. The total asset count is frozen from assets held at those selected
+branches when the audit opens.
+
+**Cost.** The model cannot describe rooms, floors or sub-branch areas unless
+Branch Master later gains those entries or this decision is revisited.
+
+**Evidence.** Product-owner direction on 2026-08-19: "Branch Master only."
+
+**Documents updated:** design script section 10.
+
+---
+
 ## 2026-08-17 — Rename the Organization location master to Branch
 
 The organization master formerly named `[Organization].[Location]` is now

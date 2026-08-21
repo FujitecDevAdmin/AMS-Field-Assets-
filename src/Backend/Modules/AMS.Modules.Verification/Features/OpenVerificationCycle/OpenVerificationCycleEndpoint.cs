@@ -26,7 +26,7 @@ public static class OpenVerificationCycleEndpoint
 
                 return result.ToHttpResult();
             })
-            .RequireCapability(Capabilities.Verification.Manage)
+            .RequireCapability(Capabilities.FieldAssets.Manage)
             .WithName("OpenVerificationCycle")
             .Produces<OpenVerificationCycleResponse>(StatusCodes.Status201Created)
             .ProducesValidationProblem()

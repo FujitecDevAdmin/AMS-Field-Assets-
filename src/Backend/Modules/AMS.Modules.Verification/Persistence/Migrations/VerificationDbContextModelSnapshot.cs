@@ -67,7 +67,6 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsBulkCount")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValueSql("0", "DF_PhysicalVerification_IsBulkCount");
 
@@ -144,6 +143,30 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("AMS.Modules.Verification.Domain.PhysicalVerificationAssignment", b =>
+                {
+                    b.Property<int>("PhysicalVerificationCycleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AuditorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AssignedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("AssignedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PhysicalVerificationCycleId", "AuditorUserId")
+                        .HasName("PK_PhysicalVerificationAssignment");
+
+                    b.HasIndex("AuditorUserId")
+                        .HasDatabaseName("IX_PhysicalVerificationAssignment_AuditorUserId");
+
+                    b.ToTable("PhysicalVerificationAssignment", "Verification");
+                });
+
             modelBuilder.Entity("AMS.Modules.Verification.Domain.PhysicalVerificationCycle", b =>
                 {
                     b.Property<int>("Id")
@@ -151,6 +174,9 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("ClosedOnUtc")
                         .HasColumnType("datetime2");
@@ -183,6 +209,9 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("TotalAssetCount")
+                        .HasColumnType("int");
+
                     b.HasKey("Id")
                         .HasName("PK_PhysicalVerificationCycle");
 
@@ -190,12 +219,24 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_PhysicalVerificationCycle_Name");
 
-                    b.HasIndex("IsActive")
-                        .IsUnique()
-                        .HasDatabaseName("UX_PhysicalVerificationCycle_OneActive")
-                        .HasFilter("[IsActive] = 1");
-
                     b.ToTable("PhysicalVerificationCycle", "Verification");
+                });
+
+            modelBuilder.Entity("AMS.Modules.Verification.Domain.PhysicalVerificationCycleLocation", b =>
+                {
+                    b.Property<int>("PhysicalVerificationCycleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PhysicalVerificationCycleId", "BranchId")
+                        .HasName("PK_PhysicalVerificationCycleLocation");
+
+                    b.HasIndex("BranchId")
+                        .HasDatabaseName("IX_PhysicalVerificationCycleLocation_BranchId");
+
+                    b.ToTable("PhysicalVerificationCycleLocation", "Verification");
                 });
 
             modelBuilder.Entity("AMS.Modules.Verification.Domain.PhysicalVerification", b =>
@@ -206,6 +247,26 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_PhysicalVerification_PhysicalVerificationCycle_PhysicalVerificationCycleId");
+                });
+
+            modelBuilder.Entity("AMS.Modules.Verification.Domain.PhysicalVerificationAssignment", b =>
+                {
+                    b.HasOne("AMS.Modules.Verification.Domain.PhysicalVerificationCycle", null)
+                        .WithMany()
+                        .HasForeignKey("PhysicalVerificationCycleId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_PhysicalVerificationAssignment_Cycle_PhysicalVerificationCycleId");
+                });
+
+            modelBuilder.Entity("AMS.Modules.Verification.Domain.PhysicalVerificationCycleLocation", b =>
+                {
+                    b.HasOne("AMS.Modules.Verification.Domain.PhysicalVerificationCycle", null)
+                        .WithMany()
+                        .HasForeignKey("PhysicalVerificationCycleId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("FK_PhysicalVerificationCycleLocation_Cycle_PhysicalVerificationCycleId");
                 });
 #pragma warning restore 612, 618
         }

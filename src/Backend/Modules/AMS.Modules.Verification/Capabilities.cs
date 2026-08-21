@@ -12,6 +12,12 @@ namespace AMS.Modules.Verification;
 /// </remarks>
 public static class Capabilities
 {
+    public static class FieldAssets
+    {
+        /// <summary>Administer field-asset audits from the Field Asset Admin portal.</summary>
+        public const string Manage = "field-asset.manage";
+    }
+
     public static class Verification
     {
         /// <summary>Record a sighting or a bulk count against the open cycle.</summary>

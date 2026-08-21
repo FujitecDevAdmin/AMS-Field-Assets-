@@ -1,6 +1,7 @@
 using AMS.Modules.Assets.PublicApi;
 using AMS.Modules.Verification.Domain;
 using AMS.Modules.Verification.Persistence;
+using AMS.Modules.Organization.PublicApi.Organization;
 using AMS.SharedKernel.Abstractions;
 using AMS.SharedKernel.Messaging;
 using AMS.SharedKernel.Persistence;
@@ -38,6 +39,7 @@ public sealed class SubmitVerificationHandler(
     IAssetSnapshot assets,
     IClock clock,
     ICurrentUser currentUser,
+    IBranchDirectory branches,
     SqlErrorTranslator sqlErrors)
     : IRequestHandler<SubmitVerificationCommand, SubmitVerificationResponse>
 {
@@ -61,13 +63,47 @@ public sealed class SubmitVerificationHandler(
         }
 
         var cycle = await db.PhysicalVerificationCycles
-            .SingleOrDefaultAsync(c => c.IsActive, ct);
+            .SingleOrDefaultAsync(c => c.Id == request.CycleId && c.IsActive, ct);
 
         if (cycle is null)
         {
             return Error.Validation(
-                "VerificationCycle.NoneOpen",
-                "No verification cycle is open. Ask an administrator to start one.");
+                "VerificationCycle.NotActive",
+                "The selected audit is not active.");
+        }
+
+        var isAssigned = await db.PhysicalVerificationAssignments.AsNoTracking()
+            .AnyAsync(assignment =>
+                assignment.PhysicalVerificationCycleId == cycle.Id
+                && assignment.AuditorUserId == currentUser.Id, ct);
+        if (!isAssigned)
+        {
+            return Error.Forbidden(
+                "VerificationCycle.NotAssigned",
+                "You are not assigned to conduct this audit.");
+        }
+
+        var locationIds = await db.PhysicalVerificationCycleLocations.AsNoTracking()
+            .Where(location => location.PhysicalVerificationCycleId == cycle.Id)
+            .Select(location => location.BranchId)
+            .ToListAsync(ct);
+        if (locationIds.Count == 0)
+        {
+            locationIds.Add(cycle.BranchId);
+        }
+        var selectedBranches = await branches.FindActiveAsync(locationIds, ct);
+        var acceptedBranches = selectedBranches
+            .SelectMany(branch => new[] { branch.BranchCode, branch.BranchName })
+            .Select(NormalizeBranch)
+            .ToHashSet(StringComparer.Ordinal);
+        var belongsToAuditBranch = asset.CurrentLocationId is { } currentLocationId
+            ? locationIds.Contains(currentLocationId)
+            : acceptedBranches.Contains(NormalizeBranch(asset.ImportedBranch));
+        if (!belongsToAuditBranch)
+        {
+            return Error.Forbidden(
+                "Verification.AssetOutsideAuditBranch",
+                "This asset does not belong to a branch assigned to this audit.");
         }
 
         // Checked before the insert as well as after. The phone may have been
@@ -101,11 +137,11 @@ public sealed class SubmitVerificationHandler(
             IsBulkCount = request.IsBulkCount,
             CountedQuantity = request.CountedQuantity,
             ExpectedQuantitySnapshot = request.ExpectedQuantitySnapshot,
-            ScannedQrValue = request.ScannedQrValue,
+            ScannedQrValue = PersistedScanValue(request.ScannedQrValue, asset),
             // A tag that does not name the asset it is stuck to. Recorded
             // rather than refused: the technician is standing in front of the
             // thing, and the tag being wrong is the finding.
-            HasQrMismatch = HasMismatch(request.ScannedQrValue, asset.AssetNumber),
+            HasQrMismatch = HasMismatch(request.ScannedQrValue, asset),
             WorkingCondition = request.WorkingCondition,
             SerialVerified = request.SerialVerified,
             GpsLatitude = request.GpsLatitude,
@@ -158,6 +194,8 @@ public sealed class SubmitVerificationHandler(
 
             throw;
         }
+
+        await assets.RecordPhysicalCheckAsync(request.AssetId, verification.VerifiedOnUtc, ct);
 
         return Describe(verification, asset, wasAlreadyRecorded: false);
     }
@@ -215,9 +253,54 @@ public sealed class SubmitVerificationHandler(
     /// ignored, because a QR reader returns what is printed and printers add
     /// neither. Anything else is a mismatch worth recording.
     /// </remarks>
-    private static bool HasMismatch(string? scanned, string assetNumber) =>
+    private static bool HasMismatch(string? scanned, AssetSnapshot asset) =>
         !string.IsNullOrWhiteSpace(scanned)
-        && !string.Equals(scanned.Trim(), assetNumber.Trim(), StringComparison.OrdinalIgnoreCase);
+        && !ScanMatches(scanned, asset.AssetNumber)
+        && !ScanMatches(scanned, asset.QrCodeValue)
+        && !ScanMatches(scanned, asset.BarcodeValue);
+
+    private static string? PersistedScanValue(string? scanned, AssetSnapshot asset)
+    {
+        if (string.IsNullOrWhiteSpace(scanned))
+        {
+            return null;
+        }
+
+        if (ScanMatches(scanned, asset.QrCodeValue))
+        {
+            return asset.QrCodeValue!.Trim();
+        }
+
+        if (ScanMatches(scanned, asset.BarcodeValue))
+        {
+            return asset.BarcodeValue!.Trim();
+        }
+
+        if (ScanMatches(scanned, asset.AssetNumber))
+        {
+            return asset.AssetNumber.Trim();
+        }
+
+        // Preserve a genuinely mismatched tag as an audit finding while
+        // respecting the existing nvarchar(200) evidence column.
+        var raw = scanned.Trim();
+        return raw.Length <= 200 ? raw : raw[..200];
+    }
+
+    private static bool ScanMatches(string scannedValue, string? registeredValue)
+    {
+        var scanned = NormalizeScan(scannedValue);
+        var registered = NormalizeScan(registeredValue);
+        return registered.Length > 0
+            && (scanned == registered
+                || (registered.Length >= 4 && scanned.Contains(registered, StringComparison.Ordinal)));
+    }
+
+    private static string NormalizeScan(string? value) => string.Concat(
+        (value ?? string.Empty).Where(char.IsLetterOrDigit)).ToUpperInvariant();
+
+    private static string NormalizeBranch(string? value) => string.Concat(
+        (value ?? string.Empty).Where(char.IsLetterOrDigit)).ToUpperInvariant();
 
     private static SubmitVerificationResponse Describe(
         PhysicalVerification verification,

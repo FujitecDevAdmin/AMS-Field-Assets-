@@ -348,8 +348,12 @@ $row-inset: 8px; // how far the row's pill stops short of the drawer edge
   }
 
   .dx-treeview-item-content {
-    flex: 0 0 auto;
-    width: $rail-width;
+    /* The item already has an 8px inset on each side. Giving its content the
+       full 60px rail width centred the glyph in an oversized box starting
+       after that inset, shifting every icon to the right of its selection
+       pill. Fill the actual item width instead. */
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .nav-row {

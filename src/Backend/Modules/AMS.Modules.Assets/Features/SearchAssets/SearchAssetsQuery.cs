@@ -19,6 +19,7 @@ public sealed record SearchAssetsQuery(
     DateOnly? AcquiredFrom,
     DateOnly? AcquiredTo,
     bool? IsBulk,
+    bool? IsVerified,
     bool IncludeDeleted,
     int Skip,
     int Take) : IQuery<SearchAssetsResponse>;

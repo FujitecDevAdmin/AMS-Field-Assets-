@@ -103,6 +103,21 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
+// Browser navigation legitimately aborts outstanding API requests. EF Core
+// observes HttpContext.RequestAborted and throws TaskCanceledException; do not
+// turn that client disconnect into a 500 or an unhandled debugger break.
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next(context);
+    }
+    catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+    {
+        // The client is gone, so there is no response left to write.
+    }
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

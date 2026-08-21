@@ -40,6 +40,25 @@ public sealed class BranchDirectory(OrganizationDbContext db) : IBranchDirectory
 
     public async Task<bool> IsActiveAsync(int branchId, CancellationToken ct) =>
         await db.Branches.AsNoTracking().AnyAsync(l => l.Id == branchId && l.IsActive, ct);
+
+    public async Task<IReadOnlyList<BranchReference>> FindActiveAsync(
+        IReadOnlyCollection<int> branchIds,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(branchIds);
+
+        return await db.Branches.AsNoTracking()
+            .Where(branch => branch.IsActive && branchIds.Contains(branch.Id))
+            .Select(branch => new BranchReference(branch.Id, branch.BranchCode, branch.BranchName))
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<BranchReference>> ListActiveAsync(CancellationToken ct) =>
+        await db.Branches.AsNoTracking()
+            .Where(branch => branch.IsActive)
+            .OrderBy(branch => branch.BranchCode)
+            .Select(branch => new BranchReference(branch.Id, branch.BranchCode, branch.BranchName))
+            .ToListAsync(ct);
 }
 
 /// <summary>Organization's answer to "who supplies this".</summary>

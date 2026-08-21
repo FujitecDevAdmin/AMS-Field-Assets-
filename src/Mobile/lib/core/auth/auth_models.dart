@@ -32,7 +32,9 @@ class SignInResult {
       mfaRequired: json['mfaRequired'] as bool,
       mfaChallengeToken: json['mfaChallengeToken'] as String?,
       accessToken: json['accessToken'] as String?,
-      accessTokenExpiresOnUtc: expires == null ? null : DateTime.parse(expires).toUtc(),
+      accessTokenExpiresOnUtc: expires == null
+          ? null
+          : DateTime.parse(expires).toUtc(),
     );
   }
 
@@ -74,7 +76,9 @@ class MfaResult {
     usedRecoveryCode: json['usedRecoveryCode'] as bool,
     remainingRecoveryCodes: json['remainingRecoveryCodes'] as int,
     accessToken: json['accessToken'] as String,
-    accessTokenExpiresOnUtc: DateTime.parse(json['accessTokenExpiresOnUtc'] as String).toUtc(),
+    accessTokenExpiresOnUtc: DateTime.parse(
+      json['accessTokenExpiresOnUtc'] as String,
+    ).toUtc(),
   );
 
   final int userId;

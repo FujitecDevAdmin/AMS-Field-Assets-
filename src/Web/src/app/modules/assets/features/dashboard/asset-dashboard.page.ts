@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from '@
 import { RouterLink } from '@angular/router';
 import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { DxChartModule } from 'devextreme-angular/ui/chart';
-import { DxLoadPanelModule } from 'devextreme-angular/ui/load-panel';
 import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
 
 import {
@@ -23,7 +22,6 @@ type ChartType = 'bar' | 'line' | 'spline';
     RouterLink,
     DxButtonModule,
     DxChartModule,
-    DxLoadPanelModule,
     DxSelectBoxModule,
   ],
   providers: [AssetDashboardStore],

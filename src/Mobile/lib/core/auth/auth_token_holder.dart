@@ -18,4 +18,6 @@ class AuthTokenHolder {
   void Function()? onUnauthorized;
 }
 
-final authTokenHolderProvider = Provider<AuthTokenHolder>((ref) => AuthTokenHolder());
+final authTokenHolderProvider = Provider<AuthTokenHolder>(
+  (ref) => AuthTokenHolder(),
+);

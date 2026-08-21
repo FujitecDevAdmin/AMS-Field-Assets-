@@ -1,17 +1,8 @@
-<section class="auditor-hero">
+<section class="auditor-hero ams-page-hero">
   <div>
     <p class="eyebrow">AUDIT MANAGEMENT</p>
     <h1>Auditors</h1>
     <p>Manage verification accounts, branch access and account security.</p>
-  </div>
-  <div class="hero-actions">
-    <dx-button
-      text="Add Location"
-      icon="map"
-      stylingMode="outlined"
-      (onClick)="showAddLocation()"
-    />
-    <dx-button text="Add Auditor" icon="plus" type="default" (onClick)="showAddAuditor()" />
   </div>
 </section>
 
@@ -71,18 +62,18 @@
   </header>
 
   <dx-data-grid
-    [dataSource]="auditors()"
+    [dataSource]="filteredAuditors()"
     keyExpr="id"
     [showBorders]="true"
     [rowAlternationEnabled]="true"
-    [columnAutoWidth]="false"
-    [columnWidth]="155"
-    [allowColumnResizing]="true"
-    columnResizingMode="widget"
+    [columnAutoWidth]="true"
+    [wordWrapEnabled]="false"
+    [allowColumnResizing]="false"
     [hoverStateEnabled]="true"
     noDataText="No auditor accounts have been configured."
     (onExporting)="exportTable($event, 'AMS_Auditor_Directory')"
   >
+    <dxo-scrolling mode="standard" [useNative]="true" showScrollbar="always" />
     <dxo-paging [pageSize]="10" />
     <dxo-pager
       [visible]="true"
@@ -91,13 +82,50 @@
       [showInfo]="true"
     />
     <dxo-export [enabled]="true" [formats]="['xlsx']" />
-    <dxo-toolbar><dxi-item name="exportButton" location="after" /></dxo-toolbar>
-    <dxi-column dataField="displayName" caption="Auditor name" [width]="205" />
+    <dxo-toolbar>
+      <dxi-item location="after" template="addBranchToolbarAction" />
+      <dxi-item location="after" template="addAuditorToolbarAction" />
+      <dxi-item name="exportButton" location="after" />
+    </dxo-toolbar>
+    <div *dxTemplate="let _ of 'addBranchToolbarAction'">
+      <button
+        type="button"
+        class="register-tool-button"
+        title="Add Branch"
+        aria-label="Add Branch"
+        (click)="showAddBranch()"
+      >
+        <i class="dx-icon dx-icon-map" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div *dxTemplate="let _ of 'addAuditorToolbarAction'">
+      <button
+        type="button"
+        class="register-tool-button register-tool-button--primary"
+        title="Add Auditor"
+        aria-label="Add Auditor"
+        (click)="showAddAuditor()"
+      >
+        <i class="dx-icon dx-icon-add" aria-hidden="true"></i>
+      </button>
+    </div>
+    <dxi-column dataField="displayName" caption="Auditor name" />
+    <dxi-column
+      caption=""
+      cellTemplate="viewAuditorCell"
+      alignment="center"
+      [width]="48"
+      [minWidth]="48"
+      [allowSorting]="false"
+      [allowFiltering]="false"
+      [allowResizing]="false"
+      [showInColumnChooser]="false"
+    />
     <dxi-column dataField="username" caption="Username" />
-    <dxi-column dataField="email" caption="Email" [width]="220" />
+    <dxi-column dataField="email" caption="Email" />
     <dxi-column dataField="employeeId" caption="Employee ID" />
-    <dxi-column dataField="branchScope" caption="Branch access" [width]="190" />
-    <dxi-column dataField="completedVerifications" caption="Verified assets" dataType="number" />
+    <dxi-column dataField="branchScope" caption="Branch access" />
+    <dxi-column dataField="completedVerifications" caption="Verified assets" dataType="number" alignment="left" />
     <dxi-column dataField="mfaEnabled" caption="MFA" cellTemplate="mfaCell" />
     <dxi-column dataField="isActive" caption="Account status" cellTemplate="statusCell" />
     <dxi-column
@@ -105,9 +133,18 @@
       caption="Last login"
       dataType="datetime"
       format="dd MMM yyyy, HH:mm"
-      [width]="180"
     />
-    <dxi-column caption="Actions" cellTemplate="actionsCell" [width]="130" [allowSorting]="false" />
+    <div *dxTemplate="let cell of 'viewAuditorCell'" class="auditor-view-cell">
+      <button
+        type="button"
+        class="auditor-name-cell__view"
+        title="View auditor details"
+        [attr.aria-label]="'View details for ' + cell.data.displayName"
+        (click)="viewAuditor(cell.data)"
+      >
+        <i class="dx-icon dx-icon-eyeopen" aria-hidden="true"></i>
+      </button>
+    </div>
     <div *dxTemplate="let cell of 'mfaCell'">
       <span class="security-badge" [class.security-badge-enabled]="cell.value">
         {{ cell.value ? 'Enabled' : 'Pending' }}
@@ -122,12 +159,67 @@
         {{ cell.data.isLocked ? 'Locked' : cell.data.isActive ? 'Active' : 'Inactive' }}
       </span>
     </div>
-    <div *dxTemplate="let _ of 'actionsCell'" class="action-buttons">
-      <dx-button text="View" stylingMode="outlined" />
-      <dx-button icon="overflow" stylingMode="text" />
-    </div>
   </dx-data-grid>
 </section>
+
+<dx-popup
+  [title]="selectedAuditor() ? selectedAuditor()!.displayName + ' — Auditor details' : 'Auditor details'"
+  [visible]="isViewPanelVisible()"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  [width]="'min(1050px, 95vw)'"
+  [height]="'auto'"
+  [maxHeight]="'90vh'"
+  (onHiding)="closeAuditorView()"
+>
+  <div *dxTemplate="let _ of 'content'" class="auditor-view">
+    @if (selectedAuditor(); as auditor) {
+      <header class="auditor-view-identity">
+        <span class="auditor-avatar">{{ auditor.displayName.charAt(0).toUpperCase() }}</span>
+        <div><span>AUDITOR ACCOUNT</span><h3>{{ auditor.displayName }}</h3><p>{{ auditor.username }} · {{ auditor.email || 'No email recorded' }}</p></div>
+        <span class="status-badge" [class.status-badge-inactive]="!auditor.isActive" [class.status-badge-locked]="auditor.isLocked">{{ auditor.isLocked ? 'Locked' : auditor.isActive ? 'Active' : 'Inactive' }}</span>
+      </header>
+      <section class="auditor-view-summary">
+        <article>
+          <i class="dx-icon dx-icon-map"></i>
+          <div><span>Branch access</span><strong>{{ auditor.branchScope }}</strong></div>
+        </article>
+        <article>
+          <i class="dx-icon dx-icon-check"></i>
+          <div><span>Verified assets</span><strong>{{ auditorActivity()?.totalCount ?? auditor.completedVerifications }}</strong></div>
+        </article>
+        <article>
+          <i class="dx-icon dx-icon-lock"></i>
+          <div><span>MFA security</span><strong>{{ auditor.mfaEnabled ? 'Enabled' : 'Pending' }}</strong></div>
+        </article>
+        <article>
+          <i class="dx-icon dx-icon-clock"></i>
+          <div><span>Last login</span><strong>{{ auditor.lastLoginOnUtc ? (auditor.lastLoginOnUtc | date: 'dd MMM yyyy, HH:mm') : 'Never' }}</strong></div>
+        </article>
+      </section>
+      @if (activityError(); as error) { <div class="auditor-form-error">{{ error }}</div> }
+      <section class="auditor-activity">
+        <header class="auditor-activity__header">
+          <div><span class="auditor-activity__icon"><i class="dx-icon dx-icon-columnfield"></i></span><div><h4>Verification activity</h4><p>Assets completed by this auditor</p></div></div>
+          <strong>{{ auditorActivity()?.totalCount ?? 0 }} records</strong>
+        </header>
+        <div class="auditor-activity-grid">
+        <dx-data-grid [dataSource]="auditorActivity()?.rows ?? []" keyExpr="verificationId" height="100%" [showBorders]="false" [rowAlternationEnabled]="true" [columnAutoWidth]="true" noDataText="No asset verification activity yet.">
+          <dxo-paging [pageSize]="10" />
+          <dxo-pager [visible]="(auditorActivity()?.rows?.length ?? 0) > 0" [showInfo]="true" />
+          <dxi-column dataField="assetNumber" caption="Asset number" />
+          <dxi-column dataField="assetName" caption="Asset name" [minWidth]="210" />
+          <dxi-column dataField="auditName" caption="Audit" />
+          <dxi-column dataField="workingCondition" caption="Condition" />
+          <dxi-column dataField="verifiedOnUtc" caption="Verified on" dataType="datetime" format="dd MMM yyyy, HH:mm" />
+          <dxi-column dataField="remarks" caption="Remarks" [minWidth]="180" />
+        </dx-data-grid>
+        @if (isLoadingActivity()) { <div class="auditor-activity-loading">Loading verification activity…</div> }
+        </div>
+      </section>
+    }
+  </div>
+</dx-popup>
 
 <dx-popup
   title="Add auditor account"
@@ -227,16 +319,16 @@
       </div>
       <dx-tag-box
         class="branch-field"
-        [items]="locations()"
-        displayExpr="locationName"
-        valueExpr="locationId"
+        [items]="branches()"
+        displayExpr="branchName"
+        valueExpr="id"
         [searchEnabled]="true"
         [showSelectionControls]="true"
         [applyValueMode]="'useButtons'"
-        placeholder="Select one or more assigned locations"
-        [value]="selectedLocationIds()"
+        placeholder="Select one or more assigned branches"
+        [value]="selectedBranchIds()"
         [disabled]="hasAllBranches()"
-        (onValueChanged)="selectedLocationIds.set($event.value ?? [])"
+        (onValueChanged)="selectedBranchIds.set($event.value ?? [])"
       />
     </section>
 
@@ -259,71 +351,94 @@
 </dx-popup>
 
 <dx-popup
-  title="Add assigned location"
-  [visible]="isLocationPanelVisible()"
+  title="Add assigned branch"
+  [visible]="isBranchPanelVisible()"
   [showCloseButton]="true"
   [dragEnabled]="false"
   [hideOnOutsideClick]="false"
   [width]="760"
   [height]="650"
-  (onHiding)="closeAddLocation()"
+  (onHiding)="closeAddBranch()"
 >
-  <div class="location-manager">
-    <div class="location-manager-intro">
+  <div class="branch-manager">
+    <div class="branch-manager-intro">
       <div>
-        <strong>Assigned location directory</strong>
+        <strong>Assigned branch directory</strong>
         <p>
-          These values are stored in Assets.CustomFieldDefinition and are separate from
-          Organisation.Location.
+          These are the official branch records stored in Organization.Branch.
         </p>
       </div>
-      <span>{{ locations().length }} locations</span>
+      <span>{{ branches().length }} branches</span>
     </div>
 
     <dx-data-grid
-      class="location-grid"
-      [dataSource]="locations()"
+      class="branch-grid"
+      [dataSource]="branches()"
       keyExpr="id"
       [showBorders]="true"
       [rowAlternationEnabled]="true"
       [hoverStateEnabled]="true"
       [columnAutoWidth]="true"
-      (onExporting)="exportTable($event, 'AMS_Assigned_Locations')"
+      (onExporting)="exportTable($event, 'AMS_Assigned_Branches')"
     >
-      <dxo-search-panel [visible]="true" placeholder="Search assigned locations" />
+      <dxo-search-panel [visible]="true" placeholder="Search assigned branches" />
       <dxo-scrolling mode="standard" />
       <dxo-paging [pageSize]="10" />
       <dxo-pager [visible]="true" [showInfo]="true" />
       <dxo-export [enabled]="true" [formats]="['xlsx']" />
       <dxo-toolbar>
-        <dxi-item name="searchPanel" location="after" />
-        <dxi-item name="exportButton" location="after" />
+        <dxi-item name="searchPanel" branch="after" />
+        <dxi-item name="exportButton" branch="after" />
       </dxo-toolbar>
-      <dxi-column dataField="locationId" caption="Location ID" [width]="110" />
-      <dxi-column dataField="locationName" caption="Location name" />
+      <dxi-column dataField="id" caption="Branch ID" [width]="110" />
+      <dxi-column dataField="branchCode" caption="Branch code" [width]="140" />
+      <dxi-column dataField="branchName" caption="Branch name" />
     </dx-data-grid>
 
-    <div class="location-create">
+    <div class="branch-create">
       <label>
-        <span>New location name *</span>
+        <span>Branch code *</span>
         <dx-text-box
-          placeholder="Enter the assigned location"
-          [value]="newLocationName()"
+          placeholder="Example: CHN01"
+          [value]="newBranchCode()"
           valueChangeEvent="keyup"
-          (onValueChanged)="newLocationName.set($event.value ?? '')"
+          (onValueChanged)="newBranchCode.set($event.value ?? '')"
         />
       </label>
-      @if (locationError()) {
-        <p class="location-error">{{ locationError() }}</p>
+      <label>
+        <span>Branch name *</span>
+        <dx-text-box
+          placeholder="Enter the branch name"
+          [value]="newBranchName()"
+          valueChangeEvent="keyup"
+          (onValueChanged)="newBranchName.set($event.value ?? '')"
+        />
+      </label>
+      <label>
+        <span>Time zone *</span>
+        <dx-text-box
+          placeholder="India Standard Time"
+          [value]="newBranchTimeZone()"
+          valueChangeEvent="keyup"
+          (onValueChanged)="newBranchTimeZone.set($event.value ?? '')"
+        />
+      </label>
+      @if (branchError()) {
+        <p class="branch-error">{{ branchError() }}</p>
       }
-      <div class="location-actions">
-        <dx-button text="Cancel" stylingMode="outlined" (onClick)="closeAddLocation()" />
+      <div class="branch-actions">
+        <dx-button text="Cancel" stylingMode="outlined" (onClick)="closeAddBranch()" />
         <dx-button
-          text="Save Location"
+          text="Save Branch"
           icon="save"
           type="default"
-          [disabled]="newLocationName().trim().length === 0 || isSavingLocation()"
-          (onClick)="saveLocation()"
+          [disabled]="
+            newBranchCode().trim().length === 0 ||
+            newBranchName().trim().length === 0 ||
+            newBranchTimeZone().trim().length === 0 ||
+            isSavingBranch()
+          "
+          (onClick)="saveBranch()"
         />
       </div>
     </div>

@@ -17,6 +17,9 @@ public static class SearchVerificationsMapper
             request.ExceptionsOnly ?? false,
             request.MismatchesOnly ?? false,
             request.Skip ?? 0,
-            request.Take ?? 50);
+            request.Take ?? 50,
+            request.BranchId,
+            string.IsNullOrWhiteSpace(request.Location) ? null : request.Location.Trim(),
+            string.IsNullOrWhiteSpace(request.Search) ? null : request.Search.Trim());
     }
 }

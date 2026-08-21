@@ -7,5 +7,8 @@ namespace AMS.Modules.Verification.Features.OpenVerificationCycle;
 /// </summary>
 public sealed record OpenVerificationCycleCommand(
     string CycleName,
+    int BranchId,
     DateOnly StartDate,
-    DateOnly? EndDate) : ICommand<OpenVerificationCycleResponse>;
+    DateOnly? EndDate,
+    IReadOnlyList<int> AuditorUserIds,
+    IReadOnlyList<int> LocationBranchIds) : ICommand<OpenVerificationCycleResponse>;

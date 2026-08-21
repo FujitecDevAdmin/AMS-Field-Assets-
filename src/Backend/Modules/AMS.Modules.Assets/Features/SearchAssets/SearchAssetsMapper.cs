@@ -24,6 +24,7 @@ public static class SearchAssetsMapper
             request.AcquiredFrom,
             request.AcquiredTo,
             request.IsBulk,
+            request.IsVerified,
             request.IncludeDeleted ?? false,
             request.Skip ?? 0,
             request.Take ?? 50);

@@ -25,7 +25,9 @@ class _StubSessionStore extends SessionStore {
 }
 
 Widget _app(Session? stored) => ProviderScope(
-  overrides: [sessionStoreProvider.overrideWithValue(_StubSessionStore(stored))],
+  overrides: [
+    sessionStoreProvider.overrideWithValue(_StubSessionStore(stored)),
+  ],
   child: const AmsAuditApp(),
 );
 
@@ -47,19 +49,31 @@ void main() {
     expect(find.text('Password'), findsOneWidget);
   });
 
-  testWidgets('goes straight in when a valid session is stored', (tester) async {
+  testWidgets('goes straight in when a valid session is stored', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _app(_session(expiresOnUtc: DateTime.now().toUtc().add(const Duration(hours: 8)))),
+      _app(
+        _session(
+          expiresOnUtc: DateTime.now().toUtc().add(const Duration(hours: 8)),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Signed in as S Verma'), findsOneWidget);
+    expect(find.text('My Audits'), findsOneWidget);
     expect(find.text('Username'), findsNothing);
   });
 
   testWidgets('an expired session is not a session', (tester) async {
     await tester.pumpWidget(
-      _app(_session(expiresOnUtc: DateTime.now().toUtc().subtract(const Duration(minutes: 1)))),
+      _app(
+        _session(
+          expiresOnUtc: DateTime.now().toUtc().subtract(
+            const Duration(minutes: 1),
+          ),
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 

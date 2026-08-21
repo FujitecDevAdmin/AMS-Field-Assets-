@@ -52,7 +52,7 @@ public sealed class TestCurrentUser : ICurrentUser
 /// database standing behind it. What it needs is a time zone and whether the
 /// branch exists; both are answers, not tables.
 /// </remarks>
-public sealed class FakeLocationDirectory : ILocationDirectory
+public sealed class FakeBranchDirectory : IBranchDirectory
 {
     private readonly Dictionary<int, string> _zones = new()
     {
@@ -61,18 +61,29 @@ public sealed class FakeLocationDirectory : ILocationDirectory
         [3] = "GMT Standard Time",
     };
 
-    public FakeLocationDirectory With(int locationId, string timeZoneId)
+    public FakeBranchDirectory With(int locationId, string timeZoneId)
     {
         _zones[locationId] = timeZoneId;
 
         return this;
     }
 
-    public Task<string?> TimeZoneOfAsync(int locationId, CancellationToken ct) =>
-        Task.FromResult(_zones.TryGetValue(locationId, out var zone) ? zone : null);
+    public Task<string?> TimeZoneOfAsync(int branchId, CancellationToken ct) =>
+        Task.FromResult(_zones.TryGetValue(branchId, out var zone) ? zone : null);
 
-    public Task<bool> IsActiveAsync(int locationId, CancellationToken ct) =>
-        Task.FromResult(_zones.ContainsKey(locationId));
+    public Task<bool> IsActiveAsync(int branchId, CancellationToken ct) =>
+        Task.FromResult(_zones.ContainsKey(branchId));
+
+    public Task<IReadOnlyList<BranchReference>> FindActiveAsync(
+        IReadOnlyCollection<int> branchIds,
+        CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<BranchReference>>(branchIds
+            .Where(_zones.ContainsKey)
+            .Select(id => new BranchReference(id, $"B{id}", $"Branch {id}"))
+            .ToArray());
+
+    public Task<IReadOnlyList<BranchReference>> ListActiveAsync(CancellationToken ct) =>
+        FindActiveAsync(_zones.Keys.ToArray(), ct);
 }
 
 /// <summary>The ServiceLevel schema, built by the module's own migrations.</summary>
@@ -89,7 +100,7 @@ public sealed class ServiceLevelFixture : IAsyncLifetime
 
     public TestCurrentUser CurrentUser { get; } = new();
 
-    public FakeLocationDirectory Locations { get; } = new();
+    public FakeBranchDirectory Locations { get; } = new();
 
     /// <summary>ServiceDesk's tickets, as far as the escalation monitor sees them.</summary>
     public FakeSlaWatchList Tickets { get; } = new();

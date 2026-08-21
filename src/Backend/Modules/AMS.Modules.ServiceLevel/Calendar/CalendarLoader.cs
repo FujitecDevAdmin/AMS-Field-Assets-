@@ -21,7 +21,7 @@ namespace AMS.Modules.ServiceLevel.Calendar;
 /// expects.
 /// </para>
 /// </remarks>
-public sealed class CalendarLoader(ServiceLevelDbContext db, ILocationDirectory locations)
+public sealed class CalendarLoader(ServiceLevelDbContext db, IBranchDirectory locations)
 {
     private readonly Dictionary<int, CalendarSnapshot> _cache = [];
 

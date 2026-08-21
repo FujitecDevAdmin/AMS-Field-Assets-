@@ -6,6 +6,7 @@ namespace AMS.Modules.Verification.Features.SubmitVerification;
 /// Record a sighting or a bulk count. Catalogue: the mobile capture.
 /// </summary>
 public sealed record SubmitVerificationCommand(
+    int CycleId,
     int AssetId,
     Guid? ClientCaptureId,
     bool IsBulkCount,

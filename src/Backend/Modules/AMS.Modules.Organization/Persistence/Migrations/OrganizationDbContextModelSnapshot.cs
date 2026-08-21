@@ -63,6 +63,71 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                     b.ToTable("Application", "Organization");
                 });
 
+            modelBuilder.Entity("AMS.Modules.Organization.Domain.Branch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BranchCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsHeadOffice")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ModifiedOnUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RegionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .HasDefaultValueSql("N'India Standard Time'", "DF_Branch_TimeZoneId");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Branch");
+
+                    b.HasIndex("BranchCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Branch_Code");
+
+                    b.HasIndex("IsHeadOffice")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Branch_OneHeadOffice")
+                        .HasFilter("[IsHeadOffice] = 1");
+
+                    b.HasIndex("RegionId")
+                        .HasDatabaseName("IX_Branch_RegionId");
+
+                    b.ToTable("Branch", "Organization");
+                });
+
             modelBuilder.Entity("AMS.Modules.Organization.Domain.Department", b =>
                 {
                     b.Property<int>("Id")
@@ -111,6 +176,9 @@ namespace AMS.Modules.Organization.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -143,9 +211,6 @@ namespace AMS.Modules.Organization.Persistence.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("LocationId")
-                        .HasColumnType("int");
 
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(100)
@@ -184,8 +249,8 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                     b.HasIndex("ReportingManagerId")
                         .HasDatabaseName("IX_Employee_ReportingManagerId");
 
-                    b.HasIndex("LocationId", "FullName")
-                        .HasDatabaseName("IX_Employee_Location");
+                    b.HasIndex("BranchId", "FullName")
+                        .HasDatabaseName("IX_Employee_Branch");
 
                     b.ToTable("Employee", "Organization");
 
@@ -251,72 +316,6 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                         .HasFilter("[RevokedOnUtc] IS NULL");
 
                     b.ToTable("EmployeeApplication", "Organization");
-                });
-
-            modelBuilder.Entity("AMS.Modules.Organization.Domain.Location", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsHeadOffice")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LocationCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("LocationName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ModifiedBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("ModifiedOnUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("RegionId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TimeZoneId")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)")
-                        .HasDefaultValueSql("N'India Standard Time'", "DF_Location_TimeZoneId");
-
-                    b.HasKey("Id")
-                        .HasName("PK_Location");
-
-                    b.HasIndex("IsHeadOffice")
-                        .IsUnique()
-                        .HasDatabaseName("UX_Location_OneHeadOffice")
-                        .HasFilter("[IsHeadOffice] = 1");
-
-                    b.HasIndex("LocationCode")
-                        .IsUnique()
-                        .HasDatabaseName("UX_Location_Code");
-
-                    b.HasIndex("RegionId")
-                        .HasDatabaseName("IX_Location_RegionId");
-
-                    b.ToTable("Location", "Organization");
                 });
 
             modelBuilder.Entity("AMS.Modules.Organization.Domain.Region", b =>
@@ -415,19 +414,28 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                     b.ToTable("Vendor", "Organization");
                 });
 
+            modelBuilder.Entity("AMS.Modules.Organization.Domain.Branch", b =>
+                {
+                    b.HasOne("AMS.Modules.Organization.Domain.Region", null)
+                        .WithMany()
+                        .HasForeignKey("RegionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_Branch_Region_RegionId");
+                });
+
             modelBuilder.Entity("AMS.Modules.Organization.Domain.Employee", b =>
                 {
+                    b.HasOne("AMS.Modules.Organization.Domain.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_Employee_Branch_BranchId");
+
                     b.HasOne("AMS.Modules.Organization.Domain.Department", null)
                         .WithMany()
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .HasConstraintName("FK_Employee_Department_DepartmentId");
-
-                    b.HasOne("AMS.Modules.Organization.Domain.Location", null)
-                        .WithMany()
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("FK_Employee_Location_LocationId");
 
                     b.HasOne("AMS.Modules.Organization.Domain.Employee", null)
                         .WithMany()
@@ -451,15 +459,6 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_EmployeeApplication_Employee_EmployeeId");
-                });
-
-            modelBuilder.Entity("AMS.Modules.Organization.Domain.Location", b =>
-                {
-                    b.HasOne("AMS.Modules.Organization.Domain.Region", null)
-                        .WithMany()
-                        .HasForeignKey("RegionId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("FK_Location_Region_RegionId");
                 });
 #pragma warning restore 612, 618
         }

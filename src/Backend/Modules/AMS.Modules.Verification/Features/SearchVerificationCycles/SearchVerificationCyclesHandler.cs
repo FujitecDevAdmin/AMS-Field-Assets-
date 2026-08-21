@@ -33,10 +33,18 @@ public sealed class SearchVerificationCyclesHandler(VerificationDbContext db)
             .Select(c => new SearchVerificationCyclesResponse.Row(
                 c.Id,
                 c.CycleName,
+                c.BranchId,
                 c.StartDate,
                 c.EndDate,
                 c.IsActive,
                 c.ClosedOnUtc,
+                c.TotalAssetCount,
+                db.PhysicalVerificationAssignments
+                    .Where(a => a.PhysicalVerificationCycleId == c.Id)
+                    .Select(a => a.AuditorUserId).ToList(),
+                db.PhysicalVerificationCycleLocations
+                    .Where(l => l.PhysicalVerificationCycleId == c.Id)
+                    .Select(l => l.BranchId).ToList(),
                 db.PhysicalVerifications.Count(v => v.PhysicalVerificationCycleId == c.Id),
                 db.PhysicalVerifications.Count(v =>
                     v.PhysicalVerificationCycleId == c.Id

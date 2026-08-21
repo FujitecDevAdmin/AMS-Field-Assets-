@@ -30,7 +30,7 @@ namespace AMS.Modules.ServiceLevel.Features.SetLocationCalendar;
 /// </remarks>
 public sealed class SetLocationCalendarHandler(
     ServiceLevelDbContext db,
-    ILocationDirectory locations,
+    IBranchDirectory locations,
     CalendarLoader calendars,
     IClock clock,
     ICurrentUser currentUser,

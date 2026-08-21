@@ -1,8 +1,16 @@
 using AMS.Modules.Verification.Features.CloseVerificationCycle;
+using AMS.Modules.Verification.Features.CalculateAuditAssetCount;
 using AMS.Modules.Verification.Features.OpenVerificationCycle;
 using AMS.Modules.Verification.Features.SearchVerificationCycles;
+using AMS.Modules.Verification.Features.SearchAuditBranches;
+using AMS.Modules.Verification.Features.SearchAuditAssets;
 using AMS.Modules.Verification.Features.SearchVerifications;
+using AMS.Modules.Verification.Features.SearchMyAudits;
+using AMS.Modules.Verification.Features.ResolveAuditScan;
+using AMS.Modules.Verification.Features.GetLatestAssetVerification;
+using AMS.Modules.Verification.Features.AuditorVerificationActivity;
 using AMS.Modules.Verification.Features.SubmitVerification;
+using AMS.Modules.Verification.Features.AddAuditorsToCycle;
 using AMS.Modules.Verification.Persistence;
 using AMS.SharedKernel.Messaging;
 using AMS.SharedKernel.Persistence;
@@ -47,10 +55,6 @@ public static class VerificationModuleExtensions
         services.AddSingleton(new SqlErrorTranslator()
             .Register("UX_PhysicalVerificationCycle_Name", "VerificationCycle.NameTaken",
                 "A cycle with that name already exists.")
-            // A filtered unique index over IsActive = 1. A second open cycle
-            // would leave a phone guessing which round its captures belong to.
-            .Register("UX_PhysicalVerificationCycle_OneActive", "VerificationCycle.AlreadyOpen",
-                "A verification cycle is already open. Close it before starting another.")
             // R2-21: THIS is the retry. The same device sent the same capture
             // again, and the answer is the row it already made.
             .Register("UX_PhysicalVerification_ClientCapture", "Verification.AlreadyCaptured",
@@ -76,7 +80,15 @@ public static class VerificationModuleExtensions
             .AddEndpointFilter<ValidationEndpointFilter>();
 
         SearchVerificationCyclesEndpoint.Map(group);
+        SearchAuditAssetsEndpoint.Map(group);
+        SearchAuditBranchesEndpoint.Map(group);
+        CalculateAuditAssetCountEndpoint.Map(group);
+        SearchMyAuditsEndpoint.Map(group);
+        ResolveAuditScanEndpoint.Map(group);
+        GetLatestAssetVerificationEndpoint.Map(group);
+        AuditorVerificationActivityEndpoints.Map(group);
         OpenVerificationCycleEndpoint.Map(group);
+        AddAuditorsToCycleEndpoint.Map(group);
         CloseVerificationCycleEndpoint.Map(group);
 
         SubmitVerificationEndpoint.Map(group);
@@ -88,7 +100,16 @@ public static class VerificationModuleExtensions
     private static void AddHandlers(IServiceCollection services)
     {
         services.AddScoped<IRequestHandler<SearchVerificationCyclesQuery, SearchVerificationCyclesResponse>, SearchVerificationCyclesHandler>();
+        services.AddScoped<IRequestHandler<SearchAuditAssetsQuery, SearchAuditAssetsResponse>, SearchAuditAssetsHandler>();
+        services.AddScoped<IRequestHandler<SearchAuditBranchesQuery, SearchAuditBranchesResponse>, SearchAuditBranchesHandler>();
+        services.AddScoped<IRequestHandler<CalculateAuditAssetCountQuery, CalculateAuditAssetCountResponse>, CalculateAuditAssetCountHandler>();
+        services.AddScoped<IRequestHandler<SearchMyAuditsQuery, SearchMyAuditsResponse>, SearchMyAuditsHandler>();
+        services.AddScoped<IRequestHandler<ResolveAuditScanQuery, ResolveAuditScanResponse>, ResolveAuditScanHandler>();
+        services.AddScoped<IRequestHandler<GetLatestAssetVerificationQuery, GetLatestAssetVerificationResponse>, GetLatestAssetVerificationHandler>();
+        services.AddScoped<IRequestHandler<SearchAuditorVerificationCountsQuery, SearchAuditorVerificationCountsResponse>, SearchAuditorVerificationCountsHandler>();
+        services.AddScoped<IRequestHandler<GetAuditorVerificationActivityQuery, GetAuditorVerificationActivityResponse>, GetAuditorVerificationActivityHandler>();
         services.AddScoped<IRequestHandler<OpenVerificationCycleCommand, OpenVerificationCycleResponse>, OpenVerificationCycleHandler>();
+        services.AddScoped<IRequestHandler<AddAuditorsToCycleCommand, AddAuditorsToCycleResponse>, AddAuditorsToCycleHandler>();
         services.AddScoped<IRequestHandler<CloseVerificationCycleCommand, CloseVerificationCycleResponse>, CloseVerificationCycleHandler>();
 
         services.AddScoped<IRequestHandler<SubmitVerificationCommand, SubmitVerificationResponse>, SubmitVerificationHandler>();

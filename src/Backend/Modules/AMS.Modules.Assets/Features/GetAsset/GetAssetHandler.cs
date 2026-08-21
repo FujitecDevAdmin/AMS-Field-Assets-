@@ -62,7 +62,7 @@ public sealed class GetAssetHandler(AssetsDbContext db, ICurrentUser currentUser
             a.AcquisitionDate, a.QrCodeValue, a.BarcodeValue,
             a.IsBulk, a.Quantity, a.UnitOfMeasure,
             a.CapitalisedFromAssetId, a.SplitFromAssetId,
-            a.Remarks, a.IsDeleted, a.LastPhysicalCheckOnUtc,
+            a.Remarks, a.ImportedDataJson, a.IsDeleted, a.LastPhysicalCheckOnUtc,
             type.TracksHardware, type.TracksSoftware, type.TracksVehicle, type.TracksCalibration);
 
         // Each section is fetched only when the type says it applies, so a chair

@@ -68,3 +68,50 @@
     </ams-notification-panel>
   </div>
 </dx-popup>
+
+<dx-popup
+  title="Global search"
+  [visible]="globalSearchVisible()"
+  (visibleChange)="globalSearchVisible.set($event)"
+  [width]="'min(760px, 94vw)'"
+  [height]="'auto'"
+  [maxHeight]="'82vh'"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  [hideOnOutsideClick]="true"
+  [wrapperAttr]="{ class: 'global-search-dialog' }"
+>
+  <div *dxTemplate="let _ of 'content'" class="global-search-results">
+    <header>
+      <span>SEARCHING ACROSS MODULES</span>
+      <h2>{{ globalSearchTerm() }}</h2>
+      <p>Matching assets, audits and auditors</p>
+    </header>
+
+    @if (globalSearchLoading()) {
+      <div class="global-search-state">
+        <i class="dx-icon-search"></i>
+        <strong>Searching all modules…</strong>
+      </div>
+    } @else if (globalSearchError(); as error) {
+      <div class="global-search-state global-search-state--empty">
+        <i class="dx-icon-info"></i>
+        <strong>{{ error }}</strong>
+      </div>
+    } @else {
+      <div class="global-search-list">
+        @for (result of globalSearchResults(); track result.module + '-' + result.id) {
+          <button type="button" class="global-search-result" (click)="openGlobalSearchResult(result)">
+            <i [class]="'dx-icon-' + result.icon"></i>
+            <span class="global-search-result__copy">
+              <span class="global-search-result__module">{{ result.module }}</span>
+              <strong>{{ result.title }}</strong>
+              <small>{{ result.description || 'Open matching record' }}</small>
+            </span>
+            <i class="dx-icon-chevronright"></i>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</dx-popup>

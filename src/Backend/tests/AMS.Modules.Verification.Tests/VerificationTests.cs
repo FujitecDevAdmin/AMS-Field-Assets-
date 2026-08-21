@@ -1,10 +1,12 @@
 using AMS.Modules.Verification.Domain;
+using AMS.Modules.Assets.PublicApi;
 using AMS.Modules.Verification.Features.CloseVerificationCycle;
 using AMS.Modules.Verification.Features.OpenVerificationCycle;
 using AMS.Modules.Verification.Features.SearchVerificationCycles;
 using AMS.Modules.Verification.Features.SearchVerifications;
 using AMS.Modules.Verification.Features.SubmitVerification;
 using AMS.SharedKernel.Results;
+using Microsoft.EntityFrameworkCore;
 
 namespace AMS.Modules.Verification.Tests;
 
@@ -32,19 +34,17 @@ public sealed class VerificationTests(VerificationFixture fixture)
     }
 
     [Fact]
-    public async Task Only_one_cycle_can_be_open_at_a_time()
+    public async Task Multiple_cycles_can_be_open_for_the_same_branch()
     {
-        // A second open cycle would leave a phone guessing which round its
-        // captures belong to — and a phone that guesses wrong has counted
-        // against the wrong quarter.
         await fixture.ResetAsync();
         await OpenCycleAsync("Q2 2026");
 
-        (await OpenCycleAsync("Q3 2026")).Error!.Code.ShouldBe("VerificationCycle.AlreadyOpen");
+        (await OpenCycleAsync("Q3 2026")).IsSuccess.ShouldBeTrue();
+        (await SearchCyclesAsync()).Value.Rows.Count.ShouldBe(2);
     }
 
     [Fact]
-    public async Task Closing_a_cycle_frees_the_slot_for_the_next()
+    public async Task A_closed_cycle_does_not_prevent_a_later_cycle()
     {
         await fixture.ResetAsync();
         var id = (await OpenCycleAsync("Q2 2026")).Value.Id;
@@ -129,7 +129,30 @@ public sealed class VerificationTests(VerificationFixture fixture)
     {
         await fixture.ResetAsync();
 
-        (await SubmitAsync(10)).Error!.Code.ShouldBe("VerificationCycle.NoneOpen");
+        (await SubmitAsync(10)).Error!.Code.ShouldBe("VerificationCycle.NotActive");
+    }
+
+    [Fact]
+    public async Task An_unassigned_auditor_cannot_submit_to_an_audit()
+    {
+        await fixture.ResetAsync();
+        var cycleId = (await OpenCycleAsync("Assigned audit")).Value.Id;
+        fixture.CurrentUser.Id = 99;
+
+        (await SubmitAsync(10, cycleId: cycleId)).Error!.Code
+            .ShouldBe("VerificationCycle.NotAssigned");
+    }
+
+    [Fact]
+    public async Task An_assigned_auditor_cannot_verify_an_asset_from_another_branch()
+    {
+        await fixture.ResetAsync();
+        var cycleId = (await OpenCycleAsync("Branch audit")).Value.Id;
+        fixture.Assets.Add(new AssetSnapshot(
+            99, "AMS-000099", null, null, null, null, false, ImportedBranch: "Branch 2"));
+
+        (await SubmitAsync(99, cycleId: cycleId)).Error!.Code
+            .ShouldBe("Verification.AssetOutsideAuditBranch");
     }
 
     [Fact]
@@ -255,6 +278,7 @@ public sealed class VerificationTests(VerificationFixture fixture)
         await OpenCycleAsync("Q2 2026");
         await SubmitAsync(10, captureId: Guid.NewGuid());
 
+        await AssignAuditorAsync(2);
         fixture.CurrentUser.Id = 2;
         var second = await SubmitAsync(10, captureId: Guid.NewGuid());
 
@@ -335,6 +359,7 @@ public sealed class VerificationTests(VerificationFixture fixture)
         await OpenCycleAsync("Q2 2026");
         await SubmitAsync(20, isBulk: true, counted: 10, locationId: 1);
 
+        await AssignAuditorAsync(2);
         fixture.CurrentUser.Id = 2;
         var again = await SubmitAsync(20, isBulk: true, counted: 12, locationId: 1);
 
@@ -439,10 +464,11 @@ public sealed class VerificationTests(VerificationFixture fixture)
         string name, DateOnly? start = null, DateOnly? end = null)
     {
         var handler = new OpenVerificationCycleHandler(
-            fixture.NewContext(), fixture.Clock, fixture.CurrentUser, fixture.SqlErrors);
+            fixture.NewContext(), fixture.Clock, fixture.CurrentUser, fixture.Assets,
+            fixture.Branches, fixture.SqlErrors);
 
         return handler.HandleAsync(
-            new OpenVerificationCycleCommand(name, start ?? default, end),
+            new OpenVerificationCycleCommand(name, 1, start ?? default, end, [1], [1]),
             TestContext.Current.CancellationToken);
     }
 
@@ -463,7 +489,25 @@ public sealed class VerificationTests(VerificationFixture fixture)
             new SearchVerificationCyclesQuery(false), TestContext.Current.CancellationToken);
     }
 
-    private Task<Result<SubmitVerificationResponse>> SubmitAsync(
+    private async Task AssignAuditorAsync(int userId)
+    {
+        await using var context = fixture.NewContext();
+        var cycleId = await context.PhysicalVerificationCycles
+            .Where(cycle => cycle.IsActive)
+            .OrderByDescending(cycle => cycle.Id)
+            .Select(cycle => cycle.Id)
+            .FirstAsync(TestContext.Current.CancellationToken);
+        context.PhysicalVerificationAssignments.Add(new PhysicalVerificationAssignment
+        {
+            PhysicalVerificationCycleId = cycleId,
+            AuditorUserId = userId,
+            AssignedOnUtc = fixture.Clock.UtcNow,
+            AssignedBy = fixture.CurrentUser.Username,
+        });
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    private async Task<Result<SubmitVerificationResponse>> SubmitAsync(
         int assetId,
         Guid? captureId = null,
         bool isBulk = false,
@@ -473,15 +517,25 @@ public sealed class VerificationTests(VerificationFixture fixture)
         string condition = WorkingCondition.Good,
         int? locationId = null,
         int? holderEmployeeId = null,
-        DateTime? verifiedOnUtc = null)
+        DateTime? verifiedOnUtc = null,
+        int? cycleId = null)
     {
+        await using var lookup = fixture.NewContext();
+        var assignedCycleId = await lookup.PhysicalVerificationAssignments
+            .Where(assignment => assignment.AuditorUserId == fixture.CurrentUser.Id)
+            .Join(lookup.PhysicalVerificationCycles.Where(cycle => cycle.IsActive),
+                assignment => assignment.PhysicalVerificationCycleId,
+                cycle => cycle.Id,
+                (_, cycle) => cycle.Id)
+            .OrderByDescending(id => id)
+            .FirstOrDefaultAsync(TestContext.Current.CancellationToken);
         var handler = new SubmitVerificationHandler(
-            fixture.NewContext(), fixture.Assets, fixture.Clock, fixture.CurrentUser,
+            fixture.NewContext(), fixture.Assets, fixture.Clock, fixture.CurrentUser, fixture.Branches,
             fixture.SqlErrors);
 
-        return handler.HandleAsync(
+        return await handler.HandleAsync(
             new SubmitVerificationCommand(
-                assetId, captureId, isBulk, counted, expected, scannedQr, condition,
+                cycleId ?? (assignedCycleId == 0 ? int.MaxValue : assignedCycleId), assetId, captureId, isBulk, counted, expected, scannedQr, condition,
                 false, null, null, null, locationId, holderEmployeeId, verifiedOnUtc, null),
             TestContext.Current.CancellationToken);
     }

@@ -42,6 +42,63 @@
   max-width: 220px;
 }
 
+:host ::ng-deep .app-header__user .dx-dropdownbutton-action {
+  min-height: 40px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: #f5f6f8;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+:host ::ng-deep .app-header__user .dx-dropdownbutton-action:hover,
+:host ::ng-deep .app-header__user .dx-dropdownbutton-action.dx-state-focused {
+  border-color: #e1e4e8;
+  background: #fff;
+  box-shadow: 0 4px 12px rgb(31 41 55 / 9%);
+}
+
+:host ::ng-deep .app-header__user .dx-button-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 10px 4px 5px;
+}
+
+:host ::ng-deep .app-header__user .dx-icon-user {
+  display: inline-grid;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 42%);
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #222b35, #3c4855);
+  box-shadow: 0 3px 8px rgb(31 41 55 / 20%);
+  font-size: 14px;
+  line-height: 32px;
+}
+
+:host ::ng-deep .app-header__user .dx-button-text {
+  max-width: 128px;
+  overflow: hidden;
+  color: #202733;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .app-header__user .dx-dropdownbutton-toggle {
+  color: #747c87;
+  font-size: 9px;
+}
+
 /* The Ctrl-K affordance is a label, not a control — it must not look pressable. */
 :host ::ng-deep .app-header__kbd {
   cursor: default;

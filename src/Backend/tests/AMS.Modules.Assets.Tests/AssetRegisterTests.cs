@@ -583,7 +583,7 @@ public sealed class AssetRegisterTests(AssetsFixture fixture)
             new SearchAssetsQuery(
                 search, assetTypeId, assetClassId, assetStatusId, locationId, employeeId,
                 departmentId, costCenter, sapAssetNumber, sapPlant, acquiredFrom, acquiredTo,
-                isBulk, includeDeleted, skip, take),
+                isBulk, null, includeDeleted, skip, take),
             TestContext.Current.CancellationToken);
     }
 }

@@ -1,0 +1,90 @@
+@if (store.error(); as error) {
+  <div class="error-message">{{ error }}</div>
+}
+
+@if (store.asset(); as asset) {
+  <header class="asset-heading ams-page-hero ams-page-hero--compact">
+    <div class="asset-heading-main">
+      <dx-button
+        class="asset-back-button"
+        icon="arrowleft"
+        hint="Back to Field Assets"
+        stylingMode="text"
+        [elementAttr]="{ 'aria-label': 'Back to Field Assets' }"
+        (onClick)="goBack()"
+      />
+      <div class="asset-identity">
+        <span>ASSET NUMBER</span>
+        <strong>{{ asset.assetNumber }}</strong>
+        <h1>{{ asset.assetName }}</h1>
+      </div>
+    </div>
+    <div class="asset-meta"><span>{{ asset.typeName }}</span><span>{{ asset.statusName }}</span></div>
+  </header>
+
+  <main class="category-grid">
+    @for (column of categoryColumns(); track $index) {
+      <div class="category-column">
+        @for (category of column; track category.title) {
+          <section class="category-card">
+            <header class="card-header">
+              <h2>{{ category.title }}</h2>
+              @if (!category.isEditing) {
+                <dx-button
+                  class="card-edit-button"
+                  icon="edit"
+                  hint="Edit"
+                  stylingMode="text"
+                  [elementAttr]="{ 'aria-label': 'Edit ' + category.title }"
+                  (onClick)="edit(category)"
+                />
+              }
+            </header>
+            @for (group of category.groups; track group.title) {
+              <div class="detail-group">
+                <h3>{{ group.title }}</h3>
+                <div class="field-grid">
+                  @for (field of group.fields; track field.name) {
+                    <div class="field" [class.empty]="field.isEmpty" [class.locked]="field.isReadOnly">
+                      <label>{{ field.name }}</label>
+                      @if (category.isEditing) {
+                        <dx-text-box
+                          [value]="field.isEmpty ? '' : field.value"
+                          [disabled]="field.isReadOnly"
+                          valueChangeEvent="change keyup"
+                          (onValueChanged)="updateField(category, field.name, $event.value ?? '')"
+                        />
+                      } @else {
+                        <div class="field-value" [class.expanded]="isExpanded(category, field)">
+                          <span>{{ visibleValue(category, field) }}</span>
+                          @if (isLongValue(field)) {
+                            <dx-button
+                              class="read-more-button"
+                              [icon]="isExpanded(category, field) ? 'chevronup' : 'chevrondown'"
+                              [hint]="isExpanded(category, field) ? 'Show less' : 'Read more'"
+                              stylingMode="text"
+                              [elementAttr]="{ 'aria-label': isExpanded(category, field) ? 'Show less' : 'Read more' }"
+                              (onClick)="toggleValue(category, field)"
+                            />
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+            @if (category.isEditing) {
+              <footer class="card-actions">
+                <dx-button text="Cancel" stylingMode="outlined" (onClick)="cancel(category)" />
+                <dx-button text="Update" icon="save" type="default" [disabled]="store.saving()" (onClick)="update(category)" />
+              </footer>
+            }
+          </section>
+        }
+      </div>
+    }
+  </main>
+}
+
+<dx-load-panel [visible]="store.loading()" [showPane]="true" [shading]="true" />

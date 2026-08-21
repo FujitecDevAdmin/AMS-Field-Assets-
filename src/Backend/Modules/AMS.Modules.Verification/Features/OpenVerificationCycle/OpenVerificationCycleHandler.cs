@@ -1,5 +1,7 @@
 using AMS.Modules.Verification.Domain;
 using AMS.Modules.Verification.Persistence;
+using AMS.Modules.Assets.PublicApi;
+using AMS.Modules.Organization.PublicApi.Organization;
 using AMS.SharedKernel.Abstractions;
 using AMS.SharedKernel.Messaging;
 using AMS.SharedKernel.Persistence;
@@ -20,6 +22,8 @@ public sealed class OpenVerificationCycleHandler(
     VerificationDbContext db,
     IClock clock,
     ICurrentUser currentUser,
+    IAssetSnapshot assets,
+    IBranchDirectory branches,
     SqlErrorTranslator sqlErrors)
     : IRequestHandler<OpenVerificationCycleCommand, OpenVerificationCycleResponse>
 {
@@ -44,11 +48,33 @@ public sealed class OpenVerificationCycleHandler(
                 "A cycle cannot end before it starts.");
         }
 
+        var selectedBranches = await branches.FindActiveAsync(request.LocationBranchIds, ct);
+        if (selectedBranches.Count != request.LocationBranchIds.Count)
+        {
+            return Error.Validation(
+                "VerificationCycle.Locations",
+                "Every audit location must be an active Branch Master record.");
+        }
+
+        if (!await branches.IsActiveAsync(request.BranchId, ct))
+        {
+            return Error.Validation(
+                "VerificationCycle.Branch",
+                "The audit branch must be an active Branch Master record.");
+        }
+
+        var branchAliases = selectedBranches
+            .SelectMany(branch => new[] { branch.BranchCode, branch.BranchName })
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var totalAssetCount = await assets.CountByImportedBranchesAsync(request.LocationBranchIds, branchAliases, ct);
         var cycle = new PhysicalVerificationCycle
         {
             CycleName = request.CycleName,
             StartDate = startDate,
             EndDate = request.EndDate,
+            BranchId = request.BranchId,
+            TotalAssetCount = totalAssetCount,
             IsActive = true,
             CreatedOnUtc = now,
             CreatedBy = currentUser.Username,
@@ -58,6 +84,22 @@ public sealed class OpenVerificationCycleHandler(
 
         try
         {
+            await db.SaveChangesAsync(ct);
+
+            db.PhysicalVerificationAssignments.AddRange(request.AuditorUserIds.Select(auditorUserId =>
+                new PhysicalVerificationAssignment
+                {
+                    PhysicalVerificationCycleId = cycle.Id,
+                    AuditorUserId = auditorUserId,
+                    AssignedOnUtc = now,
+                    AssignedBy = currentUser.Username,
+                }));
+            db.PhysicalVerificationCycleLocations.AddRange(request.LocationBranchIds.Select(branchId =>
+                new PhysicalVerificationCycleLocation
+                {
+                    PhysicalVerificationCycleId = cycle.Id,
+                    BranchId = branchId,
+                }));
             await db.SaveChangesAsync(ct);
         }
         catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.SqlClient.SqlException sql)
@@ -71,6 +113,6 @@ public sealed class OpenVerificationCycleHandler(
             throw;
         }
 
-        return new OpenVerificationCycleResponse(cycle.Id, cycle.CycleName, cycle.StartDate);
+        return new OpenVerificationCycleResponse(cycle.Id, cycle.CycleName, cycle.StartDate, cycle.TotalAssetCount);
     }
 }

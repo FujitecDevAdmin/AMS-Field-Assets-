@@ -1,5 +1,5 @@
 <section class="dashboard">
-  <header class="dashboard-hero">
+  <header class="dashboard-hero ams-page-hero">
     <div>
       <p class="eyebrow"><span class="live-dot"></span> LIVE ASSET INTELLIGENCE</p>
       <h1>Asset command centre</h1>
@@ -15,13 +15,6 @@
         }}</strong
         ><small>Auto-refreshes every 30 seconds</small>
       </div>
-      <dx-button
-        icon="refresh"
-        text="Refresh now"
-        type="default"
-        [disabled]="store.loading()"
-        (onClick)="store.load()"
-      /><a routerLink="/field-assets" class="register-link">Open asset register →</a>
     </div>
   </header>
 
@@ -29,7 +22,49 @@
     <div class="dashboard-error"><i class="dx-icon-warning"></i>{{ error }}</div>
   }
 
+  @if (store.loading() && !store.data()) {
+    <section class="asset-loader" aria-live="polite" aria-label="Loading asset intelligence">
+      <div class="loader-stage">
+        <div class="inventory-orbit" aria-hidden="true">
+          <i class="orbit orbit-one"></i><i class="orbit orbit-two"></i>
+          <div class="asset-core"><i class="dx-icon-box"></i></div>
+          <span class="node node-one"></span><span class="node node-two"></span><span class="node node-three"></span>
+        </div>
+        <div class="loader-copy">
+          <span>ASSET INTELLIGENCE ENGINE</span>
+          <h2>Assembling your live register</h2>
+          <p>Connecting inventory, custody, verification and financial signals.</p>
+          <div class="loading-track"><i></i></div>
+          <div class="loading-steps"><span>Register</span><span>Custody</span><span>Verification</span><span>Analytics</span></div>
+        </div>
+      </div>
+      <div class="loader-kpis" aria-hidden="true">
+        @for (item of [1, 2, 3, 4]; track item) {
+          <div><i></i><span></span><strong></strong><small></small></div>
+        }
+      </div>
+      <div class="loader-panels" aria-hidden="true">
+        <div><span></span><i></i><i></i><i></i></div>
+        <div><span></span><i></i><i></i><i></i></div>
+      </div>
+    </section>
+  }
+
   @if (store.data(); as data) {
+    <div class="section-heading">
+      <div><span>PORTFOLIO OVERVIEW</span><h2>Asset estate at a glance</h2></div>
+      <div class="section-heading__actions">
+        <p>Live inventory, custody and lifecycle indicators</p>
+        <dx-button
+          class="section-refresh"
+          icon="refresh"
+          hint="Refresh dashboard"
+          stylingMode="text"
+          [disabled]="store.loading()"
+          (onClick)="store.load()"
+        />
+      </div>
+    </div>
     <section class="kpi-grid" aria-label="Asset key performance indicators">
       <article class="kpi kpi-primary">
         <div class="kpi-icon"><i class="dx-icon-box"></i></div>
@@ -38,7 +73,13 @@
           ><small>{{ formatCurrency(data.totalAssetValue) }} portfolio value</small>
         </div>
       </article>
-      <article class="kpi kpi-success">
+      <article
+        class="kpi kpi-success kpi-link"
+        routerLink="/field-assets"
+        [queryParams]="{ verification: 'verified' }"
+        tabindex="0"
+        aria-label="View verified assets in the asset register"
+      >
         <div class="kpi-icon"><i class="dx-icon-check"></i></div>
         <div>
           <span>Verified assets</span><strong>{{ formatNumber(data.verifiedAssets) }}</strong
@@ -114,6 +155,10 @@
       </div>
     </section>
 
+    <div class="section-heading section-heading--analytics">
+      <div><span>OPERATIONAL ANALYTICS</span><h2>Performance and financial distribution</h2></div>
+      <p>Explore live trends using chart or table views</p>
+    </div>
     <section class="analytics-grid">
       <article class="chart-card">
         <header>
@@ -196,15 +241,11 @@
       </article>
     </section>
 
+    <div class="section-heading section-heading--tables">
+      <div><span>REGISTER BREAKDOWN</span><h2>Detailed asset intelligence</h2></div>
+      <p>Department, type and recently registered assets</p>
+    </div>
     <section class="table-grid">
-      <article class="table-card">
-        <ams-analytics-table
-          title="Assets by status"
-          fileName="AMS_Assets_By_Status"
-          [rows]="data.assetsByStatus"
-          [columns]="breakdownColumns"
-        />
-      </article>
       <article class="table-card">
         <ams-analytics-table
           title="Asset value by department"
@@ -221,7 +262,7 @@
           [columns]="breakdownColumns"
         />
       </article>
-      <article class="table-card">
+      <article class="table-card table-card--wide">
         <ams-analytics-table
           title="Recently added assets"
           fileName="AMS_Recently_Added_Assets"
@@ -233,10 +274,4 @@
     </section>
   }
 
-  <dx-load-panel
-    [visible]="store.loading() && !store.data()"
-    [showPane]="true"
-    [shading]="false"
-    message="Building live dashboard…"
-  />
 </section>

@@ -26,7 +26,7 @@ public static class SearchVerificationCyclesEndpoint
 
                 return result.ToHttpResult();
             })
-            .RequireCapability(Capabilities.Verification.View)
+            .RequireCapability(Capabilities.FieldAssets.Manage)
             .WithName("SearchVerificationCycles")
             .Produces<SearchVerificationCyclesResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem()

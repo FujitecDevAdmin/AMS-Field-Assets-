@@ -20,5 +20,7 @@ public sealed class SearchVerificationsValidator : AbstractValidator<SearchVerif
         RuleFor(x => x.WorkingCondition).MaximumLength(20);
         RuleFor(x => x.Skip).GreaterThanOrEqualTo(0).When(x => x.Skip.HasValue);
         RuleFor(x => x.Take).InclusiveBetween(1, 200).When(x => x.Take.HasValue);
+        RuleFor(x => x.Location).MaximumLength(200);
+        RuleFor(x => x.Search).MaximumLength(200);
     }
 }

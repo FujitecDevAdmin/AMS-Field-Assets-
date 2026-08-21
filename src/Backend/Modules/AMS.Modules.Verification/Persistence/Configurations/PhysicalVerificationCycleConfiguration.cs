@@ -19,6 +19,8 @@ public sealed class PhysicalVerificationCycleConfiguration : IEntityTypeConfigur
         builder.Property(x => x.Id).IsRequired();
         builder.Property(x => x.CycleName).HasMaxLength(120).IsRequired();
         builder.Property(x => x.StartDate).IsRequired();
+        builder.Property(x => x.BranchId).IsRequired();
+        builder.Property(x => x.TotalAssetCount).IsRequired();
         builder.Property(x => x.IsActive).IsRequired();
         builder.Property(x => x.CreatedOnUtc).IsRequired();
         builder.Property(x => x.CreatedBy).HasMaxLength(100);
@@ -28,9 +30,5 @@ public sealed class PhysicalVerificationCycleConfiguration : IEntityTypeConfigur
             .IsUnique()
             .HasDatabaseName("UX_PhysicalVerificationCycle_Name");
 
-        builder.HasIndex(x => x.IsActive)
-            .IsUnique()
-            .HasFilter("[IsActive] = 1")
-            .HasDatabaseName("UX_PhysicalVerificationCycle_OneActive");
     }
 }

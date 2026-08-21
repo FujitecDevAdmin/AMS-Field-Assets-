@@ -17,6 +17,10 @@ public sealed class VerificationDbContext(DbContextOptions<VerificationDbContext
 
     public DbSet<PhysicalVerificationCycle> PhysicalVerificationCycles => Set<PhysicalVerificationCycle>();
 
+    public DbSet<PhysicalVerificationAssignment> PhysicalVerificationAssignments => Set<PhysicalVerificationAssignment>();
+
+    public DbSet<PhysicalVerificationCycleLocation> PhysicalVerificationCycleLocations => Set<PhysicalVerificationCycleLocation>();
+
     /// <summary>
     /// Drops EF's automatic index-per-foreign-key convention.
     /// </summary>

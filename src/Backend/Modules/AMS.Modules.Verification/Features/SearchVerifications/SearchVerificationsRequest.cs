@@ -10,4 +10,7 @@ public sealed record SearchVerificationsRequest(
     bool? ExceptionsOnly,
     bool? MismatchesOnly,
     int? Skip,
-    int? Take);
+    int? Take,
+    int? BranchId = null,
+    string? Location = null,
+    string? Search = null);

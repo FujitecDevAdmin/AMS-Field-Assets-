@@ -13,6 +13,7 @@ public static class SubmitVerificationMapper
         ArgumentNullException.ThrowIfNull(request);
 
         return new SubmitVerificationCommand(
+            request.CycleId,
             request.AssetId,
             request.ClientCaptureId,
             request.IsBulkCount ?? false,

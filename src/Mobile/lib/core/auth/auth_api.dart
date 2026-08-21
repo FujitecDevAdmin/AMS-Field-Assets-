@@ -12,7 +12,10 @@ class AuthApi {
 
   final Dio _dio;
 
-  Future<SignInResult> signIn({required String username, required String password}) async {
+  Future<SignInResult> signIn({
+    required String username,
+    required String password,
+  }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '$_base/sign-in',
       data: <String, String>{'username': username, 'password': password},
@@ -28,17 +31,48 @@ class AuthApi {
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '$_base/sign-in/mfa',
-      data: <String, String>{'mfaChallengeToken': mfaChallengeToken, 'code': code},
+      data: <String, String>{
+        'mfaChallengeToken': mfaChallengeToken,
+        'code': code,
+      },
     );
 
     _throwOnFailure(response, 'That code was not accepted.');
     return MfaResult.fromJson(response.data!);
   }
 
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '$_base/me/password',
+      data: <String, String>{
+        'currentPassword': currentPassword,
+        'newPassword': newPassword,
+      },
+    );
+
+    final status = response.statusCode ?? 0;
+    if (status == 200) return;
+    if (status == 403) {
+      throw const AuthFailure('The current password is incorrect.');
+    }
+    if (status == 400 || status == 422) {
+      throw const AuthFailure(
+        'Use at least 12 characters and choose a password different from the current one.',
+      );
+    }
+    throw AuthFailure('Password could not be changed (HTTP $status).');
+  }
+
   /// The API never says WHY a sign-in failed, deliberately — a message that
   /// tells "no such user" from "wrong password" is a user enumeration tool.
   /// This does not invent a reason it was not given.
-  void _throwOnFailure(Response<Map<String, dynamic>> response, String unauthorised) {
+  void _throwOnFailure(
+    Response<Map<String, dynamic>> response,
+    String unauthorised,
+  ) {
     final status = response.statusCode ?? 0;
 
     if (status == 200 && response.data != null) {
@@ -54,4 +88,6 @@ class AuthApi {
   }
 }
 
-final authApiProvider = Provider<AuthApi>((ref) => AuthApi(ref.watch(dioProvider)));
+final authApiProvider = Provider<AuthApi>(
+  (ref) => AuthApi(ref.watch(dioProvider)),
+);

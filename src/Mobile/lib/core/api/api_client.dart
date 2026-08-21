@@ -5,13 +5,12 @@ import '../auth/auth_token_holder.dart';
 
 /// Where the API lives.
 ///
-/// `10.0.2.2` is the host machine as seen from the Android emulator; a phone on
-/// the bench needs the machine's LAN address instead. Passed with
-/// `--dart-define=AMS_API_BASE=...` rather than edited, so a build for a real
-/// device does not depend on somebody remembering to change a constant back.
+/// Development uses ADB reverse port forwarding, so a USB-connected audit
+/// phone reaches the workstation API through its own loopback address.
+/// Deployment builds override this with `--dart-define=AMS_API_BASE=...`.
 const String apiBaseUrl = String.fromEnvironment(
   'AMS_API_BASE',
-  defaultValue: 'http://10.0.2.2:5069',
+  defaultValue: 'http://127.0.0.1:5069',
 );
 
 final dioProvider = Provider<Dio>((ref) {

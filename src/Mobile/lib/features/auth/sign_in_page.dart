@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../main.dart' show fujitecRed;
+import '../../shared/widgets/fujitec_header_logo.dart';
 
 /// Sign in. Two steps, because the API has two: an enrolled user gets a
 /// challenge token and no access token, and is not signed in until the code is
@@ -54,76 +55,126 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     final state = ref.watch(authControllerProvider);
     final isMfa = state.stage == SignInStage.mfa;
 
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     return Scaffold(
-      body: Column(
-        children: [
-          const _Hero(),
-          Expanded(
-            child: Transform.translate(
-              offset: const Offset(0, -28),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      resizeToAvoidBottomInset: true,
+      backgroundColor: const Color(0xFFFFF7F8),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFF9FA), Color(0xFFFCE8EB)],
+          ),
+        ),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(16, 18, 16, 20 + keyboardInset),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight > keyboardInset + 38
+                      ? constraints.maxHeight - keyboardInset - 38
+                      : 0,
                 ),
-                child: SingleChildScrollView(
-                  // The keyboard covers half a handset; without this the
-                  // password field sits behind it and the button is off-screen.
-                  padding: EdgeInsets.fromLTRB(
-                    24,
-                    28,
-                    24,
-                    24 + MediaQuery.viewInsetsOf(context).bottom,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _Title(isMfa: isMfa),
-                        const SizedBox(height: 24),
-                        if (isMfa) ..._mfaFields() else ..._credentialFields(),
-                        if (state.error case final String message) ...[
-                          const SizedBox(height: 16),
-                          _ErrorBox(message: message),
-                        ],
-                        const SizedBox(height: 28),
-                        FilledButton(
-                          onPressed:
-                              state.busy ? null : (isMfa ? _submitCode : _submitCredentials),
-                          child: state.busy
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(isMfa ? 'Verify' : 'Sign in'),
-                        ),
-                        if (isMfa) ...[
-                          const SizedBox(height: 6),
-                          TextButton(
-                            onPressed: state.busy
-                                ? null
-                                : () {
-                                    _code.clear();
-                                    ref.read(authControllerProvider.notifier).cancelMfa();
-                                  },
-                            child: const Text('Use a different account'),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _Hero(),
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFDFD),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(color: const Color(0xFFEBC8CD)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x1FD01126),
+                            blurRadius: 24,
+                            offset: Offset(0, 10),
                           ),
                         ],
-                        const SizedBox(height: 24),
-                        const _Foot(),
-                      ],
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _Title(isMfa: isMfa),
+                            const SizedBox(height: 22),
+                            if (isMfa)
+                              ..._mfaFields()
+                            else
+                              ..._credentialFields(),
+                            if (state.error case final String message) ...[
+                              const SizedBox(height: 16),
+                              _ErrorBox(message: message),
+                            ],
+                            const SizedBox(height: 24),
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFD01126),
+                                    Color(0xFFD01126),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: Colors.white,
+                                  shadowColor: Colors.transparent,
+                                ),
+                                onPressed: state.busy
+                                    ? null
+                                    : (isMfa
+                                          ? _submitCode
+                                          : _submitCredentials),
+                                child: state.busy
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(isMfa ? 'Verify' : 'Sign in'),
+                              ),
+                            ),
+                            if (isMfa) ...[
+                              const SizedBox(height: 6),
+                              TextButton(
+                                onPressed: state.busy
+                                    ? null
+                                    : () {
+                                        _code.clear();
+                                        ref
+                                            .read(
+                                              authControllerProvider.notifier,
+                                            )
+                                            .cancelMfa();
+                                      },
+                                child: const Text('Use a different account'),
+                              ),
+                            ],
+                            const SizedBox(height: 20),
+                            const _Foot(),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -139,8 +190,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         prefixIcon: Icon(Icons.person_outline),
         counterText: '',
       ),
-      validator: (value) =>
-          (value == null || value.trim().isEmpty) ? 'Enter your username' : null,
+      validator: (value) => (value == null || value.trim().isEmpty)
+          ? 'Enter your username'
+          : null,
     ),
     const SizedBox(height: 14),
     TextFormField(
@@ -154,12 +206,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         prefixIcon: const Icon(Icons.lock_outline),
         counterText: '',
         suffixIcon: IconButton(
-          icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+          icon: Icon(
+            _obscure
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+          ),
           tooltip: _obscure ? 'Show password' : 'Hide password',
           onPressed: () => setState(() => _obscure = !_obscure),
         ),
       ),
-      validator: (value) => (value == null || value.isEmpty) ? 'Enter your password' : null,
+      validator: (value) =>
+          (value == null || value.isEmpty) ? 'Enter your password' : null,
     ),
   ];
 
@@ -168,62 +225,50 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       controller: _code,
       autofillHints: const [AutofillHints.oneTimeCode],
       textAlign: TextAlign.center,
-      style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w600),
+      style: const TextStyle(
+        fontSize: 24,
+        letterSpacing: 8,
+        fontWeight: FontWeight.w600,
+      ),
       onFieldSubmitted: (_) => _submitCode(),
       decoration: const InputDecoration(labelText: 'Code', hintText: '000000'),
     ),
   ];
 }
 
-/// The brand half. Decorative: the form beside it carries the semantics.
+/// Mandatory supplied brand artwork, kept separate from the form so that the
+/// keyboard and compact displays can never cause the two sections to overlap.
 class _Hero extends StatelessWidget {
   const _Hero();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(24, MediaQuery.paddingOf(context).top + 36, 24, 52),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFE01020), fujitecRed, Color(0xFF7D000C)],
-          stops: [0, 0.45, 1],
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.center,
+          child: FujitecHeaderLogo(),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // The wordmark is red artwork and cannot sit on a red panel. Rather
-          // than park it on a white card — which reads as a sticker stuck to the
-          // screen — it is knocked out to white, which is what a reversed logo
-          // is for. srcIn recolours the opaque pixels and leaves the alpha, so
-          // one asset serves both treatments.
-          Image.asset(
-            'assets/images/fujitec-logo.png',
-            width: 150,
-            color: Colors.white,
-            colorBlendMode: BlendMode.srcIn,
+        SizedBox(height: 18),
+        Text(
+          'Asset Audit',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFFD01126),
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
           ),
-          const SizedBox(height: 22),
-          const Text(
-            'Asset Audit',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Verify what is actually there — online or not.',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.88), fontSize: 14),
-          ),
-        ],
-      ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          'Verify what is actually there — online or not.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFF675A5D), fontSize: 13),
+        ),
+      ],
     );
   }
 }
@@ -242,7 +287,9 @@ class _Title extends StatelessWidget {
       children: [
         Text(
           isMfa ? 'Two-factor code' : 'Sign in',
-          style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
@@ -268,8 +315,8 @@ class _ErrorBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0x14CA0012),
-        border: Border.all(color: const Color(0x38CA0012)),
+        color: const Color(0x14D01126),
+        border: Border.all(color: const Color(0x38D01126)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -280,7 +327,11 @@ class _ErrorBox extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: fujitecRed, fontSize: 13, height: 1.35),
+              style: const TextStyle(
+                color: fujitecRed,
+                fontSize: 13,
+                height: 1.35,
+              ),
             ),
           ),
         ],
@@ -297,7 +348,10 @@ class _Foot extends StatelessWidget {
     return Text(
       'Fujitec India · Asset Management System',
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+      style: TextStyle(
+        fontSize: 11,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
     );
   }
 }

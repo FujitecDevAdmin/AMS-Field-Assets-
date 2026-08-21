@@ -9,7 +9,11 @@ import {
 import { Router, RouterOutlet } from '@angular/router';
 import { DxDrawerModule } from 'devextreme-angular/ui/drawer';
 import { DxPopupModule } from 'devextreme-angular/ui/popup';
+import { catchError, firstValueFrom, forkJoin, of } from 'rxjs';
 
+import { AssetsApi } from '../../modules/assets/data/assets.api';
+import { AuditsApi } from '../../modules/audit/data/audits.api';
+import { AuditorsApi } from '../../modules/audit/data/auditors.api';
 import { AuthStore } from '../auth/auth.store';
 import { ToastService } from '../notifications/toast.service';
 import { AppHeaderComponent, type UserMenuItem } from './app-header.component';
@@ -17,6 +21,16 @@ import { BREAKPOINT, mediaQuery } from './media-query';
 import type { NavBadges } from './nav-items';
 import { NotificationPanelComponent, type AppNotification } from './notification-panel.component';
 import { SideNavComponent } from './side-nav.component';
+
+interface GlobalSearchResult {
+  readonly id: number;
+  readonly module: 'Assets' | 'Audits' | 'Auditors';
+  readonly title: string;
+  readonly description: string;
+  readonly icon: string;
+  readonly path: readonly (string | number)[];
+  readonly queryParams?: Readonly<Record<string, string>>;
+}
 
 /**
  * The application shell: navigation drawer on the left, notification panel on
@@ -46,6 +60,15 @@ export class ShellPage {
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly assetsApi = inject(AssetsApi);
+  private readonly auditsApi = inject(AuditsApi);
+  private readonly auditorsApi = inject(AuditorsApi);
+
+  protected readonly globalSearchVisible = signal(false);
+  protected readonly globalSearchLoading = signal(false);
+  protected readonly globalSearchTerm = signal('');
+  protected readonly globalSearchResults = signal<readonly GlobalSearchResult[]>([]);
+  protected readonly globalSearchError = signal<string | null>(null);
 
   /** The signed-in user, for the header. */
   protected readonly displayName = this.auth.displayName;
@@ -121,25 +144,83 @@ export class ShellPage {
     this.navOpened.update((open) => !open);
   }
 
-  /**
-   * On a phone the drawer covers the content, so it has to get out of the way
-   * once it has been used. On a desktop it is the frame — closing it after
-   * every click would be a tic.
-   */
+  /** Collapse to the icon rail after every module selection. On handsets the
+   * rail has zero width, so the same state closes the overlay completely. */
   protected onNavigated(): void {
-    if (this.isHandset()) {
-      this.navOpened.set(false);
-    }
+    this.navOpened.set(false);
   }
 
   protected togglePanel(): void {
     this.panelOpened.update((open) => !open);
   }
 
-  protected onSearch(term: string): void {
-    // The global search endpoint belongs to the discovery module and does not
-    // exist yet. Saying so is better than a box that silently does nothing.
-    this.toast.info(`Search is not wired up yet — you asked for “${term}”.`);
+  protected async onSearch(term: string): Promise<void> {
+    const query = term.trim();
+    if (!query) return;
+
+    this.navOpened.set(false);
+    this.globalSearchTerm.set(query);
+    this.globalSearchResults.set([]);
+    this.globalSearchError.set(null);
+    this.globalSearchVisible.set(true);
+    this.globalSearchLoading.set(true);
+
+    const normalized = query.toLocaleLowerCase();
+    try {
+      const response = await firstValueFrom(forkJoin({
+        assets: this.assetsApi.search(query, 0, 10, {}).pipe(catchError(() => of({ rows: [], totalCount: 0 }))),
+        audits: this.auditsApi.list().pipe(catchError(() => of({ rows: [] }))),
+        auditors: this.auditorsApi.list().pipe(catchError(() => of({ rows: [] }))),
+      }));
+
+      const assets: GlobalSearchResult[] = response.assets.rows.map(asset => ({
+        id: asset.id,
+        module: 'Assets',
+        title: asset.assetNumber,
+        description: [asset.assetName, asset.serialNumber].filter(Boolean).join(' · '),
+        icon: 'box',
+        path: ['/field-assets', asset.id],
+      }));
+      const audits: GlobalSearchResult[] = response.audits.rows
+        .filter(audit => [audit.cycleName, String(audit.id)].some(value => value.toLocaleLowerCase().includes(normalized)))
+        .slice(0, 10)
+        .map(audit => ({
+          id: audit.id,
+          module: 'Audits',
+          title: audit.cycleName,
+          description: `${audit.isActive ? 'Active' : 'Closed'} · ${audit.totalAssetCount} assets`,
+          icon: 'checklist',
+          path: ['/audit'],
+          queryParams: { search: audit.cycleName },
+        }));
+      const auditors: GlobalSearchResult[] = response.auditors.rows
+        .filter(auditor => [auditor.displayName, auditor.username, auditor.email ?? '', String(auditor.employeeId ?? '')]
+          .some(value => value.toLocaleLowerCase().includes(normalized)))
+        .slice(0, 10)
+        .map(auditor => ({
+          id: auditor.id,
+          module: 'Auditors',
+          title: auditor.displayName,
+          description: [auditor.username, auditor.email].filter(Boolean).join(' · '),
+          icon: 'user',
+          path: ['/auditors'],
+          queryParams: { search: auditor.displayName },
+        }));
+
+      this.globalSearchResults.set([...assets, ...audits, ...auditors]);
+      if (this.globalSearchResults().length === 0) {
+        this.globalSearchError.set(`No results found for “${query}”.`);
+      }
+    } catch {
+      this.globalSearchError.set('Global search could not be completed. Check the API connection.');
+    } finally {
+      this.globalSearchLoading.set(false);
+    }
+  }
+
+  protected openGlobalSearchResult(result: GlobalSearchResult): void {
+    this.globalSearchVisible.set(false);
+    void this.router.navigate([...result.path], { queryParams: result.queryParams });
   }
 
   protected onUserMenu(item: UserMenuItem): void {

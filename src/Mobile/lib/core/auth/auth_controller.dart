@@ -52,7 +52,9 @@ class AuthState {
   }) => AuthState(
     session: clearSession ? null : session ?? this.session,
     stage: stage ?? this.stage,
-    challengeToken: clearChallenge ? null : challengeToken ?? this.challengeToken,
+    challengeToken: clearChallenge
+        ? null
+        : challengeToken ?? this.challengeToken,
     busy: busy ?? this.busy,
     error: clearError ? null : error ?? this.error,
     notice: clearNotice ? null : notice ?? this.notice,
@@ -72,7 +74,8 @@ class AuthController extends Notifier<AuthState> {
     // The API client reads the token from here rather than from this
     // controller, which would be a cycle. Setting the callback in build means
     // it is in place before any request can be made.
-    ref.read(authTokenHolderProvider).onUnauthorized = () => unawaited(signOut());
+    ref.read(authTokenHolderProvider).onUnauthorized = () =>
+        unawaited(signOut());
 
     // Fire and forget: the screen renders a spinner while restoring is true.
     unawaited(_restore());
@@ -93,7 +96,10 @@ class AuthController extends Notifier<AuthState> {
     state = state.copyWith(session: stored, restoring: false);
   }
 
-  Future<void> signIn({required String username, required String password}) async {
+  Future<void> signIn({
+    required String username,
+    required String password,
+  }) async {
     state = state.copyWith(busy: true, clearError: true, clearNotice: true);
 
     try {
@@ -123,7 +129,10 @@ class AuthController extends Notifier<AuthState> {
     } on AuthFailure catch (failure) {
       state = state.copyWith(busy: false, error: failure.message);
     } on Exception {
-      state = state.copyWith(busy: false, error: 'The server could not be reached.');
+      state = state.copyWith(
+        busy: false,
+        error: 'The server could not be reached.',
+      );
     }
   }
 
@@ -156,8 +165,53 @@ class AuthController extends Notifier<AuthState> {
     } on AuthFailure catch (failure) {
       state = state.copyWith(busy: false, error: failure.message);
     } on Exception {
-      state = state.copyWith(busy: false, error: 'The server could not be reached.');
+      state = state.copyWith(
+        busy: false,
+        error: 'The server could not be reached.',
+      );
     }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final session = state.session;
+    if (session == null) return false;
+
+    state = state.copyWith(busy: true, clearError: true, clearNotice: true);
+    try {
+      await ref
+          .read(authApiProvider)
+          .changePassword(
+            currentPassword: currentPassword,
+            newPassword: newPassword,
+          );
+      final updated = Session(
+        userId: session.userId,
+        username: session.username,
+        displayName: session.displayName,
+        accessToken: session.accessToken,
+        expiresOnUtc: session.expiresOnUtc,
+        mustChangePassword: false,
+      );
+      await ref.read(sessionStoreProvider).write(updated);
+      state = state.copyWith(
+        session: updated,
+        busy: false,
+        clearError: true,
+        notice: 'Password changed successfully.',
+      );
+      return true;
+    } on AuthFailure catch (failure) {
+      state = state.copyWith(busy: false, error: failure.message);
+    } on Exception {
+      state = state.copyWith(
+        busy: false,
+        error: 'The server could not be reached.',
+      );
+    }
+    return false;
   }
 
   /// Abandon a half-finished sign-in and go back to the credentials step.
@@ -189,4 +243,6 @@ class AuthController extends Notifier<AuthState> {
   }
 }
 
-final authControllerProvider = NotifierProvider<AuthController, AuthState>(AuthController.new);
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  AuthController.new,
+);

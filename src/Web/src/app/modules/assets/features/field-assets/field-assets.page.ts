@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
 import type { DxDataGridTypes } from 'devextreme-angular/ui/data-grid';
@@ -11,6 +12,7 @@ import { Workbook } from 'exceljs';
 import { Buffer } from 'buffer';
 import { saveAs } from 'file-saver';
 
+import { AuthStore } from '../../../../core/auth/auth.store';
 import { FieldAssetsStore } from './field-assets.store';
 import type {
   AssetImportResponse,
@@ -39,6 +41,22 @@ interface ImportedChooserColumn {
   readonly dataField: string;
   readonly calculateCellValue: (asset: AssetRegisterRow) => string;
 }
+
+interface ColumnChoice {
+  readonly dataField: string;
+  readonly caption: string;
+  readonly visible: boolean;
+}
+
+const defaultRegisterColumns = [
+  ['assetNumber', 'Asset No'], ['assetName', 'Asset Name'], ['typeName', 'TechnicalGroup'],
+  ['className', 'Asset Class'], ['statusName', 'Status'],
+  ['serialNumber', 'ManufactureSerialNumber'], ['costCenter', 'Cost Centre'],
+  ['quantity', 'Capitalized Quantity'], ['acquisitionDate', 'First Acquisition Date'],
+] as const;
+
+const promotedTemplateHeaders = new Set<string>(defaultRegisterColumns.map(([, caption]) => caption));
+const defaultImportedHeaders = new Set<string>(['Location']);
 
 interface EditableImportedField {
   readonly name: string;
@@ -71,8 +89,7 @@ const importedColumnHeaders = [
   'Depreciation COA Description', 'WarrantyPeriodsInMonth', 'InsurancePolicyNumber',
   'InsurancePolicyType', 'InsurancePolicyStartDate', 'InsurancePolicyEndDate', 'EmployeeUniqueID',
   'EmployeeName', 'EmpEMailAddress', 'ContractNo', 'CalibrationStartDate', 'CalibrationEndDate',
-  'WarrantyPeriodStartDate', 'WarrantyPeriodEndDate', 'Auditor Name', 'Auditor Company Name',
-  'Verified', 'Auditor Remarks', 'Make', 'Model',
+  'WarrantyPeriodStartDate', 'WarrantyPeriodEndDate', 'Make', 'Model',
 ] as const;
 
 const detailCategoryConfig = [
@@ -108,11 +125,6 @@ const detailCategoryConfig = [
   { title: '8. Calibration', groups: [
     { title: 'Calibration Details', fields: ['CalibrationStartDate', 'CalibrationEndDate'] },
   ] },
-  { title: '9. Audit', groups: [
-    { title: 'Auditor', fields: ['Auditor Name', 'Auditor Company Name'] },
-    { title: 'Verification', fields: ['Verified'] },
-    { title: 'Remarks', fields: ['Auditor Remarks'] },
-  ] },
 ] as const;
 
 @Component({
@@ -132,6 +144,9 @@ const detailCategoryConfig = [
 })
 export class FieldAssetsPage implements OnInit {
   readonly store = inject(FieldAssetsStore);
+  private readonly auth = inject(AuthStore);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   selectedAsset: AssetRegisterRow | null = null;
   importedFields: ImportedField[] = [];
   detailCategories: DetailCategory[] = [];
@@ -140,23 +155,130 @@ export class FieldAssetsPage implements OnInit {
   isGeneratingSkippedReport = false;
   skippedReportError: string | null = null;
   skippedReportResult: AssetImportResponse | null = null;
+  isFilterVisible = false;
+  isColumnChooserVisible = false;
+  selectedBranchId: number | null = null;
   editableFields: EditableImportedField[] = [];
   editCategories: EditableDetailCategory[] = [];
   editCategoryColumns: readonly (readonly EditableDetailCategory[])[] = [[], []];
   readonly importedChooserColumns: readonly ImportedChooserColumn[] = importedColumnHeaders.map(
-    (caption, index) => ({
+    (caption, index): ImportedChooserColumn => ({
       caption,
       dataField: `imported_${index + 1}`,
       calculateCellValue: (asset: AssetRegisterRow) => this.readImportedValue(asset, caption),
     }),
-  );
+  ).filter(column => !promotedTemplateHeaders.has(column.caption));
+  readonly columnVisibility = signal<Record<string, boolean>>(this.loadColumnPreferences());
+  readonly columnChoices = signal<readonly ColumnChoice[]>([]);
 
   ngOnInit(): void {
-    void this.store.load();
+    this.route.queryParamMap.subscribe(params => {
+      const verification = params.get('verification');
+      const search = params.get('search')?.trim() ?? '';
+
+      this.store.filters.set({
+        ...this.store.filters(),
+        isVerified: verification === 'verified' ? true : undefined,
+      });
+      this.store.search.set(search);
+      this.store.pageIndex.set(0);
+      void this.store.load();
+    });
+    void this.store.loadBranches();
+  }
+
+  showFilters(): void {
+    this.selectedBranchId = this.store.filters().locationId ?? null;
+    this.isFilterVisible = true;
+    void this.store.loadBranches();
+  }
+
+  showColumnChooser(): void {
+    const visibility = this.columnVisibility();
+    this.columnChoices.set([
+      ...defaultRegisterColumns.map(([dataField, caption]) => ({
+        dataField,
+        caption,
+        visible: visibility[dataField] ?? true,
+      })),
+      ...this.importedChooserColumns.map(column => ({
+        dataField: column.dataField,
+        caption: column.caption,
+        visible: visibility[column.dataField] ?? defaultImportedHeaders.has(column.caption),
+      })),
+    ]);
+    this.isColumnChooserVisible = true;
+  }
+
+  setColumnChoice(dataField: string, visible: boolean): void {
+    this.columnChoices.update(choices => choices.map(choice =>
+      choice.dataField === dataField ? { ...choice, visible } : choice));
+  }
+
+  applyColumnChoices(): void {
+    const visibility = Object.fromEntries(
+      this.columnChoices().map(choice => [choice.dataField, choice.visible]),
+    );
+    this.columnVisibility.set(visibility);
+    this.saveColumnPreferences(visibility);
+    this.isColumnChooserVisible = false;
+  }
+
+  cancelColumnChooser(): void {
+    this.isColumnChooserVisible = false;
+  }
+
+  isColumnVisible(dataField: string, defaultVisible: boolean): boolean {
+    return this.columnVisibility()[dataField] ?? defaultVisible;
+  }
+
+  isImportedColumnVisible(column: ImportedChooserColumn): boolean {
+    return this.isColumnVisible(column.dataField, defaultImportedHeaders.has(column.caption));
+  }
+
+  async applyBranchFilter(): Promise<void> {
+    const { locationId: _, ...existingFilters } = this.store.filters();
+    await this.store.applyFilters(this.selectedBranchId === null
+      ? existingFilters
+      : { ...existingFilters, locationId: this.selectedBranchId });
+    this.isFilterVisible = false;
+  }
+
+  async clearBranchFilter(): Promise<void> {
+    this.selectedBranchId = null;
+    const { locationId: _, ...existingFilters } = this.store.filters();
+    await this.store.applyFilters(existingFilters);
+    this.isFilterVisible = false;
   }
 
   onSearch(value: string): void {
     void this.store.applySearch(value);
+  }
+
+  private columnPreferenceKey(): string {
+    const userId = this.auth.session()?.userId ?? 'anonymous';
+    return `ams.field-assets.columns.user.${userId}`;
+  }
+
+  private loadColumnPreferences(): Record<string, boolean> {
+    try {
+      const stored = localStorage.getItem(this.columnPreferenceKey());
+      if (stored === null) return {};
+      const parsed = JSON.parse(stored) as unknown;
+      return parsed !== null && typeof parsed === 'object'
+        ? parsed as Record<string, boolean>
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private saveColumnPreferences(preferences: Record<string, boolean>): void {
+    try {
+      localStorage.setItem(this.columnPreferenceKey(), JSON.stringify(preferences));
+    } catch {
+      // Storage can be unavailable in private browsing; defaults remain usable.
+    }
   }
 
   onFileSelected(event: Event): void {
@@ -296,10 +418,7 @@ export class FieldAssetsPage implements OnInit {
   }
 
   viewAsset(asset: AssetRegisterRow): void {
-    this.selectedAsset = asset;
-    this.importedFields = this.readImportedFields(asset);
-    this.detailCategories = this.buildDetailCategories(this.importedFields);
-    this.isDetailVisible = true;
+    void this.router.navigate(['/field-assets', asset.id], { state: { asset } });
   }
 
   editAsset(asset: AssetRegisterRow): void {
@@ -342,7 +461,6 @@ export class FieldAssetsPage implements OnInit {
 
   private buildEditableCategories(fields: readonly EditableImportedField[]): EditableDetailCategory[] {
     const fieldLookup = new Map(fields.map(field => [field.name.trim().toLocaleLowerCase(), field]));
-    const assignedNames = new Set<string>();
     const categories: EditableDetailCategory[] = detailCategoryConfig.map(category => ({
       title: category.title,
       groups: category.groups.map(group => ({
@@ -350,18 +468,10 @@ export class FieldAssetsPage implements OnInit {
         fields: group.fields.flatMap(name => {
           const field = fieldLookup.get(name.toLocaleLowerCase());
           if (!field) return [];
-          assignedNames.add(field.name.trim().toLocaleLowerCase());
           return [field];
         }),
       })).filter(group => group.fields.length > 0),
     })).filter(category => category.groups.length > 0);
-    const additionalFields = fields.filter(field => !assignedNames.has(field.name.trim().toLocaleLowerCase()));
-    if (additionalFields.length > 0) {
-      categories.push({
-        title: '10. Additional Fields',
-        groups: [{ title: 'Custom Excel Columns', fields: additionalFields }],
-      });
-    }
     return categories;
   }
 
@@ -387,7 +497,6 @@ export class FieldAssetsPage implements OnInit {
 
   private buildDetailCategories(fields: readonly ImportedField[]): DetailCategory[] {
     const fieldLookup = new Map(fields.map(field => [field.name.trim().toLocaleLowerCase(), field]));
-    const assignedNames = new Set<string>();
     const categories: DetailCategory[] = detailCategoryConfig.map(category => ({
       title: category.title,
       groups: category.groups.map(group => ({
@@ -395,20 +504,12 @@ export class FieldAssetsPage implements OnInit {
         fields: group.fields.flatMap(name => {
           const field = fieldLookup.get(name.toLocaleLowerCase());
           if (field) {
-            assignedNames.add(field.name.trim().toLocaleLowerCase());
             return [field];
           }
           return [];
         }),
       })),
     }));
-    const additionalFields = fields.filter(field => !assignedNames.has(field.name.trim().toLocaleLowerCase()));
-    if (additionalFields.length > 0) {
-      categories.push({
-        title: '10. Additional Fields',
-        groups: [{ title: 'Custom Excel Columns', fields: additionalFields }],
-      });
-    }
     return categories;
   }
 

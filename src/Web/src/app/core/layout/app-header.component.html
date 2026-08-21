@@ -18,7 +18,7 @@
         #searchBox
         class="app-header__search"
         mode="search"
-        placeholder="Search assets, tickets, people…"
+        placeholder="Search assets globally…"
         valueChangeEvent="input"
         [(value)]="searchText"
         [showClearButton]="true"
@@ -71,7 +71,8 @@
         [items]="userMenu"
         displayExpr="text"
         keyExpr="id"
-        [dropDownOptions]="{ width: 220 }"
+        hint="Open profile menu"
+        [dropDownOptions]="{ width: 220, wrapperAttr: { class: 'app-header-profile-menu' } }"
         (onItemClick)="onUserMenuClick($event)"
       >
       </dx-drop-down-button>

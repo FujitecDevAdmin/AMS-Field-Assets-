@@ -17,6 +17,7 @@ public sealed record SearchAssetsRequest(
     DateOnly? AcquiredFrom,
     DateOnly? AcquiredTo,
     bool? IsBulk,
+    bool? IsVerified,
     bool? IncludeDeleted,
     int? Skip,
     int? Take);

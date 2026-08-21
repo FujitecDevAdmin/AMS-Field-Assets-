@@ -26,7 +26,7 @@ public static class CloseVerificationCycleEndpoint
 
                 return result.ToHttpResult();
             })
-            .RequireCapability(Capabilities.Verification.Manage)
+            .RequireCapability(Capabilities.FieldAssets.Manage)
             .WithName("CloseVerificationCycle")
             .Produces<CloseVerificationCycleResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem()

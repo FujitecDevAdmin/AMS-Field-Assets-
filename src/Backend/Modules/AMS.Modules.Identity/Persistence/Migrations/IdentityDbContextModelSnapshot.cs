@@ -230,7 +230,7 @@ namespace AMS.Modules.Identity.Persistence.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("LocationId")
+                    b.Property<int>("BranchId")
                         .HasColumnType("int");
 
                     b.Property<string>("GrantedBy")
@@ -243,7 +243,7 @@ namespace AMS.Modules.Identity.Persistence.Migrations
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit");
 
-                    b.HasKey("UserId", "LocationId")
+                    b.HasKey("UserId", "BranchId")
                         .HasName("PK_UserBranch");
 
                     b.HasIndex("UserId")

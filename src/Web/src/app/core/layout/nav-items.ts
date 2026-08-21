@@ -50,8 +50,9 @@ export const NAV_ITEMS: NavItem[] = [
     path: '/field-assets',
     capability: 'field-asset.view',
   },
-  { id: 'auditors', text: 'Auditors', icon: 'group', path: '/auditors' },
   { id: 'reports', text: 'Reports', icon: 'chart', path: '/reports' },
+  { id: 'audit', text: 'Audit', icon: 'search', path: '/audit' },
+  { id: 'auditors', text: 'Auditors', icon: 'group', path: '/auditors' },
   { id: 'audit-reports', text: 'Audit Reports', icon: 'doc', path: '/audit-reports' },
 ];
 

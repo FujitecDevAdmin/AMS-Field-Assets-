@@ -6,6 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\AMS.SharedKernel\AMS.SharedKernel.csproj" />
     <ProjectReference Include="..\AMS.Modules.Assets.PublicApi\AMS.Modules.Assets.PublicApi.csproj" />
+    <ProjectReference Include="..\AMS.Modules.Organization.PublicApi\AMS.Modules.Organization.PublicApi.csproj" />
+    <ProjectReference Include="..\AMS.Modules.Identity.PublicApi\AMS.Modules.Identity.PublicApi.csproj" />
     <ProjectReference Include="..\..\AMS.SharedKernel.Persistence\AMS.SharedKernel.Persistence.csproj" />
     <ProjectReference Include="..\..\AMS.SharedKernel.Web\AMS.SharedKernel.Web.csproj" />
   </ItemGroup>

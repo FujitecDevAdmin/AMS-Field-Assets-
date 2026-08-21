@@ -5,5 +5,8 @@ namespace AMS.Modules.Verification.Features.OpenVerificationCycle;
 /// </summary>
 public sealed record OpenVerificationCycleRequest(
     string CycleName,
+    int BranchId,
     DateOnly? StartDate,
-    DateOnly? EndDate);
+    DateOnly? EndDate,
+    IReadOnlyList<int> AuditorUserIds,
+    IReadOnlyList<int> LocationBranchIds);

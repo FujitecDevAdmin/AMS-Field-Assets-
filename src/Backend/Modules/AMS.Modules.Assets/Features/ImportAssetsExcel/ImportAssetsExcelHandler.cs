@@ -33,8 +33,12 @@ public sealed class ImportAssetsExcelHandler(
         "Depreciation COA Description", "WarrantyPeriodsInMonth", "InsurancePolicyNumber",
         "InsurancePolicyType", "InsurancePolicyStartDate", "InsurancePolicyEndDate", "EmployeeUniqueID",
         "EmployeeName", "EmpEMailAddress", "ContractNo", "CalibrationStartDate", "CalibrationEndDate",
-        "WarrantyPeriodStartDate", "WarrantyPeriodEndDate", "Auditor Name", "Auditor Company Name",
-        "Verified", "Auditor Remarks", "Make", "Model",
+        "WarrantyPeriodStartDate", "WarrantyPeriodEndDate", "Make", "Model",
+    ];
+
+    private static readonly string[] RemovedAuditHeaders =
+    [
+        "Auditor Name", "Auditor Company", "Auditor Company Name", "Verified", "Auditor Remarks",
     ];
 
     private static readonly string[] PurchaseHeaders =
@@ -159,7 +163,8 @@ public sealed class ImportAssetsExcelHandler(
             var validAssetName = assetName!;
 
             var importedData = TemplateHeaders
-                .Concat(row.Keys.Where(header => !TemplateHeaders.Contains(header, StringComparer.OrdinalIgnoreCase)))
+                .Concat(row.Keys.Where(header => !TemplateHeaders.Contains(header, StringComparer.OrdinalIgnoreCase)
+                    && !RemovedAuditHeaders.Contains(header, StringComparer.OrdinalIgnoreCase)))
                 .ToDictionary(header => header, header => Text(row, header), StringComparer.OrdinalIgnoreCase);
             var importedJson = JsonSerializer.Serialize(importedData);
             if (existingAssets.TryGetValue(validAssetNumber, out var existingAsset))
@@ -270,7 +275,8 @@ public sealed class ImportAssetsExcelHandler(
     {
         var extraHeaders = processed
             .SelectMany(item => item.Row.Keys)
-            .Where(header => !TemplateHeaders.Contains(header, StringComparer.OrdinalIgnoreCase))
+            .Where(header => !TemplateHeaders.Contains(header, StringComparer.OrdinalIgnoreCase)
+                && !RemovedAuditHeaders.Contains(header, StringComparer.OrdinalIgnoreCase))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
         if (extraHeaders.Length == 0 || processed.Count == 0)

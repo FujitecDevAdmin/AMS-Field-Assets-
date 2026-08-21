@@ -1,0 +1,60 @@
+<section class="my-audits">
+  <header class="auditor-hero ams-page-hero">
+    <div><p>ASSIGNED FIELD WORK</p><h1>My Audits</h1><span>Only audits and branch assets assigned to your account are shown.</span></div>
+    <div class="hero-stat"><strong>{{ pendingCount() }}</strong><small>assets pending</small></div>
+  </header>
+
+  @if (error(); as message) { <div class="error-banner">{{ message }}</div> }
+
+  <section class="work-card">
+    <header>
+      <div><h2>Assigned audit</h2><p>Select an audit to view its authorized asset register.</p></div>
+      <dx-select-box [items]="audits()" valueExpr="id" displayExpr="auditName" width="320" [value]="selectedAuditId()" (onValueChanged)="selectedAuditId.set($event.value ?? null)" placeholder="No audits assigned" />
+    </header>
+
+    @if (selectedAudit(); as audit) {
+      <div class="scope-strip"><strong>{{ audit.branchName }}</strong><span>{{ audit.assets.length }} authorized assets</span><span>{{ audit.startDate }} — {{ audit.endDate ?? 'Open ended' }}</span></div>
+      <dx-data-grid class="desktop-assets" [dataSource]="audit.assets" keyExpr="id" [showBorders]="false" [showRowLines]="true" [rowAlternationEnabled]="true" [columnAutoWidth]="true" [searchPanel]="{ visible: true, width: 260, placeholder: 'Search assigned assets' }">
+        <dxo-paging [pageSize]="15" /><dxo-pager [showInfo]="true" [showPageSizeSelector]="true" [allowedPageSizes]="[15, 30, 50]" />
+        <dxi-column dataField="assetNumber" caption="Asset number" />
+        <dxi-column dataField="assetName" caption="Asset name" [minWidth]="220" />
+        <dxi-column dataField="serialNumber" caption="Serial number" />
+        <dxi-column dataField="location" caption="Location" />
+        <dxi-column dataField="quantity" caption="Quantity" alignment="center" />
+        <dxi-column dataField="isVerified" caption="Status" cellTemplate="status" alignment="center" />
+        <dxi-column caption="Action" cellTemplate="action" alignment="center" />
+        <div *dxTemplate="let cell of 'status'"><span class="status" [class.done]="cell.data.isVerified">{{ cell.data.isVerified ? 'Verified' : 'Pending' }}</span></div>
+        <div *dxTemplate="let cell of 'action'"><dx-button text="Verify" icon="check" stylingMode="text" [disabled]="cell.data.isVerified || !audit.isActive" (onClick)="openVerification(cell.data)" /></div>
+      </dx-data-grid>
+      <div class="mobile-assets" aria-label="Assigned assets">
+        @for (asset of audit.assets; track asset.id) {
+          <article class="asset-card">
+            <header>
+              <div><strong>{{ asset.assetNumber }}</strong><span>{{ asset.assetName }}</span></div>
+              <span class="status" [class.done]="asset.isVerified">{{ asset.isVerified ? 'Verified' : 'Pending' }}</span>
+            </header>
+            <dl>
+              <div><dt>Location</dt><dd>{{ asset.location || 'Not specified' }}</dd></div>
+              <div><dt>Serial number</dt><dd>{{ asset.serialNumber || '—' }}</dd></div>
+              <div><dt>Quantity</dt><dd>{{ asset.quantity }}</dd></div>
+            </dl>
+            <dx-button text="Verify asset" icon="check" type="default" width="100%" [disabled]="asset.isVerified || !audit.isActive" (onClick)="openVerification(asset)" />
+          </article>
+        } @empty {
+          <div class="empty">No assets belong to this assigned branch.</div>
+        }
+      </div>
+    } @else if (!loading()) { <div class="empty">No audit has been assigned to your account.</div> }
+  </section>
+</section>
+
+<dx-popup title="Verify asset" [visible]="selectedAsset() !== null" [width]="'min(560px, 94vw)'" [height]="'auto'" [showCloseButton]="true" (onHiding)="closeVerification()">
+  <div *dxTemplate="let _ of 'content'" class="verify-form">
+    @if (selectedAsset(); as asset) { <div class="asset-heading"><strong>{{ asset.assetNumber }}</strong><span>{{ asset.assetName }}</span></div> }
+    <label><span>Working condition</span><dx-select-box [items]="conditionOptions" [value]="condition()" (onValueChanged)="condition.set($event.value ?? 'Good')" /></label>
+    <label><span>Scanned QR value</span><dx-text-box [value]="scannedQr()" (onValueChanged)="scannedQr.set($event.value ?? '')" /></label>
+    <label class="serial"><dx-check-box text="Serial number physically verified" [value]="serialVerified()" (onValueChanged)="serialVerified.set($event.value ?? false)" /></label>
+    <label><span>Remarks</span><dx-text-area [height]="80" [value]="remarks()" (onValueChanged)="remarks.set($event.value ?? '')" /></label>
+    <footer><dx-button text="Cancel" stylingMode="outlined" (onClick)="closeVerification()" /><dx-button text="Save verification" icon="check" type="default" [disabled]="saving()" (onClick)="submitVerification()" /></footer>
+  </div>
+</dx-popup>

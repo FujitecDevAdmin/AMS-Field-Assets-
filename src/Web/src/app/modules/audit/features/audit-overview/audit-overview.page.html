@@ -1,0 +1,374 @@
+<section class="audit-page">
+  <header class="audit-hero ams-page-hero">
+    <div>
+      <p class="eyebrow"><span class="live-dot"></span> PHYSICAL VERIFICATION CONTROL</p>
+      <h1>Audit command centre</h1>
+      <p>Plan verification cycles, deploy auditors and monitor field assurance.</p>
+    </div>
+  </header>
+
+  @if (pageError(); as error) {
+    <div class="error-banner"><i class="dx-icon-warning"></i>{{ error }}</div>
+  }
+
+  <section class="summary-grid" aria-label="Audit summary">
+    <article class="summary-card summary-active">
+      <div class="summary-icon"><i class="dx-icon-runner"></i></div>
+      <div><span>Active audits</span><strong>{{ activeCount() }}</strong><small>In field execution</small></div>
+    </article>
+    <article class="summary-card summary-complete">
+      <div class="summary-icon"><i class="dx-icon-check"></i></div>
+      <div><span>Completed audits</span><strong>{{ completedCount() }}</strong><small>Verification cycles closed</small></div>
+    </article>
+    <article class="summary-card summary-verified">
+      <div class="summary-icon"><i class="dx-icon-box"></i></div>
+      <div><span>Assets verified</span><strong>{{ verifiedCount() }}</strong><small>Confirmed in the field</small></div>
+    </article>
+    <article class="summary-card summary-exception">
+      <div class="summary-icon"><i class="dx-icon-warning"></i></div>
+      <div><span>Exceptions found</span><strong>{{ exceptionCount() }}</strong><small>Require attention</small></div>
+    </article>
+  </section>
+
+  <section class="audit-list audit-register">
+    <header>
+      <div>
+        <span class="section-kicker">AUDIT REGISTER</span>
+        <h2>Verification portfolio</h2>
+        <p>{{ filteredAudits().length }} audit{{ filteredAudits().length === 1 ? '' : 's' }}</p>
+      </div>
+      <div class="filters">
+        <dx-text-box
+          width="250"
+          mode="search"
+          placeholder="Search audits"
+          [value]="search()"
+          (onValueChanged)="search.set($event.value ?? '')"
+        />
+        <dx-select-box
+          width="170"
+          [items]="statusOptions"
+          [value]="selectedStatus()"
+          (onValueChanged)="selectedStatus.set($event.value ?? 'All statuses')"
+        />
+        <dx-button
+          class="create-audit-action"
+          text="Create Audit"
+          icon="plus"
+          type="default"
+          hint="Create Audit"
+          (onClick)="showAddAudit()"
+        />
+      </div>
+    </header>
+
+    <dx-data-grid
+      [dataSource]="filteredAudits()"
+      keyExpr="id"
+      [showBorders]="false"
+      [showRowLines]="true"
+      [rowAlternationEnabled]="true"
+      [columnAutoWidth]="true"
+      [columnHidingEnabled]="true"
+      [hoverStateEnabled]="true"
+      noDataText="No audits match the current filters."
+    >
+      <dxo-paging [pageSize]="10" />
+      <dxo-pager
+        [showPageSizeSelector]="true"
+        [allowedPageSizes]="[10, 25, 50]"
+        [showInfo]="true"
+      />
+      <dxi-column dataField="cycleName" caption="Audit name" [minWidth]="220" cellTemplate="auditNameCell" />
+      <dxi-column dataField="startDate" caption="Start date" dataType="date" format="dd MMM yyyy" />
+      <dxi-column dataField="endDate" caption="End date" dataType="date" format="dd MMM yyyy" />
+      <dxi-column
+        dataField="totalAssetCount"
+        caption="Total assets"
+        dataType="number"
+        alignment="center"
+      />
+      <dxi-column
+        dataField="verifiedCount"
+        caption="Verified"
+        dataType="number"
+        alignment="center"
+      />
+      <dxi-column dataField="pendingCount" caption="Pending" dataType="number" alignment="center" />
+      <dxi-column
+        dataField="progressPercent"
+        caption="Progress"
+        dataType="number"
+        format="#0'%'"
+        alignment="center"
+      />
+      <dxi-column
+        dataField="exceptionCount"
+        caption="Exceptions"
+        dataType="number"
+        alignment="center"
+      />
+      <dxi-column
+        dataField="status"
+        caption="Status"
+        alignment="center"
+        cellTemplate="statusCell"
+      />
+      <div *dxTemplate="let cell of 'statusCell'" class="status-cell">
+        <span class="status" [class]="'status status--' + cell.value.toLocaleLowerCase()">{{
+          cell.value
+        }}</span>
+      </div>
+      <div *dxTemplate="let cell of 'auditNameCell'">
+        <button type="button" class="audit-name-link" (click)="showAuditDetails(cell.data)">{{ cell.value }}</button>
+      </div>
+    </dx-data-grid>
+  </section>
+
+  <dx-load-panel
+    [visible]="loading()"
+    [showPane]="true"
+    [shading]="false"
+    message="Loading audits…"
+  />
+</section>
+
+<dx-popup
+  title="Audit details"
+  [wrapperAttr]="{ class: 'audit-details-popup' }"
+  [visible]="isDetailsVisible()"
+  [width]="'min(1080px, 96vw)'"
+  [height]="'auto'"
+  [maxHeight]="'88vh'"
+  [showCloseButton]="true"
+  (onHiding)="closeAuditDetails()"
+>
+  <div *dxTemplate="let _ of 'content'" class="audit-details">
+    @if (selectedAudit(); as audit) {
+      <header class="details-heading">
+        <div><span>AUDIT</span><h2>{{ audit.cycleName }}</h2><p>{{ selectedBranchName() }}</p></div>
+        <span class="status" [class]="'status status--' + audit.status.toLocaleLowerCase()">{{ audit.status }}</span>
+      </header>
+      <div class="details-grid">
+        <div><span>Start date</span><strong>{{ audit.startDate | date: 'dd MMM yyyy' }}</strong></div>
+        <div><span>End date</span><strong>{{ audit.endDate ? (audit.endDate | date: 'dd MMM yyyy') : 'Open ended' }}</strong></div>
+        <div><span>Total assets</span><strong>{{ audit.totalAssetCount }}</strong></div>
+        <div><span>Verified</span><strong>{{ audit.verifiedCount }}</strong></div>
+        <div><span>Pending</span><strong>{{ audit.pendingCount }}</strong></div>
+        <div><span>Exceptions</span><strong>{{ audit.exceptionCount }}</strong></div>
+      </div>
+      <div class="auditor-summary">
+        <div>
+          <span>Assigned auditors</span>
+          <strong>{{ selectedAuditorNames().length ? selectedAuditorNames().join(', ') : audit.auditorUserIds.length + ' auditor(s)' }}</strong>
+        </div>
+        @if (audit.isActive) {
+          <dx-button icon="plus" text="Add auditor" hint="Add auditor to this active audit" stylingMode="contained" (onClick)="showAddAuditors()" />
+        }
+      </div>
+      <div class="details-actions">
+        <dx-button class="tiny-assets-button" icon="box" hint="View assets" stylingMode="outlined" aria-label="View assets" (onClick)="viewAuditAssets()" />
+      </div>
+      @if (detailsError(); as error) { <div class="error-banner"><i class="dx-icon-warning"></i>{{ error }}</div> }
+    }
+  </div>
+</dx-popup>
+
+<dx-popup
+  title="Add auditor to audit"
+  [visible]="isAddAuditorVisible()"
+  [width]="'min(560px, 94vw)'"
+  [height]="'auto'"
+  [maxHeight]="'82vh'"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  (onHiding)="closeAddAuditors()"
+>
+  <div *dxTemplate="let _ of 'content'" class="add-auditor-form">
+    <p>Add one or more auditors without restarting the audit or affecting completed verification.</p>
+    @if (addAuditorError(); as error) {
+      <div class="error-banner"><i class="dx-icon-warning"></i>{{ error }}</div>
+    }
+    <label>
+      <span>Available auditors <b>*</b></span>
+      <dx-tag-box
+        [items]="availableAdditionalAuditors()"
+        valueExpr="id"
+        displayExpr="displayName"
+        placeholder="Select auditors"
+        [searchEnabled]="true"
+        [showSelectionControls]="true"
+        [applyValueMode]="'useButtons'"
+        [value]="additionalAuditorIds()"
+        (onValueChanged)="additionalAuditorIds.set($event.value ?? [])"
+      />
+      @if (availableAdditionalAuditors().length === 0) {
+        <small>All active auditors are already assigned to this audit.</small>
+      }
+    </label>
+    <footer>
+      <dx-button text="Cancel" stylingMode="text" [disabled]="isAddingAuditors()" (onClick)="closeAddAuditors()" />
+      <dx-button text="Add auditors" icon="plus" type="default" [disabled]="!canAddAuditors()" (onClick)="addAuditors()" />
+    </footer>
+  </div>
+</dx-popup>
+
+<dx-popup
+  [title]="selectedAudit() ? selectedAudit()!.cycleName + ' — Assets' : 'Audit assets'"
+  [wrapperAttr]="{ class: 'audit-assets-dialog' }"
+  [visible]="showingAssets()"
+  [width]="'min(1280px, 97vw)'"
+  [height]="'min(760px, 90vh)'"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  (onHiding)="closeAuditAssets()"
+>
+  <div *dxTemplate="let _ of 'content'" class="audit-assets-popup">
+    <header>
+      <div><span>ASSOCIATED ASSETS</span><h3>{{ auditAssets().length }} assets</h3></div>
+      <div class="asset-popup-actions">
+        <strong>{{ selectedBranchName() }}</strong>
+        <span class="status" [class.status--active]="selectedAudit()?.isActive">{{ selectedAudit()?.isActive ? 'Active' : 'Closed' }}</span>
+        <dx-button icon="refresh" hint="Refresh verification status" stylingMode="text" [disabled]="assetsLoading()" (onClick)="refreshAuditAssets()" />
+      </div>
+    </header>
+    @if (detailsError(); as error) { <div class="error-banner"><i class="dx-icon-warning"></i>{{ error }}</div> }
+    <div class="asset-grid-wrap">
+      <dx-data-grid
+        [dataSource]="auditAssets()"
+        keyExpr="id"
+        height="100%"
+        [showBorders]="false"
+        [showRowLines]="true"
+        [showColumnLines]="true"
+        [rowAlternationEnabled]="true"
+        [columnAutoWidth]="false"
+        [columnHidingEnabled]="false"
+        [searchPanel]="{ visible: true, width: 260, placeholder: 'Search assets' }"
+        noDataText="No assets are associated with this audit branch."
+      >
+        <dxo-scrolling mode="standard" [useNative]="true" showScrollbar="always" />
+        <dxo-paging [pageSize]="20" />
+        <dxo-pager [showInfo]="true" [showPageSizeSelector]="true" [allowedPageSizes]="[20, 50, 100]" />
+        <dxi-column dataField="assetNumber" caption="Asset number" [width]="180" />
+        <dxi-column dataField="assetName" caption="Asset name" [width]="300" />
+        <dxi-column dataField="serialNumber" caption="Serial number" [width]="210" />
+        <dxi-column dataField="location" caption="Location" [width]="220" />
+        <dxi-column dataField="quantity" caption="Quantity" alignment="center" [width]="105" />
+        <dxi-column dataField="isVerified" caption="Status" cellTemplate="assetStatus" alignment="center" [width]="125" />
+        <dxi-column dataField="verifiedBy" caption="Verified by" cellTemplate="verifiedBy" [width]="180" />
+        <dxi-column dataField="verifiedOnUtc" caption="Verified on" dataType="datetime" format="dd MMM yyyy, HH:mm" [width]="190" />
+        <div *dxTemplate="let cell of 'assetStatus'"><span class="status" [class.status--active]="cell.value">{{ cell.value ? 'Verified' : 'Pending' }}</span></div>
+        <div *dxTemplate="let cell of 'verifiedBy'">{{ cell.data.isVerified ? (cell.value || ('User #' + cell.data.verifiedByUserId)) : '—' }}</div>
+      </dx-data-grid>
+      @if (assetsLoading()) { <div class="assets-loading">Loading associated assets…</div> }
+    </div>
+  </div>
+</dx-popup>
+
+<dx-popup
+  title="Add Audit"
+  [visible]="isAddPanelVisible()"
+  [width]="'min(720px, 94vw)'"
+  [height]="'auto'"
+  [maxHeight]="'88vh'"
+  [showCloseButton]="true"
+  [dragEnabled]="false"
+  (onHiding)="closeAddAudit()"
+>
+  <div *dxTemplate="let _ of 'content'" class="audit-form">
+    <p>Create a physical-verification cycle for a branch and assign its auditors.</p>
+
+    @if (formError(); as error) {
+      <div class="error-banner"><i class="dx-icon-warning"></i>{{ error }}</div>
+    }
+
+    <label>
+      <span>Audit name <b>*</b></span>
+      <dx-text-box
+        placeholder="For example, South Region Q3 Audit"
+        [value]="auditName()"
+        (onValueChanged)="auditName.set($event.value ?? '')"
+      />
+    </label>
+    <label>
+      <span>Branch Name <b>*</b></span>
+      <dx-select-box
+        [items]="branches()"
+        valueExpr="id"
+        displayExpr="branchName"
+        placeholder="Select audit branch"
+        [searchEnabled]="true"
+        [showClearButton]="true"
+        [value]="branchId()"
+        (onValueChanged)="setAuditBranch($event.value ?? null)"
+      />
+      <small>The selected branch is used as the audit location and for calculating asset count.</small>
+    </label>
+    <div class="date-row">
+      <label>
+        <span>Start date <b>*</b></span>
+        <dx-date-box
+          type="date"
+          [value]="startDate()"
+          (onValueChanged)="setStartDate($event.value)"
+        />
+      </label>
+      <label>
+        <span>End date</span>
+        <dx-date-box
+          type="date"
+          [value]="endDate() || null"
+          (onValueChanged)="setEndDate($event.value)"
+        />
+      </label>
+    </div>
+    <label class="asset-count-field">
+      <span>Total asset count</span>
+      <dx-text-box
+        [value]="
+          isCountingAssets()
+            ? 'Calculating…'
+            : totalAssetCount() === null
+              ? 'Select one or more locations'
+              : totalAssetCount()!.toString()
+        "
+        [readOnly]="true"
+      />
+      @if (assetCountError(); as error) {
+        <small class="validation">{{ error }}</small>
+      }
+    </label>
+    <label class="auditor-field">
+      <span>Auditors from Auditor Master <b>*</b></span>
+      <dx-tag-box
+        [items]="eligibleAuditors()"
+        valueExpr="id"
+        displayExpr="displayName"
+        placeholder="Select one or more auditors"
+        [searchEnabled]="true"
+        [openOnFieldClick]="true"
+        [showSelectionControls]="true"
+        [showClearButton]="true"
+        [maxDisplayedTags]="3"
+        [showMultiTagOnly]="false"
+        [value]="selectedAuditorIds()"
+        (onValueChanged)="selectedAuditorIds.set($event.value ?? [])"
+      />
+      <small>All active auditors remain available and may be assigned to multiple audits.</small>
+    </label>
+    @if (endDate() && endDate() < startDate()) {
+      <p class="validation">End date cannot be earlier than the start date.</p>
+    }
+    <footer>
+      <dx-button text="Cancel" stylingMode="outlined" (onClick)="closeAddAudit()" />
+      <dx-button
+        text="Create Audit"
+        icon="check"
+        type="default"
+        [disabled]="!canCreate()"
+        (onClick)="createAudit()"
+      />
+    </footer>
+  </div>
+</dx-popup>

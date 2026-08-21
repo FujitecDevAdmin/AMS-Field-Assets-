@@ -6,6 +6,8 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { DxCheckBoxModule } from 'devextreme-angular/ui/check-box';
 import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
@@ -17,9 +19,14 @@ import { DxTextBoxModule } from 'devextreme-angular/ui/text-box';
 import { exportDataGrid } from 'devextreme/excel_exporter';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
+import { forkJoin } from 'rxjs';
 
-import { AuditorLocationsApi, type AuditorLocation } from '../../data/auditor-locations.api';
-import { AuditorsApi, type CreatedAuditor } from '../../data/auditors.api';
+import { AuditorBranchesApi, type AuditorBranch } from '../../data/auditor-branches.api';
+import {
+  AuditorsApi,
+  type AuditorVerificationActivityResponse,
+  type CreatedAuditor,
+} from '../../data/auditors.api';
 
 interface AuditorRow {
   readonly id: number;
@@ -38,6 +45,7 @@ interface AuditorRow {
 @Component({
   selector: 'ams-auditors-page',
   imports: [
+    DatePipe,
     DxButtonModule,
     DxCheckBoxModule,
     DxDataGridModule,
@@ -51,17 +59,20 @@ interface AuditorRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuditorsPage implements OnInit {
-  private readonly locationsApi = inject(AuditorLocationsApi);
+  private readonly branchesApi = inject(AuditorBranchesApi);
   private readonly auditorsApi = inject(AuditorsApi);
+  private readonly route = inject(ActivatedRoute);
 
   readonly auditors = signal<readonly AuditorRow[]>([]);
   readonly isAddPanelVisible = signal(false);
-  readonly isLocationPanelVisible = signal(false);
-  readonly locations = signal<AuditorLocation[]>([]);
-  readonly selectedLocationIds = signal<number[]>([]);
-  readonly newLocationName = signal('');
-  readonly isSavingLocation = signal(false);
-  readonly locationError = signal<string | null>(null);
+  readonly isBranchPanelVisible = signal(false);
+  readonly branches = signal<AuditorBranch[]>([]);
+  readonly selectedBranchIds = signal<number[]>([]);
+  readonly newBranchCode = signal('');
+  readonly newBranchName = signal('');
+  readonly newBranchTimeZone = signal('India Standard Time');
+  readonly isSavingBranch = signal(false);
+  readonly branchError = signal<string | null>(null);
   readonly displayName = signal('');
   readonly username = signal('');
   readonly email = signal('');
@@ -74,6 +85,11 @@ export class AuditorsPage implements OnInit {
   readonly search = signal('');
   readonly statusOptions = ['All accounts', 'Active', 'Inactive', 'Locked'];
   readonly selectedStatus = signal(this.statusOptions[0]);
+  readonly selectedAuditor = signal<AuditorRow | null>(null);
+  readonly auditorActivity = signal<AuditorVerificationActivityResponse | null>(null);
+  readonly isViewPanelVisible = signal(false);
+  readonly isLoadingActivity = signal(false);
+  readonly activityError = signal<string | null>(null);
   readonly activeCount = computed(
     () => this.auditors().filter((auditor) => auditor.isActive).length,
   );
@@ -86,6 +102,24 @@ export class AuditorsPage implements OnInit {
   readonly verificationCount = computed(() =>
     this.auditors().reduce((total, auditor) => total + auditor.completedVerifications, 0),
   );
+  readonly filteredAuditors = computed(() => {
+    const query = this.search().trim().toLocaleLowerCase();
+    const status = this.selectedStatus();
+    return this.auditors().filter(auditor => {
+      const matchesQuery = query.length === 0 || [
+        auditor.displayName,
+        auditor.username,
+        auditor.email ?? '',
+        auditor.branchScope,
+        String(auditor.employeeId ?? ''),
+      ].some(value => value.toLocaleLowerCase().includes(query));
+      const matchesStatus = status === 'All accounts'
+        || (status === 'Active' && auditor.isActive && !auditor.isLocked)
+        || (status === 'Inactive' && !auditor.isActive)
+        || (status === 'Locked' && auditor.isLocked);
+      return matchesQuery && matchesStatus;
+    });
+  });
   readonly canCreateAuditor = computed(() => {
     const username = this.username().trim();
     const email = this.email().trim();
@@ -102,13 +136,38 @@ export class AuditorsPage implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadLocationsAndAuditors();
+    this.search.set(this.route.snapshot.queryParamMap.get('search')?.trim() ?? '');
+    this.loadBranchesAndAuditors();
   }
 
   showAddAuditor(): void {
     this.resetAuditorForm();
     this.isAddPanelVisible.set(true);
-    this.loadLocations();
+    this.loadBranches();
+  }
+
+  viewAuditor(auditor: AuditorRow): void {
+    this.selectedAuditor.set(auditor);
+    this.auditorActivity.set(null);
+    this.activityError.set(null);
+    this.isViewPanelVisible.set(true);
+    this.isLoadingActivity.set(true);
+    this.auditorsApi.verificationActivity(auditor.id).subscribe({
+      next: (response) => {
+        this.auditorActivity.set(response);
+        this.isLoadingActivity.set(false);
+      },
+      error: (error) => {
+        this.activityError.set(
+          this.readApiError(error, 'Auditor verification activity could not be loaded.'),
+        );
+        this.isLoadingActivity.set(false);
+      },
+    });
+  }
+
+  closeAuditorView(): void {
+    this.isViewPanelVisible.set(false);
   }
 
   closeAddAuditor(): void {
@@ -139,7 +198,7 @@ export class AuditorsPage implements OnInit {
 
     this.isCreatingAuditor.set(true);
     this.auditorFormError.set(null);
-    const branchIds = this.hasAllBranches() ? [] : [...this.selectedLocationIds()];
+    const branchIds = this.hasAllBranches() ? [] : [...this.selectedBranchIds()];
     this.auditorsApi
       .create({
         username: this.username().trim(),
@@ -163,41 +222,45 @@ export class AuditorsPage implements OnInit {
       });
   }
 
-  showAddLocation(): void {
-    this.newLocationName.set('');
-    this.locationError.set(null);
-    this.isLocationPanelVisible.set(true);
-    this.loadLocations();
+  showAddBranch(): void {
+    this.newBranchCode.set('');
+    this.newBranchName.set('');
+    this.newBranchTimeZone.set('India Standard Time');
+    this.branchError.set(null);
+    this.isBranchPanelVisible.set(true);
+    this.loadBranches();
   }
 
-  closeAddLocation(): void {
-    this.isLocationPanelVisible.set(false);
+  closeAddBranch(): void {
+    this.isBranchPanelVisible.set(false);
   }
 
-  saveLocation(): void {
-    const locationName = this.newLocationName().trim();
-    if (locationName.length === 0 || this.isSavingLocation()) {
+  saveBranch(): void {
+    const branchCode = this.newBranchCode().trim().toUpperCase();
+    const branchName = this.newBranchName().trim();
+    const timeZoneId = this.newBranchTimeZone().trim();
+    if (branchCode.length === 0 || branchName.length === 0 || timeZoneId.length === 0 || this.isSavingBranch()) {
       return;
     }
 
-    this.isSavingLocation.set(true);
-    this.locationError.set(null);
-    this.locationsApi.create(locationName).subscribe({
-      next: (location) => {
-        this.locations.update((rows) =>
-          [...rows, location].sort((left, right) =>
-            left.locationName.localeCompare(right.locationName),
+    this.isSavingBranch.set(true);
+    this.branchError.set(null);
+    this.branchesApi.create(branchCode, branchName, timeZoneId).subscribe({
+      next: (branch) => {
+        this.branches.update((rows) =>
+          [...rows, branch].sort((left, right) =>
+            left.branchName.localeCompare(right.branchName),
           ),
         );
-        this.selectedLocationIds.update((ids) => [...ids, location.locationId]);
-        this.isSavingLocation.set(false);
-        this.closeAddLocation();
+        this.selectedBranchIds.update((ids) => [...ids, branch.id]);
+        this.isSavingBranch.set(false);
+        this.closeAddBranch();
       },
       error: () => {
-        this.locationError.set(
-          'The location could not be saved. Check that it does not already exist.',
+        this.branchError.set(
+          'The branch could not be saved. Check that it does not already exist.',
         );
-        this.isSavingLocation.set(false);
+        this.isSavingBranch.set(false);
       },
     });
   }
@@ -216,31 +279,37 @@ export class AuditorsPage implements OnInit {
     );
   }
 
-  private loadLocations(): void {
-    this.locationsApi.list().subscribe({
-      next: (response) => this.locations.set([...response.rows]),
-      error: () => this.locationError.set('Assigned locations could not be loaded.'),
+  private loadBranches(): void {
+    this.branchesApi.list().subscribe({
+      next: (response) => this.branches.set([...response.rows]),
+      error: () => this.branchError.set('Assigned branches could not be loaded.'),
     });
   }
 
-  private loadLocationsAndAuditors(): void {
-    this.locationsApi.list().subscribe({
+  private loadBranchesAndAuditors(): void {
+    this.branchesApi.list().subscribe({
       next: (response) => {
-        this.locations.set([...response.rows]);
+        this.branches.set([...response.rows]);
         this.loadAuditors();
       },
       error: () => {
-        this.locationError.set('Assigned locations could not be loaded.');
+        this.branchError.set('Assigned branches could not be loaded.');
         this.loadAuditors();
       },
     });
   }
 
   private loadAuditors(): void {
-    this.auditorsApi.list().subscribe({
-      next: (response) =>
+    forkJoin({
+      accounts: this.auditorsApi.list(),
+      counts: this.auditorsApi.verificationCounts(),
+    }).subscribe({
+      next: ({ accounts, counts }) => {
+        const verificationCounts = new Map(
+          counts.rows.map((row) => [row.auditorUserId, row.verifiedAssetCount]),
+        );
         this.auditors.set(
-          response.rows.map((auditor) => ({
+          accounts.rows.map((auditor) => ({
             id: auditor.id,
             username: auditor.username,
             displayName: auditor.displayName,
@@ -248,17 +317,18 @@ export class AuditorsPage implements OnInit {
             employeeId: auditor.employeeId,
             branchScope: auditor.hasAllBranches
               ? 'All branches'
-              : this.locations()
-                  .filter((location) => auditor.branchIds.includes(location.locationId))
-                  .map((location) => location.locationName)
+              : this.branches()
+                  .filter((branch) => auditor.branchIds.includes(branch.id))
+                  .map((branch) => branch.branchName)
                   .join(', ') || auditor.branchIds.join(', '),
             isActive: auditor.isActive,
             isLocked: auditor.isLocked,
             mfaEnabled: auditor.mfaEnabled,
             lastLoginOnUtc: auditor.lastLoginOnUtc,
-            completedVerifications: 0,
+            completedVerifications: verificationCounts.get(auditor.id) ?? 0,
           })),
-        ),
+        );
+      },
       error: (error) =>
         this.auditorFormError.set(
           this.readApiError(error, 'Auditor accounts could not be loaded.'),
@@ -269,9 +339,9 @@ export class AuditorsPage implements OnInit {
   private completeAuditorCreation(created: CreatedAuditor, branchIds: readonly number[]): void {
     const branchScope = this.hasAllBranches()
       ? 'All branches'
-      : this.locations()
-          .filter((location) => branchIds.includes(location.locationId))
-          .map((location) => location.locationName)
+      : this.branches()
+          .filter((branch) => branchIds.includes(branch.id))
+          .map((branch) => branch.branchName)
           .join(', ') || 'No branches';
     this.auditors.update((rows) => [
       ...rows,
@@ -300,7 +370,7 @@ export class AuditorsPage implements OnInit {
     this.employeeId.set('');
     this.temporaryPassword.set('');
     this.hasAllBranches.set(false);
-    this.selectedLocationIds.set([]);
+    this.selectedBranchIds.set([]);
     this.auditorFormError.set(null);
   }
 

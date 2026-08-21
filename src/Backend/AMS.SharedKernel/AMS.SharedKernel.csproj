@@ -5,7 +5,7 @@
     dependency on EF Core, ASP.NET or a module, every module inherits that
     dependency and the kernel stops being shared - it becomes the place
     people put things they could not find a home for.
-
+co
     docs/01ARCHITECTURE.md §1: "Result<T>, Error, IDispatcher, base types,
     NO business logic".
   -->

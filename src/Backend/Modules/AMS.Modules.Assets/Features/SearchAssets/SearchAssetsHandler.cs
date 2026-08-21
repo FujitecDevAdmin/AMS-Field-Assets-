@@ -1,8 +1,10 @@
 using AMS.Modules.Assets.Persistence;
+using AMS.Modules.Organization.PublicApi.Organization;
 using AMS.SharedKernel.Abstractions;
 using AMS.SharedKernel.Messaging;
 using AMS.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace AMS.Modules.Assets.Features.SearchAssets;
 
@@ -28,7 +30,10 @@ namespace AMS.Modules.Assets.Features.SearchAssets;
 /// the only people who could act on it.
 /// </para>
 /// </remarks>
-public sealed class SearchAssetsHandler(AssetsDbContext db, ICurrentUser currentUser)
+public sealed class SearchAssetsHandler(
+    AssetsDbContext db,
+    ICurrentUser currentUser,
+    IBranchDirectory? branches = null)
     : IRequestHandler<SearchAssetsQuery, SearchAssetsResponse>
 {
     public async Task<Result<SearchAssetsResponse>> HandleAsync(
@@ -80,7 +85,43 @@ public sealed class SearchAssetsHandler(AssetsDbContext db, ICurrentUser current
 
         if (request.LocationId.HasValue)
         {
-            query = query.Where(a => a.CurrentLocationId == request.LocationId.Value);
+            var branchId = request.LocationId.Value;
+            var selectedBranches = branches is null
+                ? []
+                : await branches.FindActiveAsync([branchId], ct);
+            var aliases = selectedBranches
+                .SelectMany(branch => new[] { branch.BranchCode, branch.BranchName })
+                .Select(NormalizeBranch)
+                .Where(value => value.Length > 0)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var candidates = await db.Assets.AsNoTracking()
+                .Where(asset => !asset.IsDeleted)
+                .Select(asset => new
+                {
+                    asset.Id,
+                    asset.CurrentLocationId,
+                    asset.ImportedDataJson,
+                    CustomBranch = db.AssetCustomValues
+                        .Where(value => value.AssetId == asset.Id &&
+                            db.CustomFieldDefinitions.Any(definition =>
+                                definition.Id == value.CustomFieldDefinitionId &&
+                                definition.IsActive &&
+                                (definition.FieldName == "Branch" ||
+                                 definition.DisplayLabel == "Branch")))
+                        .Select(value => value.Value)
+                        .FirstOrDefault(),
+                })
+                .ToListAsync(ct);
+
+            var matchingAssetIds = candidates
+                .Where(asset => asset.CurrentLocationId is { } currentLocationId
+                    ? currentLocationId == branchId
+                    : aliases.Contains(NormalizeBranch(
+                        asset.CustomBranch ?? ImportedValue(asset.ImportedDataJson, "Branch"))))
+                .Select(asset => asset.Id)
+                .ToArray();
+            query = query.Where(asset => matchingAssetIds.Contains(asset.Id));
         }
 
         if (request.EmployeeId.HasValue)
@@ -123,6 +164,16 @@ public sealed class SearchAssetsHandler(AssetsDbContext db, ICurrentUser current
             query = query.Where(a => a.IsBulk == request.IsBulk.Value);
         }
 
+        if (request.IsVerified.HasValue)
+        {
+            var verifiedAssetIds = await db.Database.SqlQueryRaw<int>(
+                    "SELECT DISTINCT [AssetId] AS [Value] FROM [Verification].[PhysicalVerification]")
+                .ToListAsync(ct);
+            query = request.IsVerified.Value
+                ? query.Where(asset => verifiedAssetIds.Contains(asset.Id))
+                : query.Where(asset => !verifiedAssetIds.Contains(asset.Id));
+        }
+
         var total = await query.CountAsync(ct);
 
         var rows = await query
@@ -160,4 +211,35 @@ public sealed class SearchAssetsHandler(AssetsDbContext db, ICurrentUser current
 
         return new SearchAssetsResponse(rows, total);
     }
+
+    private static string? ImportedValue(string? importedDataJson, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(importedDataJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(importedDataJson);
+            foreach (var property in document.RootElement.EnumerateObject())
+            {
+                if (string.Equals(property.Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return property.Value.ValueKind == JsonValueKind.String
+                        ? property.Value.GetString()
+                        : property.Value.ToString();
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Malformed legacy import data has no usable Branch value.
+        }
+
+        return null;
+    }
+
+    private static string NormalizeBranch(string? value) => string.Concat(
+        (value ?? string.Empty).Where(char.IsLetterOrDigit)).ToUpperInvariant();
 }

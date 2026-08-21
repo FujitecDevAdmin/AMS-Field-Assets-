@@ -1,4 +1,4 @@
-<section class="asset-hero">
+<section class="asset-hero ams-page-hero">
   <div class="asset-hero-copy">
     <p class="eyebrow">INVENTORY MANAGEMENT</p>
     <h1>Field Assets</h1>
@@ -55,28 +55,39 @@
   <main class="register-panel">
     <div class="register-toolbar">
       <div class="asset-count">
-        <div><strong>{{ store.totalCount() }}</strong> <span>total assets</span></div>
+        <div><strong>{{ store.totalCount() }}</strong> <span>TOTAL ASSETS</span></div>
         <span>{{ store.pageLabel() }}</span>
+        @if (store.filters().isVerified) {
+          <span class="active-register-filter"><i class="dx-icon dx-icon-check"></i> Verified assets</span>
+        }
       </div>
       <div class="table-controls">
-        <dx-text-box
-          width="330"
-          mode="search"
-          placeholder="Search asset number, name, serial, make or model"
-          [value]="store.search()"
-          valueChangeEvent="keyup"
-          (onValueChanged)="onSearch($event.value ?? '')"
-        />
-        <span class="page-size-label">Records per page</span>
-        <dx-select-box
-          width="88"
-          [items]="store.pageSizes"
-          [value]="store.pageSize()"
-          (onValueChanged)="onPageSizeChanged($event.value ?? 10)"
-        />
-        <dx-button text="Previous" icon="chevronleft" [disabled]="!store.canGoBack()" (onClick)="store.previousPage()" />
-        <span class="toolbar-page-label">{{ store.pageLabel() }}</span>
-        <dx-button text="Next" icon="chevronright" [disabled]="!store.canGoForward()" (onClick)="store.nextPage()" />
+        <div class="search-filter-group">
+          <dx-text-box
+            class="asset-search-box"
+            width="390"
+            mode="search"
+            placeholder="Search asset number, name, serial, make or model"
+            [value]="store.search()"
+            valueChangeEvent="keyup"
+            (onValueChanged)="onSearch($event.value ?? '')"
+          />
+        </div>
+        <div class="page-size-group">
+          <span class="page-size-label">Records per page</span>
+          <dx-select-box
+            class="page-size-select"
+            width="88"
+            [items]="store.pageSizes"
+            [value]="store.pageSize()"
+            (onValueChanged)="onPageSizeChanged($event.value ?? 10)"
+          />
+        </div>
+        <div class="toolbar-pager-group">
+          <dx-button class="pager-icon-button" icon="chevronleft" hint="Previous page" stylingMode="text" [disabled]="!store.canGoBack()" [elementAttr]="{ 'aria-label': 'Previous page' }" (onClick)="store.previousPage()" />
+          <span class="toolbar-page-label">{{ store.pageLabel() }}</span>
+          <dx-button class="pager-icon-button" icon="chevronright" hint="Next page" stylingMode="text" [disabled]="!store.canGoForward()" [elementAttr]="{ 'aria-label': 'Next page' }" (onClick)="store.nextPage()" />
+        </div>
       </div>
     </div>
 
@@ -91,18 +102,21 @@
       [rowAlternationEnabled]="true"
       [columnAutoWidth]="false"
       [columnWidth]="170"
+      [columnMinWidth]="110"
       [allowColumnResizing]="true"
       columnResizingMode="widget"
+      width="100%"
       [hoverStateEnabled]="true"
       (onExporting)="onExporting($event)"
     >
       <dxo-scrolling mode="standard" [useNative]="true" showScrollbar="always" />
       <dxo-paging [enabled]="false" />
-      <dxo-column-chooser [enabled]="true" mode="select" />
+      <dxo-column-chooser [enabled]="false" />
       <dxo-export [enabled]="true" [formats]="['xlsx']" />
       <dxo-toolbar>
         <dxi-item location="before" template="tableToolsLabel" />
-        <dxi-item name="columnChooserButton" location="after" />
+        <dxi-item location="after" template="filterAssetsButton" />
+        <dxi-item location="after" template="columnChooserAction" />
         <dxi-item name="exportButton" location="after" />
         <dxi-item location="after" template="importExcelButton" />
         <dxi-item location="after" template="downloadTemplateButton" />
@@ -112,6 +126,27 @@
           <strong>Table tools</strong>
           <span>Choose columns, export, import or download the template</span>
         </div>
+      </div>
+      <div *dxTemplate="let _ of 'filterAssetsButton'">
+        <dx-button
+          class="grid-tool-icon"
+          icon="filter"
+          hint="Filter assets by branch"
+          stylingMode="text"
+          [type]="store.filters().locationId || store.filters().isVerified ? 'default' : 'normal'"
+          [elementAttr]="{ 'aria-label': 'Filter assets by branch' }"
+          (onClick)="showFilters()"
+        />
+      </div>
+      <div *dxTemplate="let _ of 'columnChooserAction'">
+        <dx-button
+          class="grid-tool-icon"
+          icon="columnchooser"
+          hint="Choose columns"
+          stylingMode="text"
+          [elementAttr]="{ 'aria-label': 'Choose columns' }"
+          (onClick)="showColumnChooser()"
+        />
       </div>
       <div *dxTemplate="let _ of 'importExcelButton'">
         <label class="grid-import-button" title="Import Excel">
@@ -130,162 +165,118 @@
           <i class="dx-icon dx-icon-download"></i>
         </a>
       </div>
-      <dxi-column dataField="assetNumber" caption="Asset number" [fixed]="true" />
-      <dxi-column dataField="assetName" caption="Asset name" [fixed]="true" />
-      <dxi-column dataField="typeName" caption="Type" />
-      <dxi-column dataField="className" caption="Class" />
-      <dxi-column dataField="statusName" caption="Status" cellTemplate="statusCell" />
-      <dxi-column dataField="serialNumber" caption="Serial number" />
-      <dxi-column dataField="costCenter" caption="Cost centre" />
-      <dxi-column dataField="quantity" caption="Quantity" dataType="number" />
-      <dxi-column dataField="currentLocationId" caption="Location ID" dataType="number" />
-      <dxi-column dataField="acquisitionDate" caption="Acquired" dataType="date" />
+      <dxi-column dataField="assetNumber" caption="Asset No" [visible]="isColumnVisible('assetNumber', true)" [fixed]="true" [width]="212" [minWidth]="180" cellTemplate="assetLink" />
+      <dxi-column dataField="assetName" caption="Asset Name" [visible]="isColumnVisible('assetName', true)" [fixed]="true" [width]="365" [minWidth]="260" cellTemplate="assetNameLink" />
+      <dxi-column dataField="typeName" caption="TechnicalGroup" [visible]="isColumnVisible('typeName', true)" />
+      <dxi-column dataField="className" caption="Asset Class" [visible]="isColumnVisible('className', true)" />
+      <dxi-column dataField="statusName" caption="Status" [visible]="isColumnVisible('statusName', true)" cellTemplate="statusCell" />
+      <dxi-column dataField="serialNumber" caption="ManufactureSerialNumber" [visible]="isColumnVisible('serialNumber', true)" />
+      <dxi-column dataField="costCenter" caption="Cost Centre" [visible]="isColumnVisible('costCenter', true)" />
+      <dxi-column dataField="quantity" caption="Capitalized Quantity" [visible]="isColumnVisible('quantity', true)" dataType="number" />
+      <dxi-column dataField="acquisitionDate" caption="First Acquisition Date" [visible]="isColumnVisible('acquisitionDate', true)" dataType="date" />
       @for (column of importedChooserColumns; track column.dataField) {
         <dxi-column
           [dataField]="column.dataField"
           [caption]="column.caption"
-          [visible]="false"
+          [visible]="isImportedColumnVisible(column)"
           [calculateCellValue]="column.calculateCellValue"
         />
       }
-      <dxi-column caption="Actions" cellTemplate="viewAction" [fixed]="true" fixedPosition="right" [allowExporting]="false" [allowSorting]="false" />
-      <div *dxTemplate="let cell of 'viewAction'">
-        <div class="row-actions">
-          <dx-button text="View" type="default" stylingMode="outlined" (onClick)="viewAsset(cell.data)" />
-          <dx-button text="Edit" type="default" stylingMode="outlined" (onClick)="editAsset(cell.data)" />
-        </div>
+      <div *dxTemplate="let cell of 'assetLink'">
+        <button class="asset-link" type="button" (click)="viewAsset(cell.data)">{{ cell.value }}</button>
+      </div>
+      <div *dxTemplate="let cell of 'assetNameLink'">
+        <button class="asset-link asset-link--name" type="button" [title]="cell.value" (click)="viewAsset(cell.data)">{{ cell.value }}</button>
       </div>
       <div *dxTemplate="let cell of 'statusCell'">
         <span class="asset-status">{{ cell.value || '—' }}</span>
       </div>
     </dx-data-grid>
 
+    <dx-popup
+      title="Choose columns"
+      [visible]="isColumnChooserVisible"
+      [showCloseButton]="true"
+      [dragEnabled]="false"
+      [hideOnOutsideClick]="false"
+      [shading]="true"
+      shadingColor="rgba(15, 23, 42, 0.48)"
+      [width]="'min(560px, 92vw)'"
+      [height]="'min(650px, 86vh)'"
+      (onHiding)="cancelColumnChooser()"
+    >
+      <dxo-position at="center" my="center" of="window" />
+      <div *dxTemplate="let _ of 'content'" class="column-chooser-dialog">
+        <header>
+          <div><strong>Visible table columns</strong><p>Select the fields to display in the asset register.</p></div>
+          <span>{{ columnChoices().length }} available</span>
+        </header>
+        <div class="column-chooser-list">
+          @for (choice of columnChoices(); track choice.dataField) {
+            <label class="column-choice">
+              <input
+                type="checkbox"
+                [checked]="choice.visible"
+                (change)="setColumnChoice(choice.dataField, $any($event.target).checked)"
+              />
+              <span>{{ choice.caption }}</span>
+            </label>
+          }
+        </div>
+        <footer>
+          <dx-button text="Cancel" stylingMode="text" (onClick)="cancelColumnChooser()" />
+          <dx-button text="Apply columns" icon="check" type="default" (onClick)="applyColumnChoices()" />
+        </footer>
+      </div>
+    </dx-popup>
+
     <div class="pager">
       <span>Rows per page</span>
       <dx-select-box
+        class="page-size-select"
         width="90"
         [items]="store.pageSizes"
         [value]="store.pageSize()"
         (onValueChanged)="onPageSizeChanged($event.value ?? 10)"
       />
-      <dx-button text="Previous" icon="chevronleft" [disabled]="!store.canGoBack()" (onClick)="store.previousPage()" />
+      <dx-button class="pager-icon-button" icon="chevronleft" hint="Previous page" stylingMode="text" [disabled]="!store.canGoBack()" [elementAttr]="{ 'aria-label': 'Previous page' }" (onClick)="store.previousPage()" />
       <span>{{ store.pageLabel() }}</span>
-      <dx-button text="Next" icon="chevronright" [disabled]="!store.canGoForward()" (onClick)="store.nextPage()" />
+      <dx-button class="pager-icon-button" icon="chevronright" hint="Next page" stylingMode="text" [disabled]="!store.canGoForward()" [elementAttr]="{ 'aria-label': 'Next page' }" (onClick)="store.nextPage()" />
     </div>
     <dx-load-panel [visible]="store.loading()" [showPane]="true" [shading]="false" />
   </main>
 </section>
 
 <dx-popup
-  title="Asset details"
-  [visible]="isDetailVisible"
+  title="Filter Assets"
+  [visible]="isFilterVisible"
+  [width]="420"
+  [height]="'auto'"
   [showCloseButton]="true"
   [dragEnabled]="false"
-  [hideOnOutsideClick]="true"
-  [width]="'92vw'"
-  [height]="'88vh'"
-  (onHiding)="isDetailVisible = false"
+  (onHiding)="isFilterVisible = false"
 >
-  <div class="detail-popup-content">
-    <header class="detail-heading">
-      <div class="detail-identity">
-        <span class="detail-kicker">Asset number</span>
-        <strong>{{ selectedAsset?.assetNumber }}</strong>
-        <h3>{{ selectedAsset?.assetName }}</h3>
-      </div>
-      <div class="detail-summary">
-        <span>{{ selectedAsset?.typeName }}</span>
-        <span>{{ selectedAsset?.statusName }}</span>
-        <span>{{ importedFields.length }} fields</span>
-      </div>
-    </header>
-    <div class="detail-categories">
-      @for (category of detailCategories; track category.title) {
-        <section class="detail-category-card">
-          <h4>{{ category.title }}</h4>
-          @for (group of category.groups; track group.title) {
-            <div class="detail-group">
-              <h5>{{ group.title }}</h5>
-              <dl class="detail-list">
-                @for (field of group.fields; track field.name) {
-                  <div class="detail-row" [class.detail-row-empty]="field.isEmpty">
-                    <dt>{{ field.name }}:</dt>
-                    <dd>{{ field.value }}</dd>
-                  </div>
-                }
-              </dl>
-            </div>
-          }
-        </section>
-      }
-    </div>
-  </div>
-</dx-popup>
-
-<dx-popup
-  title="Edit asset details"
-  [wrapperAttr]="{ class: 'asset-edit-popup' }"
-  [visible]="isEditVisible"
-  [showCloseButton]="true"
-  [dragEnabled]="false"
-  [hideOnOutsideClick]="false"
-  [width]="'90vw'"
-  [height]="'88vh'"
-  (onHiding)="isEditVisible = false"
->
-  <div class="edit-popup-content">
-    <div class="edit-heading">
-      <div class="edit-identity">
-        <span class="edit-eyebrow">ASSET MASTER RECORD</span>
-        <strong>{{ selectedAsset?.assetNumber }}</strong>
-        <h3>{{ selectedAsset?.assetName }}</h3>
-      </div>
-      <div class="edit-meta">
-        <span>{{ selectedAsset?.typeName }}</span>
-        <span>{{ selectedAsset?.statusName }}</span>
-        <span>{{ editableFields.length }} fields</span>
-      </div>
-    </div>
-    <div class="edit-protection-note">
-      <span class="edit-lock">&#128274;</span>
-      <div>
-        <strong>Protected identification fields</strong>
-        <p>Asset Number, Asset Name, ERP Number and Host Number are controlled identifiers and cannot be changed.</p>
-      </div>
-    </div>
-    <div class="edit-category-grid">
-      @for (column of editCategoryColumns; track $index) {
-        <div class="edit-category-column">
-          @for (category of column; track category.title) {
-            <section class="edit-category-card">
-              <header>{{ category.title }}</header>
-              @for (group of category.groups; track group.title) {
-                <div class="edit-category-group">
-                  <h4>{{ group.title }}</h4>
-                  <div class="edit-field-grid">
-                    @for (field of group.fields; track field.name) {
-                      <div class="edit-field" [class.edit-field-readonly]="field.isReadOnly">
-                        <span>{{ field.name }}</span>
-                        <dx-text-box
-                          [value]="field.value"
-                          [disabled]="field.isReadOnly"
-                          valueChangeEvent="change keyup"
-                          (onValueChanged)="updateEditableField(field.name, $event.value ?? '')"
-                        />
-                      </div>
-                    }
-                  </div>
-                </div>
-              }
-            </section>
-          }
-        </div>
-      }
-    </div>
-    <div class="edit-footer">
-      <span>Review the modified information before saving.</span>
-      <dx-button text="Cancel" stylingMode="outlined" (onClick)="isEditVisible = false" />
-      <dx-button text="Save changes" icon="save" type="default" [disabled]="store.savingDetails()" (onClick)="saveEditedAsset()" />
-    </div>
+  <div *dxTemplate="let _ of 'content'" class="asset-filter-panel">
+    <p>Filter the asset register using the active Organization Branch Master.</p>
+    <label>Branch</label>
+    <dx-select-box
+      [items]="store.branches()"
+      displayExpr="branchName"
+      valueExpr="id"
+      [value]="selectedBranchId"
+      [searchEnabled]="true"
+      [showClearButton]="true"
+      [disabled]="store.branchesLoading()"
+      placeholder="Select branch"
+      noDataText="No active branches"
+      (onValueChanged)="selectedBranchId = $event.value ?? null"
+    />
+    @if (store.branchError(); as error) {
+      <div class="filter-error">{{ error }}</div>
+    }
+    <footer>
+      <dx-button text="Clear" stylingMode="outlined" (onClick)="clearBranchFilter()" />
+      <dx-button text="Apply Filter" icon="filter" type="default" (onClick)="applyBranchFilter()" />
+    </footer>
   </div>
 </dx-popup>

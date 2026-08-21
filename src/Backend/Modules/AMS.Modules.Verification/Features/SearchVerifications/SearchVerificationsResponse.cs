@@ -33,6 +33,14 @@ public sealed record SearchVerificationsResponse(
     /// <param name="VerifiedByUserId">Who looked.</param>
     /// <param name="VerifiedOnUtc">When. The phone's time, not the server's.</param>
     /// <param name="Remarks">What they said about it.</param>
+    /// <param name="AuditName">Audit cycle display name.</param>
+    /// <param name="AssetNumber">Asset register number.</param>
+    /// <param name="AssetName">Asset register display name.</param>
+    /// <param name="BranchId">Owner branch identifier.</param>
+    /// <param name="BranchName">Owner branch display name.</param>
+    /// <param name="LocationName">Imported asset location.</param>
+    /// <param name="AuditorName">Auditor display name.</param>
+    /// <param name="ScannedQrValue">QR value captured by the phone.</param>
     public sealed record Row(
         int Id,
         int PhysicalVerificationCycleId,
@@ -51,5 +59,13 @@ public sealed record SearchVerificationsResponse(
         string? PhotoPath,
         int VerifiedByUserId,
         DateTime VerifiedOnUtc,
-        string? Remarks);
+        string? Remarks,
+        string? AuditName = null,
+        string? AssetNumber = null,
+        string? AssetName = null,
+        int? BranchId = null,
+        string? BranchName = null,
+        string? LocationName = null,
+        string? AuditorName = null,
+        string? ScannedQrValue = null);
 }

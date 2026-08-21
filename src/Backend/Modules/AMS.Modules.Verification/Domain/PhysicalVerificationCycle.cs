@@ -13,6 +13,10 @@ public sealed class PhysicalVerificationCycle
 
     public DateOnly? EndDate { get; set; }
 
+    public int BranchId { get; set; }
+
+    public int TotalAssetCount { get; set; }
+
     public bool IsActive { get; set; }
 
     public DateTime? ClosedOnUtc { get; set; }

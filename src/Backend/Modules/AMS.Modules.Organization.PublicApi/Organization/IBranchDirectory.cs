@@ -20,7 +20,21 @@ public interface IBranchDirectory
 
     /// <summary>Whether a branch exists and is in use.</summary>
     Task<bool> IsActiveAsync(int branchId, CancellationToken ct);
+
+    /// <summary>Active Branch Master records matching the supplied ids.</summary>
+    Task<IReadOnlyList<BranchReference>> FindActiveAsync(
+        IReadOnlyCollection<int> branchIds,
+        CancellationToken ct);
+
+    /// <summary>All active Branch Master records, ordered for selection.</summary>
+    Task<IReadOnlyList<BranchReference>> ListActiveAsync(CancellationToken ct);
 }
+
+/// <summary>A Branch Master identity used for cross-module matching.</summary>
+/// <param name="Id">Branch id.</param>
+/// <param name="BranchCode">Stable business code.</param>
+/// <param name="BranchName">Displayed and imported name.</param>
+public sealed record BranchReference(int Id, string BranchCode, string BranchName);
 
 /// <summary>Who to write to at a vendor.</summary>
 /// <param name="VendorName">Their name, for the message.</param>

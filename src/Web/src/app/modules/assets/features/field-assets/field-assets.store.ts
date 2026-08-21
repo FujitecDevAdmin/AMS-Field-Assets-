@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
-import { AssetsApi } from '../../data/assets.api';
+import { AssetsApi, type AssetBranch } from '../../data/assets.api';
 import type {
   AssetImportResponse,
   AssetRegisterFilters,
@@ -26,6 +26,9 @@ export class FieldAssetsStore {
   readonly importing = signal(false);
   readonly savingDetails = signal(false);
   readonly filters = signal<AssetRegisterFilters>({});
+  readonly branches = signal<AssetBranch[]>([]);
+  readonly branchesLoading = signal(false);
+  readonly branchError = signal<string | null>(null);
   readonly pageLabel = computed(() => {
     if (this.totalCount() === 0) return '0 assets';
     const first = this.pageIndex() * this.pageSize() + 1;
@@ -55,6 +58,20 @@ export class FieldAssetsStore {
       this.error.set('The asset register could not be loaded. Check the API and your access.');
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async loadBranches(): Promise<void> {
+    if (this.branchesLoading() || this.branches().length > 0) return;
+    this.branchesLoading.set(true);
+    this.branchError.set(null);
+    try {
+      const response = await firstValueFrom(this.api.listBranches());
+      this.branches.set([...response.rows]);
+    } catch {
+      this.branchError.set('Branch Master could not be loaded.');
+    } finally {
+      this.branchesLoading.set(false);
     }
   }
 

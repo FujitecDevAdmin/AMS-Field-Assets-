@@ -20,3 +20,205 @@ body {
   font-family: barlow, 'Segoe UI', system-ui, sans-serif;
   background: var(--ams-surface);
 }
+
+/* Page titles use a crisp foreground and a short brand signature instead of
+   clipping the letters themselves. This stays legible on every hero colour. */
+body h1 {
+  position: relative;
+  width: fit-content;
+  padding-bottom: 0.45rem;
+  color: var(--ams-brand);
+  background: none;
+  filter: none;
+  -webkit-text-fill-color: currentcolor;
+}
+
+body h1::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: clamp(2.75rem, 42%, 5rem);
+  height: 3px;
+  content: '';
+  background: linear-gradient(
+    90deg,
+    var(--ams-title-red-dark) 0%,
+    var(--ams-brand) 55%,
+    var(--ams-title-red-light) 100%
+  );
+  border-radius: 999px;
+  box-shadow: 0 2px 7px rgb(202 0 18 / 20%);
+}
+
+/* Dark and brand-red heroes need a light title; the red signature remains the
+   shared visual identifier across every page. */
+body :is(.audit-hero, .reports-hero, .asset-hero, .auditor-hero) h1,
+body .signin__brand h1 {
+  color: #fff;
+}
+
+/* Shared module-title hero. The reference is the Service Desk title banner:
+   deep Fujitec red at the leading edge, a bright coral exit, restrained glass
+   controls, and generous but deliberate title spacing. */
+body .ams-page-hero.ams-page-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  min-height: 176px;
+  padding: 1.8rem 2.9rem;
+  color: #fff;
+  border: 0;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 76% -35%, rgb(255 255 255 / 13%), transparent 42%),
+    linear-gradient(112deg, #8e0010 0%, #b50019 42%, #d9082d 69%, #ef3c55 100%);
+  box-shadow: 0 16px 34px rgb(112 0 16 / 16%);
+}
+
+body .ams-page-hero.ams-page-hero::before {
+  position: absolute;
+  z-index: -1;
+  right: 7%;
+  bottom: -88px;
+  width: 250px;
+  height: 250px;
+  content: '';
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 32px rgb(255 255 255 / 2.5%), 0 0 0 68px rgb(255 255 255 / 2%);
+}
+
+body .ams-page-hero.ams-page-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+body .ams-page-hero.ams-page-hero :is(.eyebrow, p:first-child),
+body .ams-page-hero.ams-page-hero > div > span:first-child {
+  color: rgb(255 255 255 / 84%);
+  font-size: .68rem;
+  font-weight: 750;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+body .ams-page-hero.ams-page-hero h1 {
+  width: auto;
+  margin: .55rem 0 .45rem;
+  padding: 0;
+  color: #fff;
+  font-size: clamp(2rem, 3.1vw, 2.75rem);
+  font-weight: 430;
+  line-height: 1.05;
+  letter-spacing: -.035em;
+  -webkit-text-fill-color: #fff;
+}
+
+body .ams-page-hero.ams-page-hero h1::after {
+  display: none;
+}
+
+body .ams-page-hero.ams-page-hero :is(p:not(.eyebrow), span:not(.live-dot):not(.status):not(.dx-button-text), small) {
+  color: rgb(255 255 255 / 88%);
+}
+
+body .ams-page-hero.ams-page-hero .dx-button {
+  color: #fff;
+  border-color: rgb(255 255 255 / 35%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 9%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 9%);
+}
+
+body .ams-page-hero.ams-page-hero .dx-button:hover {
+  border-color: rgb(255 255 255 / 60%);
+  background: rgb(255 255 255 / 16%);
+}
+
+body .ams-page-hero.ams-page-hero :is(.hero-stat, .updated-at) {
+  min-width: 120px;
+  padding: 1rem 1.15rem;
+  text-align: center;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 10%);
+}
+
+body .ams-page-hero.ams-page-hero--compact {
+  min-height: 106px;
+  padding: 1.2rem 1.6rem;
+  border-radius: 14px;
+}
+
+body .ams-page-hero.ams-page-hero--compact h1 {
+  font-size: clamp(1.25rem, 2.3vw, 1.75rem);
+}
+
+@media (max-width: 760px) {
+  body .ams-page-hero.ams-page-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1.2rem;
+    min-height: 0;
+    padding: 1.45rem;
+    border-radius: 16px;
+  }
+
+  body .ams-page-hero.ams-page-hero h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (forced-colors: active) {
+  body h1::after {
+    background: currentcolor;
+    box-shadow: none;
+  }
+}
+
+/* Shared Admin Portal table theme. Component-level grid styles may define
+   their own surfaces, but every module uses the same Fujitec red header. */
+body .dx-datagrid .dx-datagrid-headers {
+  color: #fff !important;
+  background: #d01126 !important;
+}
+
+body .dx-datagrid .dx-datagrid-headers .dx-header-row > td,
+body .dx-datagrid .dx-datagrid-headers .dx-header-row > td.dx-col-fixed,
+body .dx-datagrid .dx-datagrid-headers .dx-header-row > td.dx-datagrid-sticky-column-left,
+body .dx-datagrid .dx-datagrid-headers .dx-header-row > td.dx-datagrid-sticky-column-right {
+  color: #fff !important;
+  border-right: 1px solid rgb(255 255 255 / 34%) !important;
+  border-bottom: 1px solid rgb(255 255 255 / 34%) !important;
+  background: #d01126 !important;
+}
+
+/* Column boundaries are intentionally global: every register, popup grid and
+   report table should retain its structure while scanning horizontally. */
+body .dx-datagrid .dx-datagrid-rowsview .dx-row > td,
+body .dx-datagrid .dx-datagrid-total-footer .dx-row > td,
+body .dx-datagrid .dx-datagrid-content .dx-group-row > td {
+  box-sizing: border-box;
+  border-right: 1px solid var(--ams-border) !important;
+}
+
+body .dx-datagrid .dx-datagrid-headers .dx-header-row > td:last-child,
+body .dx-datagrid .dx-datagrid-rowsview .dx-row > td:last-child,
+body .dx-datagrid .dx-datagrid-total-footer .dx-row > td:last-child,
+body .dx-datagrid .dx-datagrid-content .dx-group-row > td:last-child {
+  border-right: 0 !important;
+}
+
+body .dx-datagrid .dx-datagrid-headers :is(
+  .dx-datagrid-text-content,
+  .dx-sort,
+  .dx-sort-indicator,
+  .dx-header-filter,
+  .dx-header-filter-empty
+) {
+  color: #fff !important;
+}

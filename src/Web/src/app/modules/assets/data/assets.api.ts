@@ -8,7 +8,28 @@ import type {
   AssetRegisterFilters,
   AssetRegisterResponse,
   AssetDashboardResponse,
+  AssetDetailResponse,
 } from './models/asset-register.models';
+
+export interface LatestAssetVerification {
+  readonly isVerified: boolean;
+  readonly verificationId: number | null;
+  readonly auditId: number | null;
+  readonly verifiedByUserId: number | null;
+  readonly auditorName: string | null;
+  readonly verifiedOnUtc: string | null;
+  readonly remarks: string | null;
+}
+
+export interface AssetBranch {
+  readonly id: number;
+  readonly branchCode: string;
+  readonly branchName: string;
+}
+
+interface AssetBranchesResponse {
+  readonly rows: readonly AssetBranch[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class AssetsApi {
@@ -16,6 +37,20 @@ export class AssetsApi {
 
   dashboard(): Observable<AssetDashboardResponse> {
     return this.http.get<AssetDashboardResponse>('/api/v1/assets/dashboard');
+  }
+
+  get(assetId: number): Observable<AssetDetailResponse> {
+    return this.http.get<AssetDetailResponse>(`/api/v1/assets/${assetId}`);
+  }
+
+  latestVerification(assetId: number): Observable<LatestAssetVerification> {
+    return this.http.get<LatestAssetVerification>(
+      `/api/v1/verification/assets/${assetId}/latest-verification`,
+    );
+  }
+
+  listBranches(): Observable<AssetBranchesResponse> {
+    return this.http.get<AssetBranchesResponse>('/api/v1/verification/audit-branches');
   }
 
   search(

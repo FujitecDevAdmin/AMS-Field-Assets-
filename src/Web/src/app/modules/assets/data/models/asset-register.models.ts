@@ -32,6 +32,7 @@ export interface AssetRegisterFilters {
   readonly assetClassId?: number;
   readonly assetStatusId?: number;
   readonly locationId?: number;
+  readonly isVerified?: boolean;
   readonly employeeId?: number;
   readonly departmentId?: number;
   readonly costCenter?: string;
@@ -72,6 +73,19 @@ export interface AssetImportResponse {
 export interface ImportedAssetDetailsUpdateResponse {
   readonly assetId: number;
   readonly importedDataJson: string;
+}
+
+export interface AssetDetailResponse {
+  readonly asset: AssetDetailCore;
+}
+
+export interface AssetDetailCore {
+  readonly id: number;
+  readonly assetNumber: string;
+  readonly assetName: string;
+  readonly typeName: string;
+  readonly statusName: string;
+  readonly importedDataJson: string | null;
 }
 
 export interface AssetDashboardBreakdown {

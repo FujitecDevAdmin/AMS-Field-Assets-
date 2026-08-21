@@ -4,6 +4,7 @@ namespace AMS.Modules.Verification.Features.SubmitVerification;
 /// The HTTP wire shape. Never a domain entity in either direction (docs/01 §3).
 /// </summary>
 public sealed record SubmitVerificationRequest(
+    int CycleId,
     int AssetId,
     Guid? ClientCaptureId,
     bool? IsBulkCount,

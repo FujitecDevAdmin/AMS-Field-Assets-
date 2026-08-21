@@ -1,4 +1,4 @@
-﻿/*
+/*
     ============================================================================
     AssetManagement (AMS) - CONSOLIDATED MODULE-WISE DATABASE DESIGN
     REVISION 2
@@ -787,7 +787,7 @@ BEGIN
         [Make]                   nvarchar(100) NULL,       -- R3: promoted from AssetHardwareDetail; a chair has a make
         [Model]                  nvarchar(100) NULL,       -- R3
         [AssetStatusId]          int           NOT NULL,
-        [CurrentLocationId]      int           NULL,   -- Organization.Location, id only
+        [CurrentLocationId]      int           NULL,   -- Organization.Branch, id only
         [CurrentEmployeeId]      int           NULL,   -- Organization.Employee, id only
         [DepartmentId]           int           NULL,
         [CostCenter]             nvarchar(40)  NULL,
@@ -1075,7 +1075,7 @@ BEGIN
     CREATE TABLE [Assets].[AssetHolding] (
         [Id]             int           NOT NULL IDENTITY,
         [AssetId]        int           NOT NULL,
-        [LocationId]     int           NULL,   -- Organization.Location, id only
+        [LocationId]     int           NULL,   -- Organization.Branch, id only
         [CustomerSiteId] int           NULL,   -- Allocations.CustomerSite, id only
         [OnHandQuantity] decimal(18,3) NOT NULL,
         [CreatedOnUtc]   datetime2     NOT NULL,
@@ -2038,7 +2038,7 @@ GO
    allocation return-by dates want the same working-day arithmetic.
    TIME HANDLING - the rule that makes or breaks this module.
      Every column here that is a wall-clock time is time(0) and is LOCAL to the
-     location, resolved through [Organization].[Location].[TimeZoneId]. Every
+     location, resolved through [Organization].[Branch].[TimeZoneId]. Every
      column that is an instant is datetime2 UTC and ends OnUtc. A branch opens
      at 09:00 where it stands; storing that as UTC breaks twice a year in any
      country with daylight saving and permanently in any second country.
@@ -2164,7 +2164,7 @@ IF OBJECT_ID(N'[ServiceLevel].[LocationOperationalHour]', N'U') IS NULL         
 BEGIN
     CREATE TABLE [ServiceLevel].[LocationOperationalHour] (
         [Id]                      int           NOT NULL IDENTITY,
-        [LocationId]              int           NOT NULL,   -- Organization.Location, id only
+        [LocationId]              int           NOT NULL,   -- Organization.Branch, id only
         [IsRoundTheClock]         bit           NOT NULL CONSTRAINT [DF_LocationOperationalHour_IsRoundTheClock] DEFAULT (0),
         [StandardStartTime]       time(0)       NOT NULL,
         [StandardEndTime]         time(0)       NOT NULL,
@@ -2284,7 +2284,7 @@ IF OBJECT_ID(N'[ServiceLevel].[HolidayLocation]', N'U') IS NULL                 
 BEGIN
     CREATE TABLE [ServiceLevel].[HolidayLocation] (
         [HolidayCalendarId] int NOT NULL,
-        [LocationId]        int NOT NULL,   -- Organization.Location, id only
+        [LocationId]        int NOT NULL,   -- Organization.Branch, id only
         [CreatedOnUtc]          datetime2     NOT NULL,   -- A
         [CreatedBy]             nvarchar(100) NULL,   -- A
         CONSTRAINT [PK_HolidayLocation] PRIMARY KEY ([HolidayCalendarId], [LocationId]),
@@ -2469,6 +2469,8 @@ BEGIN
         [CycleName]     nvarchar(120) NOT NULL,
         [StartDate]     date          NOT NULL,
         [EndDate]       date          NULL,
+        [BranchId]      int           NOT NULL,   -- Organization.Branch, id only
+        [TotalAssetCount] int         NOT NULL,   -- frozen when the cycle opens
         [IsActive]      bit           NOT NULL,
         [ClosedOnUtc]   datetime2     NULL,
         [CreatedOnUtc]  datetime2     NOT NULL,
@@ -2476,6 +2478,28 @@ BEGIN
         [ModifiedOnUtc] datetime2     NULL,
         [ModifiedBy]    nvarchar(100) NULL,
         CONSTRAINT [PK_PhysicalVerificationCycle] PRIMARY KEY ([Id])
+    );
+END
+GO
+IF OBJECT_ID(N'[Verification].[PhysicalVerificationAssignment]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Verification].[PhysicalVerificationAssignment] (
+        [PhysicalVerificationCycleId] int           NOT NULL,
+        [AuditorUserId]              int           NOT NULL,   -- Identity.User, id only
+        [AssignedOnUtc]               datetime2     NOT NULL,
+        [AssignedBy]                  nvarchar(100) NULL,
+        CONSTRAINT [PK_PhysicalVerificationAssignment] PRIMARY KEY ([PhysicalVerificationCycleId], [AuditorUserId]),
+        CONSTRAINT [FK_PhysicalVerificationAssignment_Cycle_PhysicalVerificationCycleId] FOREIGN KEY ([PhysicalVerificationCycleId]) REFERENCES [Verification].[PhysicalVerificationCycle] ([Id]) ON DELETE NO ACTION
+    );
+END
+GO
+IF OBJECT_ID(N'[Verification].[PhysicalVerificationCycleLocation]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [Verification].[PhysicalVerificationCycleLocation] (
+        [PhysicalVerificationCycleId] int NOT NULL,
+        [BranchId]                    int NOT NULL,   -- Organization.Branch, id only
+        CONSTRAINT [PK_PhysicalVerificationCycleLocation] PRIMARY KEY ([PhysicalVerificationCycleId], [BranchId]),
+        CONSTRAINT [FK_PhysicalVerificationCycleLocation_Cycle_PhysicalVerificationCycleId] FOREIGN KEY ([PhysicalVerificationCycleId]) REFERENCES [Verification].[PhysicalVerificationCycle] ([Id]) ON DELETE NO ACTION
     );
 END
 GO
@@ -2521,8 +2545,12 @@ END
 GO
 IF INDEXPROPERTY(OBJECT_ID(N'[Verification].[PhysicalVerificationCycle]'), N'UX_PhysicalVerificationCycle_Name', N'IndexID') IS NULL
     CREATE UNIQUE INDEX [UX_PhysicalVerificationCycle_Name] ON [Verification].[PhysicalVerificationCycle] ([CycleName]);
-IF INDEXPROPERTY(OBJECT_ID(N'[Verification].[PhysicalVerificationCycle]'), N'UX_PhysicalVerificationCycle_OneActive', N'IndexID') IS NULL
-    CREATE UNIQUE INDEX [UX_PhysicalVerificationCycle_OneActive] ON [Verification].[PhysicalVerificationCycle] ([IsActive]) WHERE [IsActive] = 1;
+IF INDEXPROPERTY(OBJECT_ID(N'[Verification].[PhysicalVerificationCycle]'), N'UX_PhysicalVerificationCycle_OneActivePerBranch', N'IndexID') IS NULL
+    CREATE UNIQUE INDEX [UX_PhysicalVerificationCycle_OneActivePerBranch] ON [Verification].[PhysicalVerificationCycle] ([BranchId], [IsActive]) WHERE [IsActive] = 1;
+IF INDEXPROPERTY(OBJECT_ID(N'[Verification].[PhysicalVerificationAssignment]'), N'IX_PhysicalVerificationAssignment_AuditorUserId', N'IndexID') IS NULL
+    CREATE INDEX [IX_PhysicalVerificationAssignment_AuditorUserId] ON [Verification].[PhysicalVerificationAssignment] ([AuditorUserId]);
+IF INDEXPROPERTY(OBJECT_ID(N'[Verification].[PhysicalVerificationCycleLocation]'), N'IX_PhysicalVerificationCycleLocation_BranchId', N'IndexID') IS NULL
+    CREATE INDEX [IX_PhysicalVerificationCycleLocation_BranchId] ON [Verification].[PhysicalVerificationCycleLocation] ([BranchId]);
 /*  R3: this WAS one index over ([CycleId], [AssetId]). It splits, because
     the two kinds of row mean different things:
       unit rows - one sighting per asset per cycle, exactly as before.
@@ -3472,7 +3500,7 @@ GO
    =========================================================================== */
 /*  A versioned approval route. A template may select a workflow explicitly;
     otherwise the application chooses the active default matching location and
-    priority. LocationId is Organization.Location, id only.
+    priority. LocationId is Organization.Branch, id only.
     Do not edit a published definition in place. Retire it and create a new
     VersionNumber. Runtime steps are snapshots, but immutable published versions
     also make configuration review and audit much clearer. */
@@ -3484,7 +3512,7 @@ BEGIN
         [VersionNumber]         int            NOT NULL,
         [Description]           nvarchar(500)  NULL,
         [ServiceTemplateId]     int            NULL,
-        [LocationId]            int            NULL,  -- Organization.Location, id only
+        [LocationId]            int            NULL,  -- Organization.Branch, id only
         [Priority]              nvarchar(20)   NULL,  -- NULL means every priority
         [IsDefault]             bit            NOT NULL CONSTRAINT [DF_ApprovalWorkflowDefinition_IsDefault] DEFAULT (0),
         [IsPublished]           bit            NOT NULL CONSTRAINT [DF_ApprovalWorkflowDefinition_IsPublished] DEFAULT (0),

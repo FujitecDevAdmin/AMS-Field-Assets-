@@ -7,12 +7,9 @@ plugins {
 android {
     namespace = "in.co.fujitec.ams_audit"
 
-    // Pinned rather than flutter.compileSdkVersion (36): flutter_secure_storage 11
-    // publishes AAR metadata requiring 37, and the build fails outright without
-    // it. Compiling against a newer SDK does not change runtime behaviour —
-    // targetSdk below still governs that, and minSdk still governs which devices
-    // can install. Drop this line when Flutter's default reaches 37.
-    compileSdk = 37
+    // Use Flutter's supported Android SDK. The locally offered platform 37.0
+    // package is not a valid integer Android API target for Gradle.
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

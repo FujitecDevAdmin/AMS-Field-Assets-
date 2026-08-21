@@ -36,7 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.2
   dio: ^5.11.0
-  flutter_secure_storage: ^11.0.0
+  flutter_secure_storage: ^10.0.0
+  mobile_scanner: ^7.4.0
 
 dev_dependencies:
   flutter_test:

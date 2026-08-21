@@ -12,7 +12,10 @@ public static class OpenVerificationCycleMapper
 
         return new OpenVerificationCycleCommand(
             request.CycleName.Trim(),
+            request.BranchId,
             request.StartDate ?? default,
-            request.EndDate);
+            request.EndDate,
+            request.AuditorUserIds.Distinct().ToArray(),
+            request.LocationBranchIds.Distinct().ToArray());
     }
 }
