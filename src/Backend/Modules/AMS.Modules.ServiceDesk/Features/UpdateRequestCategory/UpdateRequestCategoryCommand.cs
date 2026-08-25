@@ -8,4 +8,5 @@ namespace AMS.Modules.ServiceDesk.Features.UpdateRequestCategory;
 public sealed record UpdateRequestCategoryCommand(
     int Id,
     string CategoryName,
+    string CategoryType,
     bool IsActive) : ICommand<UpdateRequestCategoryResponse>;

@@ -815,16 +815,18 @@ public sealed class ApprovalTests(ServiceDeskFixture fixture)
         int? locationId = null,
         string priority = RequestPriority.Medium)
     {
+        var classification = await fixture.CreateClassificationAsync(RequestKind.NewService);
         var handler = new RaiseServiceRequestHandler(
             fixture.NewContext(), fixture.Sla, fixture.Clock, fixture.CurrentUser,
             fixture.SqlErrors);
 
         var raised = await handler.HandleAsync(
             new RaiseServiceRequestCommand(
-                RequestKind.NewService, "New joiner", null, priority, null, null, null, null, null,
+                RequestKind.NewService, "New joiner", null, priority,
+                classification.CategoryId, classification.SubCategoryId, null, null, null,
                 requestedBy, null, locationId,
                 new RaiseServiceRequestCommand.NewServiceDetail(
-                    true, true, false, false, null, null, [])),
+                    null, null, [])),
             TestContext.Current.CancellationToken);
 
         return raised.Value.Id;

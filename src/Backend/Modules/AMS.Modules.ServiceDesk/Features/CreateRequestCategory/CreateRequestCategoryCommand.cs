@@ -6,4 +6,5 @@ namespace AMS.Modules.ServiceDesk.Features.CreateRequestCategory;
 /// Add a category. Catalogue: Categories and sub-categories.
 /// </summary>
 public sealed record CreateRequestCategoryCommand(
-    string CategoryName) : ICommand<CreateRequestCategoryResponse>;
+    string CategoryName,
+    string CategoryType) : ICommand<CreateRequestCategoryResponse>;

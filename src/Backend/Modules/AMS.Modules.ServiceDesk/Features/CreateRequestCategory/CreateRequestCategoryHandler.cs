@@ -22,9 +22,17 @@ public sealed class CreateRequestCategoryHandler(
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        if (!RequestCategoryType.All.Contains(request.CategoryType, StringComparer.Ordinal))
+        {
+            return Error.Validation(
+                "RequestCategory.UnknownType",
+                $"Category type must be one of {string.Join(", ", RequestCategoryType.All)}.");
+        }
+
         var category = new RequestCategory
         {
             CategoryName = request.CategoryName,
+            CategoryType = request.CategoryType,
             IsActive = true,
             CreatedOnUtc = clock.UtcNow,
             CreatedBy = currentUser.Username,
@@ -47,6 +55,7 @@ public sealed class CreateRequestCategoryHandler(
             throw;
         }
 
-        return new CreateRequestCategoryResponse(category.Id, category.CategoryName);
+        return new CreateRequestCategoryResponse(
+            category.Id, category.CategoryName, category.CategoryType);
     }
 }

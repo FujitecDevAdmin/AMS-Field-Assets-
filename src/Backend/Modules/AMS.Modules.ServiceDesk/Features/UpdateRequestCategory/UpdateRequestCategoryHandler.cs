@@ -27,6 +27,13 @@ public sealed class UpdateRequestCategoryHandler(
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        if (!Domain.RequestCategoryType.All.Contains(request.CategoryType, StringComparer.Ordinal))
+        {
+            return Error.Validation(
+                "RequestCategory.UnknownType",
+                $"Category type must be one of {string.Join(", ", Domain.RequestCategoryType.All)}.");
+        }
+
         var category = await db.RequestCategories.SingleOrDefaultAsync(c => c.Id == request.Id, ct);
         if (category is null)
         {
@@ -34,6 +41,17 @@ public sealed class UpdateRequestCategoryHandler(
         }
 
         category.CategoryName = request.CategoryName;
+        if (category.CategoryType != request.CategoryType
+            && (await db.ServiceRequests.AnyAsync(r => r.RequestCategoryId == request.Id, ct)
+                || await db.NewServiceRequestDetails.AnyAsync(d => d.RequestCategoryId == request.Id, ct)
+                || await db.ServiceTemplates.AnyAsync(t => t.RequestCategoryId == request.Id, ct)))
+        {
+            return Error.Conflict(
+                "RequestCategory.TypeInUse",
+                "A category already used by a request or template cannot change type.");
+        }
+
+        category.CategoryType = request.CategoryType;
         category.IsActive = request.IsActive;
         category.ModifiedOnUtc = clock.UtcNow;
         category.ModifiedBy = currentUser.Username;
@@ -54,6 +72,6 @@ public sealed class UpdateRequestCategoryHandler(
         }
 
         return new UpdateRequestCategoryResponse(
-            category.Id, category.CategoryName, category.IsActive);
+            category.Id, category.CategoryName, category.CategoryType, category.IsActive);
     }
 }

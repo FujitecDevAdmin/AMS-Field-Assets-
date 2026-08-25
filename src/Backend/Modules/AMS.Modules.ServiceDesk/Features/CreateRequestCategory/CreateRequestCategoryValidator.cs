@@ -18,5 +18,6 @@ public sealed class CreateRequestCategoryValidator : AbstractValidator<CreateReq
     public CreateRequestCategoryValidator()
     {
         RuleFor(x => x.CategoryName).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CategoryType).NotEmpty().MaximumLength(20);
     }
 }

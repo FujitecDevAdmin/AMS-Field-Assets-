@@ -96,7 +96,8 @@ public sealed class GetServiceRequestHandler(ServiceDeskDbContext db)
                     .ToListAsync(ct);
 
                 newService = new GetServiceRequestResponse.NewServiceDetail(
-                    detail.NeedsEmail, detail.NeedsErp, detail.NeedsDms, detail.NeedsVpn,
+                    false, false, false, false,
+                    detail.RequestCategoryId, detail.RequestSubCategoryId,
                     detail.RequiredByDate, detail.Notes, items);
             }
         }

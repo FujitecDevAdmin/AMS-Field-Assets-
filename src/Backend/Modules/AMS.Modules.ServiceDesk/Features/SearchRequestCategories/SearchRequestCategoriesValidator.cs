@@ -17,6 +17,6 @@ public sealed class SearchRequestCategoriesValidator : AbstractValidator<SearchR
 {
     public SearchRequestCategoriesValidator()
     {
-        // Nothing to check: the slice takes no caller-supplied fields.
+        RuleFor(x => x.CategoryType).MaximumLength(20);
     }
 }

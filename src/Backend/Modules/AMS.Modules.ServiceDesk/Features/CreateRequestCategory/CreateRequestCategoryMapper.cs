@@ -11,6 +11,7 @@ public static class CreateRequestCategoryMapper
         ArgumentNullException.ThrowIfNull(request);
 
         return new CreateRequestCategoryCommand(
-            request.CategoryName.Trim());
+            request.CategoryName.Trim(),
+            request.CategoryType.Trim());
     }
 }

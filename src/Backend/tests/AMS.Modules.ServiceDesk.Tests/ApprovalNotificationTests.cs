@@ -487,6 +487,7 @@ public sealed class ApprovalNotificationTests(ServiceDeskFixture fixture)
 
     private async Task<int> RaiseAsync()
     {
+        var classification = await fixture.CreateClassificationAsync(RequestKind.NewService);
         var handler = new RaiseServiceRequestHandler(
             fixture.NewContext(), fixture.Sla, fixture.Clock, fixture.CurrentUser,
             fixture.SqlErrors);
@@ -494,9 +495,10 @@ public sealed class ApprovalNotificationTests(ServiceDeskFixture fixture)
         var raised = await handler.HandleAsync(
             new RaiseServiceRequestCommand(
                 RequestKind.NewService, "New joiner", null, RequestPriority.Medium,
-                null, null, null, null, null, 100, null, null,
+                classification.CategoryId, classification.SubCategoryId,
+                null, null, null, 100, null, null,
                 new RaiseServiceRequestCommand.NewServiceDetail(
-                    true, true, false, false, null, null, [])),
+                    null, null, [])),
             TestContext.Current.CancellationToken);
 
         return raised.Value.Id;

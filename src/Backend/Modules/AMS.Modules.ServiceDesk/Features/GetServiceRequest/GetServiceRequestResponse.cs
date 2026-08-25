@@ -76,10 +76,12 @@ public sealed record GetServiceRequestResponse(
     IReadOnlyList<GetServiceRequestResponse.Attachment> Attachments)
 {
     /// <summary>The New Service questions and the kit asked for.</summary>
-    /// <param name="NeedsEmail">A mailbox.</param>
-    /// <param name="NeedsErp">An ERP login.</param>
-    /// <param name="NeedsDms">Document management.</param>
-    /// <param name="NeedsVpn">Remote access.</param>
+    /// <param name="NeedsEmail">Deprecated compatibility field; no longer persisted.</param>
+    /// <param name="NeedsErp">Deprecated compatibility field; no longer persisted.</param>
+    /// <param name="NeedsDms">Deprecated compatibility field; no longer persisted.</param>
+    /// <param name="NeedsVpn">Deprecated compatibility field; no longer persisted.</param>
+    /// <param name="RequestCategoryId">The Service category selected.</param>
+    /// <param name="RequestSubCategoryId">The selected child sub-category.</param>
     /// <param name="RequiredByDate">The joining date, usually.</param>
     /// <param name="Notes">Anything the four flags do not cover.</param>
     /// <param name="Items">The kit.</param>
@@ -88,6 +90,8 @@ public sealed record GetServiceRequestResponse(
         bool NeedsErp,
         bool NeedsDms,
         bool NeedsVpn,
+        int RequestCategoryId,
+        int RequestSubCategoryId,
         DateOnly? RequiredByDate,
         string? Notes,
         IReadOnlyList<NewServiceItem> Items);

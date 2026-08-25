@@ -1,4 +1,6 @@
+using System.Globalization;
 using AMS.Modules.ServiceDesk.Persistence;
+using AMS.Modules.ServiceDesk.Domain;
 using AMS.SharedKernel.Abstractions;
 using AMS.SharedKernel.Persistence;
 using Microsoft.Data.SqlClient;
@@ -150,6 +152,35 @@ public sealed class ServiceDeskFixture : IAsyncLifetime
             .UseSqlServer(ConnectionString, sql => sql.MigrationsHistoryTable(
                 "__EFMigrationsHistory", ServiceDeskDbContext.SchemaName))
             .Options);
+
+    public async Task<(int CategoryId, int SubCategoryId)> CreateClassificationAsync(
+        string requestKind)
+    {
+        await using var context = NewContext();
+        var suffix = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture)[..8];
+        var category = new RequestCategory
+        {
+            CategoryName = $"Test {suffix}",
+            CategoryType = RequestCategoryType.ForRequestKind(requestKind),
+            IsActive = true,
+            CreatedOnUtc = Clock.UtcNow,
+            CreatedBy = CurrentUser.Username,
+        };
+        context.RequestCategories.Add(category);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var subCategory = new RequestSubCategory
+        {
+            RequestCategoryId = category.Id,
+            SubCategoryName = "General",
+            IsActive = true,
+            CreatedOnUtc = Clock.UtcNow,
+            CreatedBy = CurrentUser.Username,
+        };
+        context.RequestSubCategories.Add(subCategory);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        return (category.Id, subCategory.Id);
+    }
 
     /// <summary>
     /// Empties everything except the statuses. Children first: the ticket

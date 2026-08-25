@@ -13,6 +13,7 @@ public static class UpdateRequestCategoryMapper
         return new UpdateRequestCategoryCommand(
             id,
             request.CategoryName.Trim(),
+            request.CategoryType.Trim(),
             request.IsActive);
     }
 }

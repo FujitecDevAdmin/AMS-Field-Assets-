@@ -6,4 +6,6 @@ namespace AMS.Modules.ServiceDesk.Features.SearchRequestCategories;
 /// The two-level classification. Catalogue screen: Categories.
 /// </summary>
 public sealed record SearchRequestCategoriesQuery(
-    bool? IsActive) : IQuery<SearchRequestCategoriesResponse>;
+    bool? IsActive,
+    string? CategoryType,
+    bool ActiveSubCategoriesOnly) : IQuery<SearchRequestCategoriesResponse>;

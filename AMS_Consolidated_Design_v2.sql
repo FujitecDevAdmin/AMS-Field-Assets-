@@ -1709,12 +1709,14 @@ BEGIN
     CREATE TABLE [ServiceDesk].[RequestCategory] (
         [Id]           int           NOT NULL IDENTITY,
         [CategoryName] nvarchar(100) NOT NULL,
+        [CategoryType] nvarchar(20)  NOT NULL,
         [IsActive]     bit           NOT NULL,
         [CreatedOnUtc]          datetime2     NOT NULL,   -- A
         [CreatedBy]             nvarchar(100) NULL,   -- A
         [ModifiedOnUtc]         datetime2     NULL,   -- A
         [ModifiedBy]            nvarchar(100) NULL,   -- A
-        CONSTRAINT [PK_RequestCategory] PRIMARY KEY ([Id])
+        CONSTRAINT [PK_RequestCategory] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_RequestCategory_CategoryType] CHECK ([CategoryType] IN (N'Service', N'Incident'))
     );
 END
 GO
@@ -1730,6 +1732,7 @@ BEGIN
         [ModifiedOnUtc]         datetime2     NULL,   -- A
         [ModifiedBy]            nvarchar(100) NULL,   -- A
         CONSTRAINT [PK_RequestSubCategory] PRIMARY KEY ([Id]),
+        CONSTRAINT [AK_RequestSubCategory_Id_RequestCategoryId] UNIQUE ([Id], [RequestCategoryId]),
         CONSTRAINT [FK_RequestSubCategory_RequestCategory_RequestCategoryId] FOREIGN KEY ([RequestCategoryId]) REFERENCES [ServiceDesk].[RequestCategory] ([Id]) ON DELETE CASCADE
     );
 END
@@ -1875,14 +1878,14 @@ IF OBJECT_ID(N'[ServiceDesk].[NewServiceRequestDetail]', N'U') IS NULL
 BEGIN
     CREATE TABLE [ServiceDesk].[NewServiceRequestDetail] (
         [ServiceRequestId] int            NOT NULL,
-        [NeedsEmail]       bit            NOT NULL,
-        [NeedsErp]         bit            NOT NULL,
-        [NeedsDms]         bit            NOT NULL,
-        [NeedsVpn]         bit            NOT NULL,
+        [RequestCategoryId] int           NOT NULL,
+        [RequestSubCategoryId] int        NOT NULL,
         [RequiredByDate]   date           NULL,
         [Notes]            nvarchar(1000) NULL,
         CONSTRAINT [PK_NewServiceRequestDetail] PRIMARY KEY ([ServiceRequestId]),
-        CONSTRAINT [FK_NewServiceRequestDetail_ServiceRequest_ServiceRequestId] FOREIGN KEY ([ServiceRequestId]) REFERENCES [ServiceDesk].[ServiceRequest] ([Id]) ON DELETE CASCADE
+        CONSTRAINT [FK_NewServiceRequestDetail_ServiceRequest_ServiceRequestId] FOREIGN KEY ([ServiceRequestId]) REFERENCES [ServiceDesk].[ServiceRequest] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_NewServiceRequestDetail_RequestCategory_RequestCategoryId] FOREIGN KEY ([RequestCategoryId]) REFERENCES [ServiceDesk].[RequestCategory] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_NewServiceRequestDetail_RequestSubCategory_Category] FOREIGN KEY ([RequestSubCategoryId], [RequestCategoryId]) REFERENCES [ServiceDesk].[RequestSubCategory] ([Id], [RequestCategoryId]) ON DELETE NO ACTION
     );
 END
 GO

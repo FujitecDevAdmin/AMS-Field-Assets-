@@ -86,7 +86,8 @@ public sealed class RaiseServiceRequestHandler(
             }
         }
 
-        var invalid = await ValidateClassificationAsync(categoryId, subCategoryId, ct);
+        var invalid = await ValidateClassificationAsync(
+            request.RequestKind, categoryId, subCategoryId, ct);
         if (invalid is not null)
         {
             return invalid;
@@ -197,10 +198,8 @@ public sealed class RaiseServiceRequestHandler(
             db.NewServiceRequestDetails.Add(new NewServiceRequestDetail
             {
                 ServiceRequestId = ticket.Id,
-                NeedsEmail = detail.NeedsEmail,
-                NeedsErp = detail.NeedsErp,
-                NeedsDms = detail.NeedsDms,
-                NeedsVpn = detail.NeedsVpn,
+                RequestCategoryId = categoryId!.Value,
+                RequestSubCategoryId = subCategoryId!.Value,
                 RequiredByDate = detail.RequiredByDate,
                 Notes = detail.Notes,
             });
@@ -253,36 +252,77 @@ public sealed class RaiseServiceRequestHandler(
     /// belongs to a different category. This does.
     /// </summary>
     private async Task<Error?> ValidateClassificationAsync(
+        string requestKind,
         int? categoryId,
         int? subCategoryId,
         CancellationToken ct)
     {
-        if (categoryId is { } category
-            && !await db.RequestCategories.AnyAsync(c => c.Id == category, ct))
-        {
-            return Error.NotFound("RequestCategory", category);
-        }
-
-        if (subCategoryId is not { } subCategory)
+        if (categoryId is null && subCategoryId is null && requestKind != RequestKind.NewService)
         {
             return null;
         }
 
-        var parent = await db.RequestSubCategories
-            .Where(s => s.Id == subCategory)
-            .Select(s => (int?)s.RequestCategoryId)
+        if (categoryId is not { } category)
+        {
+            return Error.Validation(
+                "ServiceRequest.CategoryRequired",
+                "Choose a category for the request.");
+        }
+
+        var categoryRow = await db.RequestCategories
+            .Where(c => c.Id == category)
+            .Select(c => new { c.CategoryType, c.IsActive })
             .SingleOrDefaultAsync(ct);
 
-        if (parent is null)
+        if (categoryRow is null)
+        {
+            return Error.NotFound("RequestCategory", category);
+        }
+
+        if (!categoryRow.IsActive)
+        {
+            return Error.Validation(
+                "RequestCategory.Retired",
+                "That category has been retired. Choose another.");
+        }
+
+        var requiredType = RequestCategoryType.ForRequestKind(requestKind);
+        if (categoryRow.CategoryType != requiredType)
+        {
+            return Error.Validation(
+                "ServiceRequest.CategoryTypeMismatch",
+                $"A {requestKind} request requires a {requiredType} category.");
+        }
+
+        if (subCategoryId is not { } subCategory)
+        {
+            return Error.Validation(
+                "ServiceRequest.SubCategoryRequired",
+                "Choose a sub-category for the request.");
+        }
+
+        var subCategoryRow = await db.RequestSubCategories
+            .Where(s => s.Id == subCategory)
+            .Select(s => new { s.RequestCategoryId, s.IsActive })
+            .SingleOrDefaultAsync(ct);
+
+        if (subCategoryRow is null)
         {
             return Error.NotFound("RequestSubCategory", subCategory);
         }
 
-        if (categoryId is not null && parent != categoryId)
+        if (subCategoryRow.RequestCategoryId != categoryId)
         {
             return Error.Validation(
                 "ServiceRequest.SubCategoryMismatch",
                 "That sub-category belongs to a different category.");
+        }
+
+        if (!subCategoryRow.IsActive)
+        {
+            return Error.Validation(
+                "RequestSubCategory.Retired",
+                "That sub-category has been retired. Choose another.");
         }
 
         return null;

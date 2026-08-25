@@ -7,13 +7,9 @@ public sealed class NewServiceRequestDetail
 {
     public int ServiceRequestId { get; set; }
 
-    public bool NeedsEmail { get; set; }
+    public int RequestCategoryId { get; set; }
 
-    public bool NeedsErp { get; set; }
-
-    public bool NeedsDms { get; set; }
-
-    public bool NeedsVpn { get; set; }
+    public int RequestSubCategoryId { get; set; }
 
     public DateOnly? RequiredByDate { get; set; }
 

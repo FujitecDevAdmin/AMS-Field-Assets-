@@ -184,14 +184,13 @@ public sealed class TicketTests(ServiceDeskFixture fixture)
             "New joiner: R Nair",
             kind: RequestKind.NewService,
             newService: new RaiseServiceRequestCommand.NewServiceDetail(
-                NeedsEmail: true, NeedsErp: true, NeedsDms: false, NeedsVpn: false,
                 RequiredByDate: new DateOnly(2026, 9, 1),
                 Notes: "Starts on the first.",
                 Items: [new RaiseServiceRequestCommand.NewServiceItem(4, 2, "16 GB")]));
 
         var detail = (await GetAsync(raised.Value.Id)).Value;
         detail.NewService.ShouldNotBeNull();
-        detail.NewService.NeedsEmail.ShouldBeTrue();
+        detail.NewService.RequestCategoryId.ShouldBeGreaterThan(0);
         detail.NewService.RequiredByDate.ShouldBe(new DateOnly(2026, 9, 1));
         detail.NewService.Items.Single().Quantity.ShouldBe(2);
     }
@@ -213,7 +212,7 @@ public sealed class TicketTests(ServiceDeskFixture fixture)
         var result = await RaiseAsync(
             "Printer",
             newService: new RaiseServiceRequestCommand.NewServiceDetail(
-                false, false, false, false, null, null, []));
+                null, null, []));
 
         result.Error!.Code.ShouldBe("ServiceRequest.NewServiceDetailNotAllowed");
     }
@@ -228,7 +227,7 @@ public sealed class TicketTests(ServiceDeskFixture fixture)
             "Joiner",
             kind: RequestKind.NewService,
             newService: new RaiseServiceRequestCommand.NewServiceDetail(
-                false, false, false, false, null, null,
+                null, null,
                 [new RaiseServiceRequestCommand.NewServiceItem(4, 0, null)]));
 
         result.Error!.Code.ShouldBe("ServiceRequest.ItemQuantity");
@@ -926,7 +925,7 @@ public sealed class TicketTests(ServiceDeskFixture fixture)
 
     // --------------------------------------------------------------- plumbing
 
-    private Task<Result<RaiseServiceRequestResponse>> RaiseAsync(
+    private async Task<Result<RaiseServiceRequestResponse>> RaiseAsync(
         string subject,
         string kind = RequestKind.SupportTicket,
         string priority = RequestPriority.Medium,
@@ -938,11 +937,16 @@ public sealed class TicketTests(ServiceDeskFixture fixture)
         int? onBehalfOfEmployeeId = null,
         RaiseServiceRequestCommand.NewServiceDetail? newService = null)
     {
+        if (kind == RequestKind.NewService && categoryId is null && subCategoryId is null)
+        {
+            (categoryId, subCategoryId) = await fixture.CreateClassificationAsync(kind);
+        }
+
         var handler = new RaiseServiceRequestHandler(
             fixture.NewContext(), fixture.Sla, fixture.Clock, fixture.CurrentUser,
             fixture.SqlErrors);
 
-        return handler.HandleAsync(
+        return await handler.HandleAsync(
             new RaiseServiceRequestCommand(
                 kind, subject, null, priority, categoryId, subCategoryId, templateId,
                 null, manualAsset, employeeId, onBehalfOfEmployeeId, null, newService),
@@ -1037,13 +1041,14 @@ public sealed class TicketTests(ServiceDeskFixture fixture)
             TestContext.Current.CancellationToken);
     }
 
-    private Task<Result<CreateRequestCategoryResponse>> CreateCategoryAsync(string name)
+    private Task<Result<CreateRequestCategoryResponse>> CreateCategoryAsync(
+        string name, string categoryType = RequestCategoryType.Incident)
     {
         var handler = new CreateRequestCategoryHandler(
             fixture.NewContext(), fixture.Clock, fixture.CurrentUser, fixture.SqlErrors);
 
         return handler.HandleAsync(
-            new CreateRequestCategoryCommand(name), TestContext.Current.CancellationToken);
+            new CreateRequestCategoryCommand(name, categoryType), TestContext.Current.CancellationToken);
     }
 
     private Task<Result<CreateRequestSubCategoryResponse>> CreateSubCategoryAsync(

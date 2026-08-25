@@ -26,10 +26,6 @@ public static class RaiseServiceRequestMapper
             request.OnBehalfOfEmployeeId,
             request.LocationId,
             request.NewService is null ? null : new RaiseServiceRequestCommand.NewServiceDetail(
-                request.NewService.NeedsEmail,
-                request.NewService.NeedsErp,
-                request.NewService.NeedsDms,
-                request.NewService.NeedsVpn,
                 request.NewService.RequiredByDate,
                 string.IsNullOrWhiteSpace(request.NewService.Notes) ? null : request.NewService.Notes.Trim(),
                 [.. request.NewService.Items.Select(i => new RaiseServiceRequestCommand.NewServiceItem(

@@ -18,10 +18,8 @@ public sealed class NewServiceRequestDetailConfiguration : IEntityTypeConfigurat
         builder.Property(x => x.ServiceRequestId).ValueGeneratedNever();
 
         builder.Property(x => x.ServiceRequestId).IsRequired();
-        builder.Property(x => x.NeedsEmail).IsRequired();
-        builder.Property(x => x.NeedsErp).IsRequired();
-        builder.Property(x => x.NeedsDms).IsRequired();
-        builder.Property(x => x.NeedsVpn).IsRequired();
+        builder.Property(x => x.RequestCategoryId).IsRequired();
+        builder.Property(x => x.RequestSubCategoryId).IsRequired();
         builder.Property(x => x.Notes).HasMaxLength(1000);
 
         builder.HasOne<ServiceRequest>()
@@ -29,5 +27,18 @@ public sealed class NewServiceRequestDetailConfiguration : IEntityTypeConfigurat
             .HasForeignKey(x => x.ServiceRequestId)
             .OnDelete(DeleteBehavior.Cascade)
             .HasConstraintName("FK_NewServiceRequestDetail_ServiceRequest_ServiceRequestId");
+
+        builder.HasOne<RequestCategory>()
+            .WithMany()
+            .HasForeignKey(x => x.RequestCategoryId)
+            .OnDelete(DeleteBehavior.NoAction)
+            .HasConstraintName("FK_NewServiceRequestDetail_RequestCategory_RequestCategoryId");
+
+        builder.HasOne<RequestSubCategory>()
+            .WithMany()
+            .HasForeignKey(x => new { x.RequestSubCategoryId, x.RequestCategoryId })
+            .HasPrincipalKey(x => new { x.Id, x.RequestCategoryId })
+            .OnDelete(DeleteBehavior.NoAction)
+            .HasConstraintName("FK_NewServiceRequestDetail_RequestSubCategory_Category");
     }
 }

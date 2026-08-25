@@ -30,10 +30,6 @@ public sealed record RaiseServiceRequestCommand(
     /// nobody trusting either half.
     /// </remarks>
     public sealed record NewServiceDetail(
-        bool NeedsEmail,
-        bool NeedsErp,
-        bool NeedsDms,
-        bool NeedsVpn,
         DateOnly? RequiredByDate,
         string? Notes,
         IReadOnlyList<NewServiceItem> Items);

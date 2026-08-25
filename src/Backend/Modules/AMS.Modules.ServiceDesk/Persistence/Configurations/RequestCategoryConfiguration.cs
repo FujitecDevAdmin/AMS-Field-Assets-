@@ -12,12 +12,15 @@ public sealed class RequestCategoryConfiguration : IEntityTypeConfiguration<Requ
 {
     public void Configure(EntityTypeBuilder<RequestCategory> builder)
     {
-        builder.ToTable("RequestCategory");
+        builder.ToTable("RequestCategory", table => table.HasCheckConstraint(
+            "CK_RequestCategory_CategoryType",
+            "([CategoryType] IN (N'Service', N'Incident'))"));
 
         builder.HasKey(x => x.Id).HasName("PK_RequestCategory");
 
         builder.Property(x => x.Id).IsRequired();
         builder.Property(x => x.CategoryName).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.CategoryType).HasMaxLength(20).IsRequired();
         builder.Property(x => x.IsActive).IsRequired();
         builder.Property(x => x.CreatedOnUtc).IsRequired();
         builder.Property(x => x.CreatedBy).HasMaxLength(100);

@@ -10,12 +10,14 @@ public sealed record SearchRequestCategoriesResponse(
     /// <summary>One category and everything under it.</summary>
     /// <param name="Id">The category.</param>
     /// <param name="CategoryName">Unique, enforced by UX_RequestCategory_Name.</param>
+    /// <param name="CategoryType">Service or Incident.</param>
     /// <param name="IsActive">Retired categories stay: tickets still point at them.</param>
     /// <param name="TicketCount">Tickets classified under it.</param>
     /// <param name="SubCategories">Its sub-categories, in one round trip — the screen is a tree.</param>
     public sealed record Row(
         int Id,
         string CategoryName,
+        string CategoryType,
         bool IsActive,
         int TicketCount,
         IReadOnlyList<SubCategoryRow> SubCategories);

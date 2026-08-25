@@ -1863,3 +1863,24 @@ started clean, and failed on its first query. Everything here talks to SQL
 Server.
 
 **Found by:** the persistence gates, on their first run.
+# 2026-08-25 — Service Desk category types and New Service classification
+
+`RequestCategory` now records whether it is available to the Service or
+Incident intake flow. `NewServiceRequestDetail` carries the selected category
+and sub-category and no longer stores the four fixed Email/ERP/DMS/VPN flags.
+Those flags encoded a changing service catalogue as columns; typed categories
+and sub-categories are the existing extensible catalogue.
+
+`ServiceRequest` retains its category columns because SupportTicket and
+AssetIssue already use them and the shared queue/API contract depends on them.
+For NewService the detail mirrors the same selection; a composite foreign key
+to `(RequestSubCategory.Id, RequestSubCategory.RequestCategoryId)` prevents an
+invalid parent/child pair. Intake rejects inactive lookups and maps NewService
+to `Service`, with SupportTicket and AssetIssue mapped to `Incident`. Existing
+references remain readable after deactivation because all new catalogue FKs
+use `NO ACTION`.
+
+The migration classifies categories from existing request/template use, stops
+on mixed-use categories or unclassified New Service rows, backfills detail
+classification, and only then makes the new columns required and removes the
+old flags.

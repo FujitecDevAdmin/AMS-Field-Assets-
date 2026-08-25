@@ -5,4 +5,5 @@ namespace AMS.Modules.ServiceDesk.Features.UpdateRequestCategory;
 /// </summary>
 public sealed record UpdateRequestCategoryRequest(
     string CategoryName,
+    string CategoryType,
     bool IsActive);

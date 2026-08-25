@@ -1,4 +1,5 @@
 using AMS.Modules.ServiceDesk.Persistence;
+using AMS.Modules.ServiceDesk.Domain;
 using AMS.SharedKernel.Messaging;
 using AMS.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +22,22 @@ public sealed class SearchRequestCategoriesHandler(ServiceDeskDbContext db)
 
         var query = db.RequestCategories.AsNoTracking();
 
+        if (request.CategoryType is not null
+            && !RequestCategoryType.All.Contains(request.CategoryType, StringComparer.Ordinal))
+        {
+            return Error.Validation(
+                "RequestCategory.UnknownType",
+                $"Category type must be one of {string.Join(", ", RequestCategoryType.All)}.");
+        }
+
         if (request.IsActive.HasValue)
         {
             query = query.Where(c => c.IsActive == request.IsActive.Value);
+        }
+
+        if (request.CategoryType is not null)
+        {
+            query = query.Where(c => c.CategoryType == request.CategoryType);
         }
 
         var rows = await query
@@ -31,10 +45,12 @@ public sealed class SearchRequestCategoriesHandler(ServiceDeskDbContext db)
             .Select(c => new SearchRequestCategoriesResponse.Row(
                 c.Id,
                 c.CategoryName,
+                c.CategoryType,
                 c.IsActive,
                 db.ServiceRequests.Count(r => r.RequestCategoryId == c.Id),
                 db.RequestSubCategories
-                    .Where(s => s.RequestCategoryId == c.Id)
+                    .Where(s => s.RequestCategoryId == c.Id
+                        && (!request.ActiveSubCategoriesOnly || s.IsActive))
                     .OrderBy(s => s.SubCategoryName)
                     .Select(s => new SearchRequestCategoriesResponse.SubCategoryRow(
                         s.Id, s.SubCategoryName, s.IsActive))

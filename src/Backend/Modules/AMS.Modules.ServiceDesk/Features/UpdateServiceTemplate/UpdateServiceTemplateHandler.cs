@@ -44,7 +44,7 @@ public sealed class UpdateServiceTemplateHandler(
         }
 
         var invalid = await CreateServiceTemplateHandler.ValidateReferencesAsync(
-            db, request.RequestCategoryId, request.RequestSubCategoryId,
+            db, template.RequestKind, request.RequestCategoryId, request.RequestSubCategoryId,
             request.DefaultSupportTeamId, ct);
         if (invalid is not null)
         {

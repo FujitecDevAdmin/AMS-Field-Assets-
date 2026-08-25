@@ -26,7 +26,6 @@ public static class SearchRequestCategoriesEndpoint
 
                 return result.ToHttpResult();
             })
-            .RequireCapability(Capabilities.ServiceDesk.View)
             .WithName("SearchRequestCategories")
             .Produces<SearchRequestCategoriesResponse>(StatusCodes.Status200OK)
             .ProducesValidationProblem()

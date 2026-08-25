@@ -33,5 +33,6 @@ public sealed class RequestSubCategoryConfiguration : IEntityTypeConfiguration<R
         builder.HasIndex(x => new { x.RequestCategoryId, x.SubCategoryName })
             .IsUnique()
             .HasDatabaseName("UX_RequestSubCategory_Name");
+
     }
 }

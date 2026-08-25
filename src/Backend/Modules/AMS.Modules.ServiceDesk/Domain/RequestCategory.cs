@@ -9,6 +9,8 @@ public sealed class RequestCategory
 
     public required string CategoryName { get; set; }
 
+    public required string CategoryType { get; set; }
+
     public bool IsActive { get; set; }
 
     public DateTime CreatedOnUtc { get; set; }

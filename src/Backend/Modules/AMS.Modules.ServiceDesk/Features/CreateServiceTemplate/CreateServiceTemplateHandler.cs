@@ -40,7 +40,7 @@ public sealed class CreateServiceTemplateHandler(
         }
 
         var invalid = await ValidateReferencesAsync(
-            db, request.RequestCategoryId, request.RequestSubCategoryId,
+            db, request.RequestKind, request.RequestCategoryId, request.RequestSubCategoryId,
             request.DefaultSupportTeamId, ct);
         if (invalid is not null)
         {
@@ -96,15 +96,35 @@ public sealed class CreateServiceTemplateHandler(
     /// </remarks>
     internal static async Task<Error?> ValidateReferencesAsync(
         ServiceDeskDbContext db,
+        string requestKind,
         int? categoryId,
         int? subCategoryId,
         int? teamId,
         CancellationToken ct)
     {
-        if (categoryId is { } category
-            && !await db.RequestCategories.AnyAsync(c => c.Id == category, ct))
+        if (categoryId is { } category)
         {
-            return Error.NotFound("RequestCategory", category);
+            var categoryRow = await db.RequestCategories
+                .Where(c => c.Id == category)
+                .Select(c => new { c.CategoryType, c.IsActive })
+                .SingleOrDefaultAsync(ct);
+
+            if (categoryRow is null)
+            {
+                return Error.NotFound("RequestCategory", category);
+            }
+
+            if (!categoryRow.IsActive)
+            {
+                return Error.Validation("RequestCategory.Retired", "That category is retired.");
+            }
+
+            if (categoryRow.CategoryType != RequestCategoryType.ForRequestKind(requestKind))
+            {
+                return Error.Validation(
+                    "ServiceTemplate.CategoryTypeMismatch",
+                    "The category type does not match the template request kind.");
+            }
         }
 
         if (teamId is { } team && !await db.SupportTeams.AnyAsync(t => t.Id == team, ct))
@@ -117,21 +137,26 @@ public sealed class CreateServiceTemplateHandler(
             return null;
         }
 
-        var parent = await db.RequestSubCategories
+        var subCategoryRow = await db.RequestSubCategories
             .Where(s => s.Id == subCategory)
-            .Select(s => (int?)s.RequestCategoryId)
+            .Select(s => new { s.RequestCategoryId, s.IsActive })
             .SingleOrDefaultAsync(ct);
 
-        if (parent is null)
+        if (subCategoryRow is null)
         {
             return Error.NotFound("RequestSubCategory", subCategory);
         }
 
-        if (categoryId is not null && parent != categoryId)
+        if (categoryId is not null && subCategoryRow.RequestCategoryId != categoryId)
         {
             return Error.Validation(
                 "ServiceTemplate.SubCategoryMismatch",
                 "That sub-category belongs to a different category.");
+        }
+
+        if (!subCategoryRow.IsActive)
+        {
+            return Error.Validation("RequestSubCategory.Retired", "That sub-category is retired.");
         }
 
         return null;

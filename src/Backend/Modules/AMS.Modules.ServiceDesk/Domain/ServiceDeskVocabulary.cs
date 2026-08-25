@@ -21,6 +21,21 @@ public static class RequestKind
     public static readonly string[] All = [SupportTicket, AssetIssue, NewService];
 }
 
+/// <summary>Which intake flow may use a request category.</summary>
+/// <remarks>Spelled exactly as CK_RequestCategory_CategoryType allows.</remarks>
+public static class RequestCategoryType
+{
+    public const string Service = "Service";
+
+    public const string Incident = "Incident";
+
+    public static readonly string[] All = [Service, Incident];
+
+    public static string ForRequestKind(string requestKind) => requestKind == RequestKind.NewService
+        ? Service
+        : Incident;
+}
+
 /// <summary>How urgent the requester says it is.</summary>
 /// <remarks>Spelled exactly as CK_ServiceRequest_Priority allows.</remarks>
 public static class RequestPriority

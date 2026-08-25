@@ -49,6 +49,37 @@ public sealed class MasterDataTests(ServiceDeskFixture fixture)
     }
 
     [Fact]
+    public async Task Categories_can_be_filtered_by_type_with_only_active_children()
+    {
+        await fixture.ResetAsync();
+        var service = await CreateCategoryAsync("Access", RequestCategoryType.Service);
+        var incident = await CreateCategoryAsync("Network", RequestCategoryType.Incident);
+        await CreateSubCategoryAsync(service.Value.Id, "Active service");
+        var retired = await CreateSubCategoryAsync(service.Value.Id, "Retired service");
+        await UpdateSubCategoryAsync(retired.Value.Id, "Retired service", isActive: false);
+        await CreateSubCategoryAsync(incident.Value.Id, "Active incident");
+
+        var handler = new SearchRequestCategoriesHandler(fixture.NewContext());
+        var result = await handler.HandleAsync(
+            new SearchRequestCategoriesQuery(true, RequestCategoryType.Service, true),
+            TestContext.Current.CancellationToken);
+
+        var row = result.Value.Rows.Single();
+        row.CategoryName.ShouldBe("Access");
+        row.CategoryType.ShouldBe(RequestCategoryType.Service);
+        row.SubCategories.Single().SubCategoryName.ShouldBe("Active service");
+    }
+
+    [Fact]
+    public async Task An_unknown_category_type_is_refused()
+    {
+        await fixture.ResetAsync();
+
+        (await CreateCategoryAsync("Other", "Other")).Error!.Code
+            .ShouldBe("RequestCategory.UnknownType");
+    }
+
+    [Fact]
     public async Task The_same_sub_category_name_may_sit_under_two_categories()
     {
         // UX_RequestSubCategory_Name is on (CategoryId, Name), not Name alone:
@@ -375,12 +406,13 @@ public sealed class MasterDataTests(ServiceDeskFixture fixture)
 
     // -------------------------------------------------------------- helpers
 
-    private Task<Result<CreateRequestCategoryResponse>> CreateCategoryAsync(string name)
+    private Task<Result<CreateRequestCategoryResponse>> CreateCategoryAsync(
+        string name, string categoryType = RequestCategoryType.Incident)
     {
         var handler = new CreateRequestCategoryHandler(
             fixture.NewContext(), fixture.Clock, fixture.CurrentUser, fixture.SqlErrors);
         return handler.HandleAsync(
-            new CreateRequestCategoryCommand(name), TestContext.Current.CancellationToken);
+            new CreateRequestCategoryCommand(name, categoryType), TestContext.Current.CancellationToken);
     }
 
     private Task<Result<UpdateRequestCategoryResponse>> UpdateCategoryAsync(
@@ -389,7 +421,7 @@ public sealed class MasterDataTests(ServiceDeskFixture fixture)
         var handler = new UpdateRequestCategoryHandler(
             fixture.NewContext(), fixture.Clock, fixture.CurrentUser, fixture.SqlErrors);
         return handler.HandleAsync(
-            new UpdateRequestCategoryCommand(id, name, isActive),
+            new UpdateRequestCategoryCommand(id, name, RequestCategoryType.Incident, isActive),
             TestContext.Current.CancellationToken);
     }
 
@@ -417,7 +449,7 @@ public sealed class MasterDataTests(ServiceDeskFixture fixture)
     {
         var handler = new SearchRequestCategoriesHandler(fixture.NewContext());
         return handler.HandleAsync(
-            new SearchRequestCategoriesQuery(null), TestContext.Current.CancellationToken);
+            new SearchRequestCategoriesQuery(null, null, false), TestContext.Current.CancellationToken);
     }
 
     private Task<Result<CreateSupportTeamResponse>> CreateTeamAsync(

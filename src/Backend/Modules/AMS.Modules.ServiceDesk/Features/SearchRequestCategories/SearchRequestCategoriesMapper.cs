@@ -11,6 +11,8 @@ public static class SearchRequestCategoriesMapper
         ArgumentNullException.ThrowIfNull(request);
 
         return new SearchRequestCategoriesQuery(
-            request.IsActive);
+            request.IsActive,
+            string.IsNullOrWhiteSpace(request.CategoryType) ? null : request.CategoryType.Trim(),
+            request.ActiveSubCategoriesOnly);
     }
 }
