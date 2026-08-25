@@ -35,6 +35,8 @@ public sealed class CreateBranchHandler(
             BranchCode = request.BranchCode,
             BranchName = request.BranchName,
             RegionId = request.RegionId,
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
             TimeZoneId = request.TimeZoneId,
             IsHeadOffice = request.IsHeadOffice,
             IsActive = true,
@@ -60,6 +62,7 @@ public sealed class CreateBranchHandler(
         }
 
         return new CreateBranchResponse(
-            branch.Id, branch.BranchCode, branch.BranchName, branch.IsHeadOffice);
+            branch.Id, branch.BranchCode, branch.BranchName,
+            branch.Latitude, branch.Longitude, branch.IsHeadOffice);
     }
 }

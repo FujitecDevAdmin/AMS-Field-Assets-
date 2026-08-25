@@ -28,5 +28,6 @@ public sealed class SubmitVerificationValidator : AbstractValidator<SubmitVerifi
         RuleFor(x => x.CountedQuantity).GreaterThanOrEqualTo(0).When(x => x.CountedQuantity.HasValue);
         RuleFor(x => x.GpsLatitude).InclusiveBetween(-90, 90).When(x => x.GpsLatitude.HasValue);
         RuleFor(x => x.GpsLongitude).InclusiveBetween(-180, 180).When(x => x.GpsLongitude.HasValue);
+        RuleFor(x => x.GpsAccuracyMetres).GreaterThanOrEqualTo(0).When(x => x.GpsAccuracyMetres.HasValue);
     }
 }

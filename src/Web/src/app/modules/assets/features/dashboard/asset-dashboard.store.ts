@@ -14,23 +14,35 @@ export class AssetDashboardStore {
   readonly lastUpdated = computed(() => this.data()?.generatedOnUtc ?? null);
   readonly verificationRate = computed(() => {
     const data = this.data();
-    return data && data.totalAssets > 0
-      ? Math.round((data.verifiedAssets / data.totalAssets) * 100)
-      : 0;
+    return data ? this.percentage(data.verifiedAssets, data.totalAssets) : 0;
   });
   readonly mappingRate = computed(() => {
     const data = this.data();
-    return data && data.totalAssets > 0
-      ? Math.round((data.employeeMappedAssets / data.totalAssets) * 100)
-      : 0;
+    return data ? this.percentage(data.employeeMappedAssets, data.totalAssets) : 0;
   });
+
+  private percentage(value: number, total: number): number {
+    if (value <= 0 || total <= 0) return 0;
+
+    // Preserve small, valid non-zero percentages instead of rounding them to 0%.
+    return Math.max(0.1, Math.round((value / total) * 1000) / 10);
+  }
 
   async load(silent = false): Promise<void> {
     if (this.loading()) return;
     this.loading.set(true);
     if (!silent) this.error.set(null);
     try {
-      this.data.set(await firstValueFrom(this.api.dashboard()));
+      const [dashboard, verifiedAssets] = await Promise.all([
+        firstValueFrom(this.api.dashboard()),
+        firstValueFrom(this.api.search('', 0, 1, { isVerified: true })),
+      ]);
+      const verifiedCount = Math.min(dashboard.totalAssets, verifiedAssets.totalCount);
+      this.data.set({
+        ...dashboard,
+        verifiedAssets: verifiedCount,
+        pendingVerification: Math.max(0, dashboard.totalAssets - verifiedCount),
+      });
       this.error.set(null);
     } catch {
       this.error.set('Dashboard analytics could not be loaded. Check the API and your access.');

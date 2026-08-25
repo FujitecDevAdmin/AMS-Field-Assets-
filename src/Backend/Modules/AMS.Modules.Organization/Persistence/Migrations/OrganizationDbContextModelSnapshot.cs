@@ -94,6 +94,14 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                     b.Property<bool>("IsHeadOffice")
                         .HasColumnType("bit");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
                     b.Property<string>("ModifiedBy")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -125,7 +133,12 @@ namespace AMS.Modules.Organization.Persistence.Migrations
                     b.HasIndex("RegionId")
                         .HasDatabaseName("IX_Branch_RegionId");
 
-                    b.ToTable("Branch", "Organization");
+                    b.ToTable("Branch", "Organization", t =>
+                        {
+                            t.HasCheckConstraint("CK_Branch_Latitude", "[Latitude] IS NULL OR ([Latitude] >= -90 AND [Latitude] <= 90)");
+
+                            t.HasCheckConstraint("CK_Branch_Longitude", "[Longitude] IS NULL OR ([Longitude] >= -180 AND [Longitude] <= 180)");
+                        });
                 });
 
             modelBuilder.Entity("AMS.Modules.Organization.Domain.Department", b =>

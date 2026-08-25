@@ -24,6 +24,8 @@ public static class SubmitVerificationMapper
             request.SerialVerified ?? false,
             request.GpsLatitude,
             request.GpsLongitude,
+            request.GpsAccuracyMetres,
+            request.IsMockLocation,
             string.IsNullOrWhiteSpace(request.PhotoPath) ? null : request.PhotoPath.Trim(),
             request.LocationId,
             request.HolderEmployeeId,

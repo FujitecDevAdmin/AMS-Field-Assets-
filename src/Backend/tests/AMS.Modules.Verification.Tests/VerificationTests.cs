@@ -536,7 +536,7 @@ public sealed class VerificationTests(VerificationFixture fixture)
         return await handler.HandleAsync(
             new SubmitVerificationCommand(
                 cycleId ?? (assignedCycleId == 0 ? int.MaxValue : assignedCycleId), assetId, captureId, isBulk, counted, expected, scannedQr, condition,
-                false, null, null, null, locationId, holderEmployeeId, verifiedOnUtc, null),
+                false, null, null, null, null, null, locationId, holderEmployeeId, verifiedOnUtc, null),
             TestContext.Current.CancellationToken);
     }
 

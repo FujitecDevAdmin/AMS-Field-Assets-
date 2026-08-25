@@ -31,6 +31,10 @@ namespace AMS.Modules.Verification.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal?>("AllowedRadiusMetres")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
                     b.Property<int>("AssetId")
                         .HasColumnType("int");
 
@@ -48,9 +52,17 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal?>("DistanceFromLocationMetres")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
                     b.Property<decimal?>("ExpectedQuantitySnapshot")
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal?>("GpsAccuracyMetres")
+                        .HasPrecision(9, 2)
+                        .HasColumnType("decimal(9,2)");
 
                     b.Property<decimal?>("GpsLatitude")
                         .HasPrecision(9, 6)
@@ -59,6 +71,18 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                     b.Property<decimal?>("GpsLongitude")
                         .HasPrecision(9, 6)
                         .HasColumnType("decimal(9,6)");
+
+                    b.Property<string>("GpsValidationMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("GpsValidationStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("HasLocationMismatch")
+                        .HasColumnType("bit")
+                        .HasDefaultValueSql("0", "DF_PhysicalVerification_HasLocationMismatch");
 
                     b.Property<bool>("HasQrMismatch")
                         .HasColumnType("bit");
@@ -69,6 +93,9 @@ namespace AMS.Modules.Verification.Persistence.Migrations
                     b.Property<bool>("IsBulkCount")
                         .HasColumnType("bit")
                         .HasDefaultValueSql("0", "DF_PhysicalVerification_IsBulkCount");
+
+                    b.Property<bool?>("IsMockLocation")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("LocationId")
                         .HasColumnType("int");
@@ -86,6 +113,14 @@ namespace AMS.Modules.Verification.Persistence.Migrations
 
                     b.Property<int>("PhysicalVerificationCycleId")
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("ReferenceLatitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
+
+                    b.Property<decimal?>("ReferenceLongitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("decimal(9,6)");
 
                     b.Property<string>("Remarks")
                         .HasMaxLength(500)
@@ -135,11 +170,23 @@ namespace AMS.Modules.Verification.Persistence.Migrations
 
                     b.ToTable("PhysicalVerification", "Verification", t =>
                         {
+                            t.HasCheckConstraint("CK_PhysicalVerification_AllowedRadius", "([AllowedRadiusMetres] IS NULL OR [AllowedRadiusMetres] >= 0)");
+
                             t.HasCheckConstraint("CK_PhysicalVerification_BulkHasCount", "([IsBulkCount] = 0 OR [CountedQuantity] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_PhysicalVerification_Condition", "([WorkingCondition] IN (N'Good', N'MinorDamage', N'Damaged', N'NotWorking', N'Missing'))");
 
                             t.HasCheckConstraint("CK_PhysicalVerification_CountNonNegative", "([CountedQuantity] IS NULL OR [CountedQuantity] >= 0)");
+
+                            t.HasCheckConstraint("CK_PhysicalVerification_Distance", "([DistanceFromLocationMetres] IS NULL OR [DistanceFromLocationMetres] >= 0)");
+
+                            t.HasCheckConstraint("CK_PhysicalVerification_GpsAccuracy", "([GpsAccuracyMetres] IS NULL OR [GpsAccuracyMetres] >= 0)");
+
+                            t.HasCheckConstraint("CK_PhysicalVerification_GpsValidationStatus", "([GpsValidationStatus] IS NULL OR [GpsValidationStatus] IN (N'NotValidated', N'InsideGeofence', N'OutsideGeofence', N'ReferenceUnavailable'))");
+
+                            t.HasCheckConstraint("CK_PhysicalVerification_ReferenceLatitude", "([ReferenceLatitude] IS NULL OR ([ReferenceLatitude] >= -90 AND [ReferenceLatitude] <= 90))");
+
+                            t.HasCheckConstraint("CK_PhysicalVerification_ReferenceLongitude", "([ReferenceLongitude] IS NULL OR ([ReferenceLongitude] >= -180 AND [ReferenceLongitude] <= 180))");
                         });
                 });
 

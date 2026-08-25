@@ -41,6 +41,8 @@
               "@fontsource/barlow/500.css",
               "@fontsource/barlow/600.css",
               "@fontsource/barlow/700.css",
+              "@fontsource/poppins/600.css",
+              "@fontsource/poppins/700.css",
               "src/styles.scss"
             ]
           },
@@ -108,6 +110,8 @@
               "@fontsource/barlow/500.css",
               "@fontsource/barlow/600.css",
               "@fontsource/barlow/700.css",
+              "@fontsource/poppins/600.css",
+              "@fontsource/poppins/700.css",
               "src/styles.scss"
             ]
           }

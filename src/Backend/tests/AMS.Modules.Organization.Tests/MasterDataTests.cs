@@ -313,7 +313,7 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         await using var context = fixture.NewContext();
         return await new CreateBranchHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
             .HandleAsync(
-                new CreateBranchCommand(code.ToUpperInvariant(), name, regionId, TimeZone, isHeadOffice),
+                new CreateBranchCommand(code.ToUpperInvariant(), name, regionId, null, null, TimeZone, isHeadOffice),
                 TestContext.Current.CancellationToken);
     }
 
@@ -328,7 +328,7 @@ public sealed class MasterDataTests(OrganizationFixture fixture)
         await using var context = fixture.NewContext();
         return await new UpdateBranchHandler(context, fixture.Clock, fixture.CurrentUser, fixture.SqlErrors)
             .HandleAsync(
-                new UpdateBranchCommand(id, code, name, regionId, TimeZone, isHeadOffice, isActive),
+                new UpdateBranchCommand(id, code, name, regionId, null, null, TimeZone, isHeadOffice, isActive),
                 TestContext.Current.CancellationToken);
     }
 

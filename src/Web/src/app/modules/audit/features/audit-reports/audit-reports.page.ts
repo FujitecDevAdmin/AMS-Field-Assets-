@@ -13,7 +13,7 @@ import { AuditsApi, type VerificationReportRow } from '../../data/audits.api';
   selector: 'ams-audit-reports-page',
   imports: [DxButtonModule, DxDataGridModule, DxLoadPanelModule, DxSelectBoxModule, DxTextBoxModule],
   templateUrl: './audit-reports.page.html',
-  styleUrl: './audit-reports.page.scss',
+  styleUrl: './audit-reports-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuditReportsPage implements OnInit {

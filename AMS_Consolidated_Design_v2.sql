@@ -509,6 +509,8 @@ BEGIN
         [BranchCode]    nvarchar(20)  NOT NULL,
         [BranchName]    nvarchar(100) NOT NULL,
         [RegionId]      int           NULL,                                         -- NEW
+        [Latitude]      decimal(9,6)  NULL,
+        [Longitude]     decimal(9,6)  NULL,
         [TimeZoneId]    nvarchar(64)  NOT NULL CONSTRAINT [DF_Branch_TimeZoneId]  -- NEW
                                       DEFAULT (N'India Standard Time'),
         [IsHeadOffice]  bit           NOT NULL,
@@ -518,6 +520,8 @@ BEGIN
         [ModifiedOnUtc] datetime2     NULL,
         [ModifiedBy]    nvarchar(100) NULL,
         CONSTRAINT [PK_Branch] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_Branch_Latitude] CHECK ([Latitude] IS NULL OR ([Latitude] >= -90 AND [Latitude] <= 90)),
+        CONSTRAINT [CK_Branch_Longitude] CHECK ([Longitude] IS NULL OR ([Longitude] >= -180 AND [Longitude] <= 180)),
         CONSTRAINT [FK_Branch_Region_RegionId] FOREIGN KEY ([RegionId])
             REFERENCES [Organization].[Region] ([Id]) ON DELETE NO ACTION
     );
@@ -2523,6 +2527,15 @@ BEGIN
         [SerialVerified]              bit           NOT NULL,
         [GpsLatitude]                 decimal(9,6)  NULL,
         [GpsLongitude]                decimal(9,6)  NULL,
+        [GpsAccuracyMetres]           decimal(9,2)  NULL,
+        [ReferenceLatitude]           decimal(9,6)  NULL,
+        [ReferenceLongitude]          decimal(9,6)  NULL,
+        [DistanceFromLocationMetres]  decimal(12,2) NULL,
+        [AllowedRadiusMetres]         decimal(12,2) NULL,
+        [GpsValidationStatus]         nvarchar(20)  NULL,
+        [HasLocationMismatch]         bit           NOT NULL CONSTRAINT [DF_PhysicalVerification_HasLocationMismatch] DEFAULT (0),
+        [IsMockLocation]              bit           NULL,
+        [GpsValidationMessage]        nvarchar(500) NULL,
         [PhotoPath]                   nvarchar(400) NULL,
         [LocationId]                  int           NULL,
         [HolderEmployeeId]            int           NULL,
@@ -2539,6 +2552,12 @@ BEGIN
         CONSTRAINT [CK_PhysicalVerification_BulkHasCount] CHECK ([IsBulkCount] = 0 OR [CountedQuantity] IS NOT NULL),
         CONSTRAINT [CK_PhysicalVerification_CountNonNegative] CHECK ([CountedQuantity] IS NULL OR [CountedQuantity] >= 0),
         CONSTRAINT [CK_PhysicalVerification_Condition] CHECK ([WorkingCondition] IN (N'Good', N'MinorDamage', N'Damaged', N'NotWorking', N'Missing')),   -- R2-20
+        CONSTRAINT [CK_PhysicalVerification_GpsAccuracy] CHECK ([GpsAccuracyMetres] IS NULL OR [GpsAccuracyMetres] >= 0),
+        CONSTRAINT [CK_PhysicalVerification_ReferenceLatitude] CHECK ([ReferenceLatitude] IS NULL OR ([ReferenceLatitude] >= -90 AND [ReferenceLatitude] <= 90)),
+        CONSTRAINT [CK_PhysicalVerification_ReferenceLongitude] CHECK ([ReferenceLongitude] IS NULL OR ([ReferenceLongitude] >= -180 AND [ReferenceLongitude] <= 180)),
+        CONSTRAINT [CK_PhysicalVerification_Distance] CHECK ([DistanceFromLocationMetres] IS NULL OR [DistanceFromLocationMetres] >= 0),
+        CONSTRAINT [CK_PhysicalVerification_AllowedRadius] CHECK ([AllowedRadiusMetres] IS NULL OR [AllowedRadiusMetres] >= 0),
+        CONSTRAINT [CK_PhysicalVerification_GpsValidationStatus] CHECK ([GpsValidationStatus] IS NULL OR [GpsValidationStatus] IN (N'NotValidated', N'InsideGeofence', N'OutsideGeofence', N'ReferenceUnavailable')),
         CONSTRAINT [FK_PhysicalVerification_PhysicalVerificationCycle_PhysicalVerificationCycleId] FOREIGN KEY ([PhysicalVerificationCycleId]) REFERENCES [Verification].[PhysicalVerificationCycle] ([Id]) ON DELETE NO ACTION
     );
 END

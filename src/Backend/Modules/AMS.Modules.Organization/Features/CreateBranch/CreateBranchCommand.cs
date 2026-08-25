@@ -9,5 +9,7 @@ public sealed record CreateBranchCommand(
     string BranchCode,
     string BranchName,
     int? RegionId,
+    decimal? Latitude,
+    decimal? Longitude,
     string TimeZoneId,
     bool IsHeadOffice) : ICommand<CreateBranchResponse>;

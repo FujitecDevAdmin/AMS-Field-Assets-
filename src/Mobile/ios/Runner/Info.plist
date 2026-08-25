@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to scan asset QR codes and barcodes for audit verification.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is captured when scanning and verifying an asset to provide physical audit evidence.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

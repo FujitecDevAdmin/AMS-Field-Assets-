@@ -29,3 +29,17 @@
   --ams-control-pad-x: 0.75rem;
   --ams-radius: 8px;
 }
+
+body.ams-dark {
+  color-scheme: dark;
+  --ams-brand: #ff5264;
+  --ams-brand-contrast: #ffffff;
+  --ams-brand-tint: rgb(255 82 100 / 15%);
+  --ams-title-red-dark: #ff8995;
+  --ams-title-red-light: #ff5264;
+  --ams-surface: #11151b;
+  --ams-surface-raised: #1b212a;
+  --ams-border: rgb(255 255 255 / 15%);
+  --ams-text: #f3f5f7;
+  --ams-text-muted: rgb(255 255 255 / 68%);
+}

@@ -12,13 +12,19 @@ public sealed class BranchConfiguration : IEntityTypeConfiguration<Branch>
 {
     public void Configure(EntityTypeBuilder<Branch> builder)
     {
-        builder.ToTable("Branch");
+        builder.ToTable("Branch", table =>
+        {
+            table.HasCheckConstraint("CK_Branch_Latitude", "[Latitude] IS NULL OR ([Latitude] >= -90 AND [Latitude] <= 90)");
+            table.HasCheckConstraint("CK_Branch_Longitude", "[Longitude] IS NULL OR ([Longitude] >= -180 AND [Longitude] <= 180)");
+        });
 
         builder.HasKey(x => x.Id).HasName("PK_Branch");
 
         builder.Property(x => x.Id).IsRequired();
         builder.Property(x => x.BranchCode).HasMaxLength(20).IsRequired();
         builder.Property(x => x.BranchName).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.Latitude).HasPrecision(9, 6);
+        builder.Property(x => x.Longitude).HasPrecision(9, 6);
         builder.Property(x => x.TimeZoneId).HasMaxLength(64).IsRequired().HasDefaultValueSql("N'India Standard Time'", "DF_Branch_TimeZoneId").ValueGeneratedNever();
         builder.Property(x => x.IsHeadOffice).IsRequired();
         builder.Property(x => x.IsActive).IsRequired();

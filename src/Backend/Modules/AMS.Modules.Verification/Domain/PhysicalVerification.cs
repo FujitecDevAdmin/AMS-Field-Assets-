@@ -31,6 +31,24 @@ public sealed class PhysicalVerification
 
     public decimal? GpsLongitude { get; set; }
 
+    public decimal? GpsAccuracyMetres { get; set; }
+
+    public decimal? ReferenceLatitude { get; set; }
+
+    public decimal? ReferenceLongitude { get; set; }
+
+    public decimal? DistanceFromLocationMetres { get; set; }
+
+    public decimal? AllowedRadiusMetres { get; set; }
+
+    public string? GpsValidationStatus { get; set; }
+
+    public bool HasLocationMismatch { get; set; }
+
+    public bool? IsMockLocation { get; set; }
+
+    public string? GpsValidationMessage { get; set; }
+
     public string? PhotoPath { get; set; }
 
     public int? LocationId { get; set; }

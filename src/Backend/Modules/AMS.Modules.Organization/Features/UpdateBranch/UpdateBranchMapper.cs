@@ -15,6 +15,8 @@ public static class UpdateBranchMapper
             request.BranchCode.Trim().ToUpperInvariant(),
             request.BranchName.Trim(),
             request.RegionId,
+            request.Latitude,
+            request.Longitude,
             request.TimeZoneId.Trim(),
             request.IsHeadOffice,
             request.IsActive);

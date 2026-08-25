@@ -38,6 +38,8 @@ public sealed class UpdateBranchHandler(
         branch.BranchCode = request.BranchCode;
         branch.BranchName = request.BranchName;
         branch.RegionId = request.RegionId;
+        branch.Latitude = request.Latitude;
+        branch.Longitude = request.Longitude;
         branch.TimeZoneId = request.TimeZoneId;
         branch.IsHeadOffice = request.IsHeadOffice;
         branch.IsActive = request.IsActive;
@@ -60,6 +62,7 @@ public sealed class UpdateBranchHandler(
         }
 
         return new UpdateBranchResponse(
-            branch.Id, branch.BranchCode, branch.IsHeadOffice, branch.IsActive);
+            branch.Id, branch.BranchCode, branch.Latitude, branch.Longitude,
+            branch.IsHeadOffice, branch.IsActive);
     }
 }

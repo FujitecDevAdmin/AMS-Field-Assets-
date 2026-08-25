@@ -46,6 +46,8 @@ public sealed class SearchBranchesHandler(OrganizationDbContext db)
                 l.BranchName,
                 l.RegionId,
                 db.Regions.Where(r => r.Id == l.RegionId).Select(r => r.RegionName).FirstOrDefault(),
+                l.Latitude,
+                l.Longitude,
                 l.TimeZoneId,
                 l.IsHeadOffice,
                 l.IsActive))

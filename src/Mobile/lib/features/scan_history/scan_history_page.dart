@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../shared/widgets/corporate_wave_background.dart';
 import '../../shared/widgets/fujitec_header_logo.dart';
 import 'scan_history.dart';
 
@@ -14,12 +15,14 @@ class ScanHistoryPage extends ConsumerWidget {
     final history = ref.watch(scanHistoryProvider);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         surfaceTintColor: Colors.transparent,
         foregroundColor: _themeDark,
         elevation: 0,
-        flexibleSpace: const DecoratedBox(
-          decoration: BoxDecoration(color: Colors.white),
+        flexibleSpace: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+          ),
         ),
         shape: const Border(bottom: BorderSide(color: Color(0xFFEBC8CD))),
         title: const FujitecHeaderLogo(),
@@ -33,28 +36,31 @@ class ScanHistoryPage extends ConsumerWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: history.isEmpty
-          ? const _EmptyHistory()
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                const Text(
-                  'Scan History',
-                  style: TextStyle(
-                    color: _themeDark,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
+      body: CorporateWaveBackground(
+        variant: CorporateWaveVariant.history,
+        child: history.isEmpty
+            ? const _EmptyHistory()
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  const Text(
+                    'Scan History',
+                    style: TextStyle(
+                      color: _themeDark,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${history.length} scans in this app session',
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-                const SizedBox(height: 16),
-                ...history.map((entry) => _HistoryTile(entry: entry)),
-              ],
-            ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${history.length} scans in this app session',
+                    style: TextStyle(color: Colors.grey.shade700),
+                  ),
+                  const SizedBox(height: 16),
+                  ...history.map((entry) => _HistoryTile(entry: entry)),
+                ],
+              ),
+      ),
     );
   }
 
@@ -90,8 +96,8 @@ class _HistoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final time = TimeOfDay.fromDateTime(entry.scannedAt).format(context);
     return Card(
-      color: Colors.white,
-      surfaceTintColor: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
       margin: const EdgeInsets.only(bottom: 10),
       child: Padding(
         padding: const EdgeInsets.all(14),

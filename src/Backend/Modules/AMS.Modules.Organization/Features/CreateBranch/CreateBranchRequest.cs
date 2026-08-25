@@ -7,5 +7,7 @@ public sealed record CreateBranchRequest(
     string BranchCode,
     string BranchName,
     int? RegionId,
+    decimal? Latitude,
+    decimal? Longitude,
     string TimeZoneId,
     bool IsHeadOffice);

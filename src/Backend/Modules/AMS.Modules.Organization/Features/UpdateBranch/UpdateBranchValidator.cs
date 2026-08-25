@@ -21,5 +21,7 @@ public sealed class UpdateBranchValidator : AbstractValidator<UpdateBranchReques
         RuleFor(x => x.BranchName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.TimeZoneId).NotEmpty().MaximumLength(64);
         RuleFor(x => x.RegionId).GreaterThan(0).When(x => x.RegionId.HasValue);
+        RuleFor(x => x.Latitude).InclusiveBetween(-90m, 90m).When(x => x.Latitude.HasValue);
+        RuleFor(x => x.Longitude).InclusiveBetween(-180m, 180m).When(x => x.Longitude.HasValue);
     }
 }

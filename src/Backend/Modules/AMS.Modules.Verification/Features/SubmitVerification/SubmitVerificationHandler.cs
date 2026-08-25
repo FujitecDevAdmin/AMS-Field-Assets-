@@ -146,6 +146,13 @@ public sealed class SubmitVerificationHandler(
             SerialVerified = request.SerialVerified,
             GpsLatitude = request.GpsLatitude,
             GpsLongitude = request.GpsLongitude,
+            GpsAccuracyMetres = request.GpsAccuracyMetres,
+            GpsValidationStatus = HasGpsCoordinates(request) ? "ReferenceUnavailable" : null,
+            HasLocationMismatch = false,
+            IsMockLocation = request.IsMockLocation,
+            GpsValidationMessage = HasGpsCoordinates(request)
+                ? "Branch coordinates are not configured. GPS was captured, but location validation was not performed."
+                : null,
             PhotoPath = request.PhotoPath,
             // What the phone saw, falling back to what the register says. A
             // bulk line counted at a branch is counted THERE, and the register
@@ -301,6 +308,9 @@ public sealed class SubmitVerificationHandler(
 
     private static string NormalizeBranch(string? value) => string.Concat(
         (value ?? string.Empty).Where(char.IsLetterOrDigit)).ToUpperInvariant();
+
+    private static bool HasGpsCoordinates(SubmitVerificationCommand request) =>
+        request.GpsLatitude.HasValue && request.GpsLongitude.HasValue;
 
     private static SubmitVerificationResponse Describe(
         PhysicalVerification verification,

@@ -72,6 +72,8 @@ class AuditsApi {
         'scannedQrValue': persistedIdentifier,
         'workingCondition': workingCondition,
         'serialVerified': serialVerified,
+        // GPS evidence is intentionally omitted during branch-scope testing.
+        // The API persists its nullable GPS columns as null.
         'locationId': audit.branchId,
         'remarks': remarks,
       },

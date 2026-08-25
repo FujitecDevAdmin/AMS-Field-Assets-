@@ -7,6 +7,8 @@ public sealed record UpdateBranchRequest(
     string BranchCode,
     string BranchName,
     int? RegionId,
+    decimal? Latitude,
+    decimal? Longitude,
     string TimeZoneId,
     bool IsHeadOffice,
     bool IsActive);

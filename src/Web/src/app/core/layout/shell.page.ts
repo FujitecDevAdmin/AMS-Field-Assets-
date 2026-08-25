@@ -16,6 +16,7 @@ import { AuditsApi } from '../../modules/audit/data/audits.api';
 import { AuditorsApi } from '../../modules/audit/data/auditors.api';
 import { AuthStore } from '../auth/auth.store';
 import { ToastService } from '../notifications/toast.service';
+import { ThemeService } from '../theme/theme.service';
 import { AppHeaderComponent, type UserMenuItem } from './app-header.component';
 import { BREAKPOINT, mediaQuery } from './media-query';
 import type { NavBadges } from './nav-items';
@@ -63,6 +64,7 @@ export class ShellPage {
   private readonly assetsApi = inject(AssetsApi);
   private readonly auditsApi = inject(AuditsApi);
   private readonly auditorsApi = inject(AuditorsApi);
+  private readonly theme = inject(ThemeService);
 
   protected readonly globalSearchVisible = signal(false);
   protected readonly globalSearchLoading = signal(false);
@@ -224,6 +226,12 @@ export class ShellPage {
   }
 
   protected onUserMenu(item: UserMenuItem): void {
+    if (item.id === 'theme') {
+      const selected = this.theme.toggle();
+      this.toast.success(`${selected === 'dark' ? 'Dark' : 'Light'} mode enabled.`);
+      return;
+    }
+
     if (item.id === 'signout') {
       this.auth.signOut();
       void this.router.navigate(['/login']);

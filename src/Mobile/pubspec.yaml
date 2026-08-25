@@ -38,7 +38,9 @@ dependencies:
   dio: ^5.11.0
   flutter_secure_storage: ^10.0.0
   mobile_scanner: ^7.4.0
-
+  # Kept available for restoring GPS evidence after the current branch-scope test.
+  geolocator: ^14.0.3
+  google_fonts: ^8.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

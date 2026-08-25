@@ -17,6 +17,8 @@ public sealed record SubmitVerificationCommand(
     bool SerialVerified,
     decimal? GpsLatitude,
     decimal? GpsLongitude,
+    decimal? GpsAccuracyMetres,
+    bool? IsMockLocation,
     string? PhotoPath,
     int? LocationId,
     int? HolderEmployeeId,

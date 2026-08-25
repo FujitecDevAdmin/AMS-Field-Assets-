@@ -13,6 +13,10 @@ public sealed class Branch
 
     public int? RegionId { get; set; }
 
+    public decimal? Latitude { get; set; }
+
+    public decimal? Longitude { get; set; }
+
     /// <summary>Defaults to <c>N'India Standard Time'</c>, as <c>DF_Branch_TimeZoneId</c> does.</summary>
     public string TimeZoneId { get; set; } = "India Standard Time";
 

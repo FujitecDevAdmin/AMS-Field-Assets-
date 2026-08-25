@@ -15,7 +15,7 @@
     </div>
     @if (error(); as message) { <div class="error-banner">{{ message }}</div> }
     <div class="grid-wrap">
-      <dx-data-grid [dataSource]="rows()" keyExpr="id" height="100%" [showBorders]="true" [showRowLines]="true" [showColumnLines]="true" [rowAlternationEnabled]="true" [columnAutoWidth]="true" [allowColumnResizing]="true" columnResizingMode="widget" noDataText="No verified assets match the selected filters.">
+      <dx-data-grid [dataSource]="rows()" keyExpr="id" [showBorders]="true" [showRowLines]="true" [showColumnLines]="true" [rowAlternationEnabled]="true" [columnAutoWidth]="true" [allowColumnResizing]="true" columnResizingMode="widget" noDataText="No verified assets match the selected filters.">
         <dxo-scrolling mode="standard" [useNative]="true" showScrollbar="always" />
         <dxo-paging [pageSize]="20" /><dxo-pager [showInfo]="true" [showPageSizeSelector]="true" [allowedPageSizes]="[20, 50, 100]" />
         <dxo-export [enabled]="true" [allowExportSelectedData]="false" />
