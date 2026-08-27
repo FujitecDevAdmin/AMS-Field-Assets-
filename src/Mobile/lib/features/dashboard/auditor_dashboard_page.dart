@@ -163,7 +163,7 @@ class _AuditorDashboardPageState extends ConsumerState<AuditorDashboardPage> {
                           'Auditor',
                           style: TextStyle(
                             color: Color(0xFF8A7477),
-                            fontSize: 9,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -467,7 +467,7 @@ class _AllAuditsDialog extends StatelessWidget {
                             '${audits.length} audits available',
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -543,7 +543,7 @@ class _AllAuditsDialog extends StatelessWidget {
                                         color: audit.isActive
                                             ? const Color(0xFFD01126)
                                             : const Color(0xFF667085),
-                                        fontSize: 9,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
@@ -566,7 +566,7 @@ class _AllAuditsDialog extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         color: Color(0xFF667085),
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -594,7 +594,7 @@ class _AllAuditsDialog extends StatelessWidget {
                                     '$verified / $total',
                                     style: const TextStyle(
                                       color: Color(0xFF344054),
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -1226,7 +1226,7 @@ class _ProgressDialogFrame extends StatelessWidget {
                             subtitle,
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -1321,7 +1321,7 @@ class _PopupProgressCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Color(0xFF667085),
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1420,7 +1420,7 @@ class _DashboardAssetsPage extends StatelessWidget {
                         color: row.asset.isVerified
                             ? const Color(0xFF16803A)
                             : const Color(0xFFD01126),
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1513,7 +1513,7 @@ class _ProfileName extends StatelessWidget {
             'AUDITOR',
             style: TextStyle(
               color: Color(0xFFD01126),
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
             ),

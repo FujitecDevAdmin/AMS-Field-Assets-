@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
 import '../../core/theme/theme_mode_controller.dart';
+import '../../core/theme/responsive_typography.dart';
 import '../../shared/widgets/corporate_wave_background.dart';
 import '../../shared/widgets/fujitec_header_logo.dart';
 import '../../shared/widgets/techy_loader.dart';
@@ -471,7 +472,7 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
                           'Refine assets in the selected location.',
                           style: TextStyle(
                             color: Color(0xFF667085),
-                            fontSize: 11.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -973,7 +974,7 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
                             'Auditor',
                             style: TextStyle(
                               color: Color(0xFF8A7477),
-                              fontSize: 9,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -1142,7 +1143,7 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
     // Read from the root Flutter view. Scaffold removes the inset from the
     // body's MediaQuery after resizing, which otherwise makes an open keyboard
     // look closed here and leaves the fixed header controls overflowing.
-    final compactForSearch =
+    final keyboardRequiresCompactLayout =
         _isSearchFocused || View.of(context).viewInsets.bottom > 0;
     final locations = _availableLocations;
     final selectedLocation = locations.contains(_selectedLocation)
@@ -1180,152 +1181,164 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
         (_assetTypeFilter == 'All' ? 0 : 1) +
         (_identifierFilter == 'All' ? 0 : 1);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-          child: _SelectedAuditSummary(
-            audit: audit,
-            verified: verified,
-            isExpanded: _isAuditSummaryExpanded,
-            onToggle: () => setState(
-              () => _isAuditSummaryExpanded = !_isAuditSummaryExpanded,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The height guard also covers intermediate keyboard animation frames
+        // where the viewport has already shrunk but the inset notification has
+        // not reached this widget yet.
+        final compactForSearch =
+            keyboardRequiresCompactLayout || constraints.maxHeight < 520;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: _SelectedAuditSummary(
+                audit: audit,
+                verified: verified,
+                // Any keyboard can resize this underlying page, including the
+                // remarks field in the verification sheet. Always render the
+                // compact summary while that reduced viewport is active.
+                isExpanded: compactForSearch ? false : _isAuditSummaryExpanded,
+                onToggle: () => setState(
+                  () => _isAuditSummaryExpanded = !_isAuditSummaryExpanded,
+                ),
+                onViewAssets: () => _openAssetListPage(audit),
+              ),
             ),
-            onViewAssets: () => _openAssetListPage(audit),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-          child: _buildSearchBar('Search assets in this audit'),
-        ),
-        if (!compactForSearch)
-          Container(
-            color: Theme.of(
-              context,
-            ).colorScheme.surface.withValues(alpha: 0.96),
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: _buildSearchBar('Search assets in this audit'),
+            ),
+            if (!compactForSearch)
+              Container(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.96),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      flex: 4,
-                      child: _AssignedLocationDropdown(
-                        locations: locations,
-                        selectedLocation: selectedLocation,
-                        onSelected: (location) => setState(() {
-                          _selectedLocation = location;
-                          _resetPage();
-                        }),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 1,
-                      child: Tooltip(
-                        message: 'Filter assets',
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outlineVariant,
-                            ),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x0F101828),
-                                blurRadius: 8,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: _AssignedLocationDropdown(
+                            locations: locations,
+                            selectedLocation: selectedLocation,
+                            onSelected: (location) => setState(() {
+                              _selectedLocation = location;
+                              _resetPage();
+                            }),
                           ),
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            clipBehavior: Clip.antiAlias,
-                            child: InkWell(
-                              onTap: _showAuditAssetFilters,
-                              child: SizedBox(
-                                height: 42,
-                                child: Center(
-                                  child: Icon(
-                                    activeAssetFilterCount == 0
-                                        ? Icons.filter_alt_outlined
-                                        : Icons.filter_alt_rounded,
-                                    size: 21,
-                                    color: _themeDark,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          flex: 1,
+                          child: Tooltip(
+                            message: 'Filter assets',
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x0F101828),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                                clipBehavior: Clip.antiAlias,
+                                child: InkWell(
+                                  onTap: _showAuditAssetFilters,
+                                  child: SizedBox(
+                                    height: responsiveControlHeight(context),
+                                    child: Center(
+                                      child: Icon(
+                                        activeAssetFilterCount == 0
+                                            ? Icons.filter_alt_outlined
+                                            : Icons.filter_alt_rounded,
+                                        size: 21,
+                                        color: _themeDark,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        const Divider(height: 1),
-        Expanded(
-          child: NotificationListener<ScrollUpdateNotification>(
-            onNotification: (notification) {
-              final isUserScrollingUpThePage =
-                  notification.dragDetails != null &&
-                  (notification.scrollDelta ?? 0) > 3;
-              if (isUserScrollingUpThePage && _isAuditSummaryExpanded) {
-                setState(() => _isAuditSummaryExpanded = false);
-              }
-              return false;
-            },
-            child: RefreshIndicator(
-              onRefresh: () => _load(audit.id),
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
-                children: [
-                  Row(
+              ),
+            const Divider(height: 1),
+            Expanded(
+              child: NotificationListener<ScrollUpdateNotification>(
+                onNotification: (notification) {
+                  final isUserScrollingUpThePage =
+                      notification.dragDetails != null &&
+                      (notification.scrollDelta ?? 0) > 3;
+                  if (isUserScrollingUpThePage && _isAuditSummaryExpanded) {
+                    setState(() => _isAuditSummaryExpanded = false);
+                  }
+                  return false;
+                },
+                child: RefreshIndicator(
+                  onRefresh: () => _load(audit.id),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
                     children: [
-                      Expanded(
-                        child: Text(
-                          selectedLocation ?? audit.branchName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              selectedLocation ?? audit.branchName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          Text(
+                            '${assets.length} assets',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(color: _themeDark),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (assets.isEmpty)
+                        const _InlineEmptyMessage(
+                          icon: Icons.inventory_2_outlined,
+                          message: 'No assets match this location and search.',
+                        )
+                      else
+                        _AssetCards(
+                          assets: assets,
+                          onAssetTap: (asset) => unawaited(
+                            _scanForAudit(audit, expectedAsset: asset),
+                          ),
                         ),
-                      ),
-                      Text(
-                        '${assets.length} assets',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelMedium?.copyWith(color: _themeDark),
-                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  if (assets.isEmpty)
-                    const _InlineEmptyMessage(
-                      icon: Icons.inventory_2_outlined,
-                      message: 'No assets match this location and search.',
-                    )
-                  else
-                    _AssetCards(
-                      assets: assets,
-                      onAssetTap: (asset) =>
-                          unawaited(_scanForAudit(audit, expectedAsset: asset)),
-                    ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -1339,7 +1352,7 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
     },
     decoration: InputDecoration(
       hintText: hintText,
-      constraints: const BoxConstraints.tightFor(height: 42),
+      constraints: const BoxConstraints(minHeight: 48),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       prefixIconConstraints: const BoxConstraints.tightFor(
         width: 40,
@@ -1541,7 +1554,7 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
                             'AUDITOR WORKSPACE',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.4,
                             ),
@@ -1568,7 +1581,7 @@ class _MyAuditsPageState extends ConsumerState<MyAuditsPage> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search audit, asset, serial or location',
-                        constraints: const BoxConstraints.tightFor(height: 42),
+                        constraints: const BoxConstraints(minHeight: 48),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 8,
@@ -2057,7 +2070,7 @@ class _SelectedAuditSummary extends StatelessWidget {
                           color: audit.isActive
                               ? const Color(0xFFD01126)
                               : const Color(0xFF16803A),
-                          fontSize: 10.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -2332,7 +2345,7 @@ class _AuditAssetListPage extends StatelessWidget {
                         color: audit.isActive
                             ? const Color(0xFFD01126)
                             : const Color(0xFF16803A),
-                        fontSize: 10.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -2450,7 +2463,7 @@ class _AuditAssetListPage extends StatelessWidget {
                                   color: asset.isVerified
                                       ? const Color(0xFF16803A)
                                       : const Color(0xFFD01126),
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -2748,7 +2761,7 @@ class _AssignedLocationDropdownState extends State<_AssignedLocationDropdown> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: double.infinity,
-          height: 42,
+          height: responsiveControlHeight(context),
           padding: const EdgeInsets.symmetric(horizontal: 11),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,

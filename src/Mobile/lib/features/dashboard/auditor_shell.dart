@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/responsive_typography.dart';
 
 import '../audits/my_audits_page.dart';
 import '../scan_history/scan_history_page.dart';
@@ -75,7 +76,7 @@ class _AuditorNavigationBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         clipBehavior: Clip.antiAlias,
         child: Container(
-          height: 58,
+          height: responsiveControlHeight(context, base: 68),
           decoration: BoxDecoration(
             border: Border.all(
               color: Theme.of(context).brightness == Brightness.dark
@@ -177,7 +178,7 @@ class _NavigationItem extends StatelessWidget {
                 color: selected
                     ? const Color(0xFFD01126)
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 9.5,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
               ),
               child: Text(

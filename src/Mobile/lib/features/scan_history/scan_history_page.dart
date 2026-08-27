@@ -139,7 +139,7 @@ class _HistoryTile extends StatelessWidget {
                   entry.wasAlreadyVerified ? 'Previously verified' : 'Scanned',
                   style: const TextStyle(
                     color: Color(0xFFD01126),
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

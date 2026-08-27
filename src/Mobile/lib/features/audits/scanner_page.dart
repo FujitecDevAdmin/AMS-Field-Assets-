@@ -136,7 +136,7 @@ class _ScannerPageState extends State<ScannerPage>
                           'SCAN ASSET',
                           style: TextStyle(
                             color: Colors.white70,
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.4,
                           ),

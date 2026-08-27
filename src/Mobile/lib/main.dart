@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'core/auth/auth_controller.dart';
 import 'core/theme/theme_mode_controller.dart';
+import 'core/theme/responsive_typography.dart';
 import 'features/auth/sign_in_page.dart';
 import 'features/auth/change_password_page.dart';
 import 'features/dashboard/auditor_shell.dart';
@@ -22,7 +23,6 @@ const Color fujitecRed = Color(0xFFD01126);
 const Color _surface = Color(0xFFFFFFFF);
 const Color _canvas = Color(0xFFF6F7F9);
 const Color _fieldFill = Color(0xFFF1F3F5);
-const double _applicationFontScale = 0.80;
 
 /// Application-wide type scale. Screens should use the semantic styles from
 /// `Theme.of(context).textTheme` instead of declaring arbitrary font sizes.
@@ -56,11 +56,11 @@ TextTheme _buildTextTheme() {
     titleMedium: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
     titleSmall: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
     bodyLarge: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w400),
-    bodyMedium: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w400),
-    bodySmall: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w400),
+    bodyMedium: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w400),
+    bodySmall: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w400),
     labelLarge: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
     labelMedium: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
-    labelSmall: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500),
+    labelSmall: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500),
   );
 }
 
@@ -202,16 +202,8 @@ class AmsAuditApp extends ConsumerWidget {
       theme: _buildTheme(),
       darkTheme: _buildTheme(brightness: Brightness.dark),
       themeMode: ref.watch(themeModeProvider),
-      builder: (context, child) {
-        final mediaQuery = MediaQuery.of(context);
-        final systemScale = mediaQuery.textScaler.scale(14) / 14;
-        return MediaQuery(
-          data: mediaQuery.copyWith(
-            textScaler: TextScaler.linear(systemScale * _applicationFontScale),
-          ),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
+      builder: (context, child) =>
+          ResponsiveTypography(child: child ?? const SizedBox.shrink()),
       home: const _SplashGate(),
     );
   }
@@ -224,12 +216,24 @@ class _SplashGate extends StatefulWidget {
   State<_SplashGate> createState() => _SplashGateState();
 }
 
-class _SplashGateState extends State<_SplashGate> {
+class _SplashGateState extends State<_SplashGate>
+    with SingleTickerProviderStateMixin {
   Timer? _timer;
+  late final AnimationController _liftController;
+  late final Animation<double> _liftPosition;
 
   @override
   void initState() {
     super.initState();
+    _liftController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1450),
+    );
+    _liftPosition = CurvedAnimation(
+      parent: _liftController,
+      curve: Curves.easeInOutCubic,
+    );
+    _liftController.repeat(reverse: true);
     _timer = Timer(const Duration(seconds: 5), () {
       if (mounted) setState(() {});
     });
@@ -239,13 +243,17 @@ class _SplashGateState extends State<_SplashGate> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     unawaited(
-      precacheImage(const AssetImage('assets/images/ams-splash.png'), context),
+      precacheImage(
+        const AssetImage('assets/images/ams-lift-splash-v2.png'),
+        context,
+      ),
     );
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _liftController.dispose();
     super.dispose();
   }
 
@@ -254,12 +262,167 @@ class _SplashGateState extends State<_SplashGate> {
     if (_timer?.isActive == false) return const _AuthGate();
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SizedBox.expand(
-        child: Image.asset(
-          'assets/images/ams-splash.png',
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
-          filterQuality: FilterQuality.high,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/ams-lift-splash-v2.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.high,
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.42, 0.72, 1],
+                colors: [Colors.transparent, Color(0x12000000), Color(0xB8000000)],
+              ),
+            ),
+          ),
+          SafeArea(
+            minimum: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: _LiftLoadingCard(
+                animation: _liftPosition,
+                reduceMotion: MediaQuery.disableAnimationsOf(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiftLoadingCard extends StatelessWidget {
+  const _LiftLoadingCard({
+    required this.animation,
+    required this.reduceMotion,
+  });
+
+  final Animation<double> animation;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Fujitec Asset Management System is loading',
+      liveRegion: true,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 360),
+        padding: const EdgeInsets.fromLTRB(18, 14, 20, 14),
+        decoration: BoxDecoration(
+          color: const Color(0xE6FFFFFF),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 28,
+              offset: Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _AnimatedLift(
+              animation: animation,
+              reduceMotion: reduceMotion,
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Preparing your workspace',
+                    style: TextStyle(
+                      color: Color(0xFF22252A),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Moving assets forward',
+                    style: TextStyle(
+                      color: Color(0xFF6B7078),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            const SizedBox(
+              width: 19,
+              height: 19,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: Color(0xFFD01126),
+                backgroundColor: Color(0x1FD01126),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedLift extends StatelessWidget {
+  const _AnimatedLift({
+    required this.animation,
+    required this.reduceMotion,
+  });
+
+  final Animation<double> animation;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 52,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F1F3),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) {
+          final progress = reduceMotion ? 0.5 : animation.value;
+          return Align(
+            alignment: Alignment(0, 1 - (progress * 2)),
+            child: child,
+          );
+        },
+        child: Container(
+          width: 28,
+          height: 22,
+          decoration: BoxDecoration(
+            color: const Color(0xFFD01126),
+            borderRadius: BorderRadius.circular(6),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x40D01126),
+                blurRadius: 8,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.unfold_more_rounded,
+            color: Colors.white,
+            size: 15,
+          ),
         ),
       ),
     );

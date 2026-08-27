@@ -125,6 +125,17 @@ Mapped straight onto `Verification.PhysicalVerification`:
 
 ## 9. Review checklist
 
+### Responsive typography
+
+All routes inherit `ResponsiveTypography` from the app builder. Use logical
+screen width, never physical screen resolution, for modest typography changes.
+Do not shrink the system font scale or replace its nonlinear accessibility curve
+with a linear estimate. Normal text retains its baseline size on narrow phones;
+wider devices add up to 12 percent. Supporting labels use at least 12 logical
+pixels and body text uses 14–16. Input fields must use minimum rather than fixed
+heights; paired location/filter controls and navigation grow with scaled text.
+Test narrow/wide phones and 1.0, 1.5, and 2.0 system text scales.
+
 - [ ] Capture and outbox row written in one local transaction
 - [ ] Nothing retried in parallel; backoff and attempt count persisted
 - [ ] `ClientCaptureId` generated once at capture and never regenerated on retry
